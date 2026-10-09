@@ -1,0 +1,26 @@
+﻿.vs/
+**/bin/
+**/obj/
+**/node_modules/
+*.user
+*.suo
+.env
+.env.*
+
+# Configuracion local con credenciales reales (cadena de conexion y SMTP).
+# Nunca se versiona: appsettings.json documenta la estructura con valores vacios.
+**/appsettings.Local.json
+
+# Permisos locales de Claude Code (por maquina/desarrollador). El resto de
+# .claude/ (skills, agentes) si se versiona.
+.claude/settings.local.json
+
+# Material subido en runtime (ActivoController / ServicioArchivos), con nombre GUID y los demo-*.*. No se versionan.
+worklingua.Server/Archivos/activos/
+
+# Documentacion y archivos de contexto para IA: no se versionan.
+/docs/
+/.agents/
+/.claude/
+/skills-lock.json
+/CLAUDE.md

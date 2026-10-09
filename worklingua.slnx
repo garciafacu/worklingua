@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/Elementos de la solución/">
+    <File Path=".agents/skills/frontend-design/LICENSE.txt" />
+    <File Path=".agents/skills/frontend-design/SKILL.md" />
+    <File Path=".agents/skills/regla-de-arquitectura/SKILL.md" />
+    <File Path="CLAUDE.md" />
+    <File Path="docs/modelo-datos.md" />
+    <File Path="docs/puesta-en-marcha.md" />
+    <File Path="docs/referencia-permisos.md" />
+    <File Path="docs/seed.sql" />
+    <File Path="docs/stored-procedures.md" />
+    <File Path="docs/verification-tablas.md" />
+  </Folder>
+  <Project Path="worklingua.client/worklingua.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="worklingua.Server/worklingua.Server.csproj" />
+  <Project Path="WorkLingua.WebService/WorkLingua.WebService.csproj" Id="3c9f1b4e-27a6-4d18-9e43-5b0c7a2f9d61" />
+</Solution>

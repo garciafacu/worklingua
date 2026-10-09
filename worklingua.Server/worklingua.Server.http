@@ -1,0 +1,195 @@
+@WorkLingua_HostAddress = https://localhost:7127
+
+### Empresas activas (alimenta el combo del registro)
+GET {{WorkLingua_HostAddress}}/api/empresas
+Accept: application/json
+
+### Registro. La cuenta queda inactiva y se envia el email de confirmacion por SMTP.
+# Sin 'Email:Host' y 'Email:Remitente' configurados el envio falla con un error explicito.
+POST {{WorkLingua_HostAddress}}/api/usuarios/registro
+Content-Type: application/json
+
+{
+  "empresaId": 1,
+  "nombre": "Ana",
+  "apellido": "Perez",
+  "email": "ana.perez@ejemplo.com",
+  "cargo": "Analista",
+  "clave": "Prueba1234"
+}
+
+### Confirmacion de cuenta. El token sale del email generado.
+POST {{WorkLingua_HostAddress}}/api/usuarios/confirmar
+Content-Type: application/json
+
+{
+  "token": "00000000-0000-0000-0000-000000000000"
+}
+
+### Login. Antes de confirmar la cuenta devuelve 403.
+# @name login
+POST {{WorkLingua_HostAddress}}/api/autenticacion/login
+Content-Type: application/json
+
+{
+  "email": "ana.perez@ejemplo.com",
+  "clave": "Prueba1234"
+}
+
+### Logout. Usa el token devuelto por el login.
+POST {{WorkLingua_HostAddress}}/api/autenticacion/logout
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### Recupero de clave. Responde 200 exista o no la cuenta.
+POST {{WorkLingua_HostAddress}}/api/autenticacion/recuperar-clave
+Content-Type: application/json
+
+{
+  "email": "ana.perez@ejemplo.com"
+}
+
+### Restablecer clave con el token del email de recupero.
+POST {{WorkLingua_HostAddress}}/api/autenticacion/restablecer-clave
+Content-Type: application/json
+
+{
+  "token": "00000000-0000-0000-0000-000000000000",
+  "claveNueva": "NuevaClave123"
+}
+
+### Cambiar clave con la sesion abierta.
+POST {{WorkLingua_HostAddress}}/api/autenticacion/cambiar-clave
+Content-Type: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+{
+  "claveActual": "Prueba1234",
+  "claveNueva": "NuevaClave123"
+}
+
+### ==========================================================================
+### Etapa 3 - Cursos e idiomas (punto 15)
+### /api/idiomas es publico. /api/cursos exige sesion con Curso.Listar: correr antes el login.
+### ==========================================================================
+
+### Idiomas activos de la plataforma
+GET {{WorkLingua_HostAddress}}/api/idiomas
+Accept: application/json
+
+### Cursos SIN el header de sesion -> 401
+GET {{WorkLingua_HostAddress}}/api/cursos
+Accept: application/json
+
+### Todos los cursos (sin criterios)
+GET {{WorkLingua_HostAddress}}/api/cursos
+Accept: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### Busqueda simple: un unico campo sobre el nombre
+GET {{WorkLingua_HostAddress}}/api/cursos?nombre=ingles
+Accept: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### Busqueda avanzada: idioma + nivel
+GET {{WorkLingua_HostAddress}}/api/cursos?idiomaId=1&nivel=Inicial
+Accept: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### Sin coincidencias: 200 con lista vacia, no 404
+GET {{WorkLingua_HostAddress}}/api/cursos?nombre=zzzz
+Accept: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### Termino demasiado largo: 400 por DataAnnotations
+GET {{WorkLingua_HostAddress}}/api/cursos?nombre=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Accept: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### ==========================================================================
+### Etapa 3 - Comentarios (punto 20 y busqueda privada del punto 15)
+### TODOS exigen sesion valida. Correr antes el login de mas arriba.
+### ==========================================================================
+
+### Listar SIN el header de sesion -> 401
+GET {{WorkLingua_HostAddress}}/api/comentarios?planId=2
+Accept: application/json
+
+### Listar con un token que no existe -> 401, mismo mensaje que el anterior
+GET {{WorkLingua_HostAddress}}/api/comentarios?planId=2
+Accept: application/json
+X-Sesion-Token: 00000000-0000-0000-0000-000000000000
+
+### Listar con sesion valida -> 200
+GET {{WorkLingua_HostAddress}}/api/comentarios?planId=2
+Accept: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### Plan inexistente -> 404
+GET {{WorkLingua_HostAddress}}/api/comentarios?planId=9999
+Accept: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### Publicar SIN sesion -> 401
+POST {{WorkLingua_HostAddress}}/api/comentarios
+Content-Type: application/json
+
+{
+  "planId": 2,
+  "texto": "Este comentario no deberia guardarse."
+}
+
+### Publicar con sesion valida -> 201
+POST {{WorkLingua_HostAddress}}/api/comentarios
+Content-Type: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+{
+  "planId": 2,
+  "texto": "Las simulaciones nos sirvieron muchisimo para preparar reuniones."
+}
+
+### Suplantacion: el usuarioId del cuerpo se ignora.
+# El autor de la respuesta tiene que ser el de la sesion, no el usuario 999.
+POST {{WorkLingua_HostAddress}}/api/comentarios
+Content-Type: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+{
+  "planId": 2,
+  "usuarioId": 999,
+  "texto": "Probando que el autor sale de la sesion y no del JSON."
+}
+
+### Texto vacio -> 400
+POST {{WorkLingua_HostAddress}}/api/comentarios
+Content-Type: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+{
+  "planId": 2,
+  "texto": ""
+}
+
+### Plan inexistente -> 404
+POST {{WorkLingua_HostAddress}}/api/comentarios
+Content-Type: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+{
+  "planId": 9999,
+  "texto": "Comentario sobre un plan que no existe."
+}
+
+### Busqueda privada simple: un unico campo de texto
+GET {{WorkLingua_HostAddress}}/api/comentarios/buscar?texto=simulaciones
+Accept: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### Busqueda privada avanzada: plan + rango de fechas
+GET {{WorkLingua_HostAddress}}/api/comentarios/buscar?planId=2&desde=2026-01-01&hasta=2026-12-31T23:59:59
+Accept: application/json
+X-Sesion-Token: {{login.response.body.$.token}}
+
+### Busqueda privada SIN sesion -> 401
+GET {{WorkLingua_HostAddress}}/api/comentarios/buscar?texto=simulaciones
+Accept: application/json

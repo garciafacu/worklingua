@@ -1,0 +1,146 @@
+/* Base tipografica y de color de WorkLingua. */
+
+/*
+ * Orden de capas. Importa porque en CSS una regla SIN capa le gana a cualquier
+ * regla EN capa, sin importar la especificidad: si el CSS heredado quedara
+ * fuera de capa, su selector `button` pisaria un `bg-white` de Tailwind en los
+ * layouts nuevos. Declarandolo aca, `utilities` va ultimo y siempre gana.
+ */
+@layer theme, heredado, utilities;
+
+/*
+ * Tailwind sin preflight: se importan solo el tema (variables y escalas) y las
+ * utilidades. El reset de Tailwind resetearia `button`, `h1`, `dl` y `a`, que
+ * App.css ya estiliza para las pantallas de cuenta de la Etapa 1.
+ * El poco reset que hace falta ya lo aporta la capa `heredado` de mas abajo.
+ */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/*
+ * Paleta unica del proyecto. Al declararla en @theme, Tailwind la emite como
+ * variables en :root y ademas genera utilidades a partir de ella, asi que el
+ * mismo color se usa como `var(--color-primario)` en el CSS heredado y como
+ * `bg-primario` / `text-primario` / `border-primario` en los componentes nuevos.
+ */
+@theme {
+    --color-fondo: #f1f5f9;
+    --color-superficie: #ffffff;
+    --color-borde: #e2e8f0;
+    --color-borde-foco: #2563eb;
+    --color-texto: #0f172a;
+    --color-texto-suave: #64748b;
+    --color-primario: #2563eb;
+    --color-primario-hover: #1d4ed8;
+    --color-marca: #1e3a5f;
+    --color-error: #b91c1c;
+    --color-error-fondo: #fef2f2;
+    --color-exito: #15803d;
+    --color-exito-fondo: #f0fdf4;
+    --color-info: #1e40af;
+    --color-info-fondo: #eff6ff;
+    /*
+     * Advertencia: el nivel WARN de la bitacora. No alcanzaba con error e info,
+     * porque un permiso denegado o un login fallido no son ni una operacion
+     * normal ni una falla del sistema, y la pantalla de Seguridad necesita
+     * distinguir los tres de un vistazo.
+     */
+    --color-alerta: #b45309;
+    --color-alerta-fondo: #fffbeb;
+    /*
+     * Relleno de las estrellas de valoracion. Es mas claro que `alerta` porque
+     * es decorativo: el puntaje siempre se acompana con el numero o la etiqueta.
+     */
+    --color-estrella: #f59e0b;
+
+    --font-base: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+@layer heredado {
+    :root {
+        --radio: 10px;
+
+        /*
+         * Alto de la barra superior del área privada. Vive acá y no como número
+         * suelto porque lo necesitan DOS lugares que tienen que coincidir:
+         * `LayoutPrivado` se lo da a la barra, y el menú lateral lo usa como
+         * `top` y como resta del alto de la ventana para quedarse pegado justo
+         * debajo. Si los dos valores se separan, el menú se monta sobre la barra
+         * o deja una franja de fondo.
+         */
+        --alto-barra: 4rem;
+
+        font-family: var(--font-base);
+        line-height: 1.5;
+        color: var(--color-texto);
+        background-color: var(--color-fondo);
+
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background-color: var(--color-fondo);
+    }
+
+    a {
+        color: var(--color-primario);
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    /*
+     * Foco visible en todo lo que se pueda tabular. Hasta ahora el unico foco
+     * definido era el de `.campo input/select`: botones y enlaces quedaban con
+     * el outline por defecto del navegador, que sobre el fondo gris de las
+     * tablas del Backoffice casi no se ve. `:focus-visible` no molesta al mouse.
+     */
+    :focus-visible {
+        outline: 2px solid var(--color-borde-foco);
+        outline-offset: 2px;
+    }
+
+    dialog {
+        color: var(--color-texto);
+    }
+
+    /*
+     * El dialogo entra con una animacion corta. Quien pidio menos movimiento en
+     * su sistema operativo lo ve aparecer sin transicion.
+     */
+    dialog[open] {
+        animation: aparecer-dialogo 140ms ease-out;
+    }
+
+    @keyframes aparecer-dialogo {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        dialog[open] {
+            animation: none;
+        }
+
+        *,
+        *::before,
+        *::after {
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
