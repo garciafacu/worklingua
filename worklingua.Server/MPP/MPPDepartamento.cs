@@ -17,10 +17,6 @@ namespace worklingua.Server.MPP
             oDatos = new Acceso();
         }
 
-        /// <summary>
-        /// Departamentos activos. Con EmpresaId en cero trae los de todas las
-        /// empresas: el alcance lo decide la BLL.
-        /// </summary>
         public List<BEDepartamento> ListarTodo(BEDepartamento Objeto)
         {
             return Listar("sp_Departamento_Listar", Objeto);

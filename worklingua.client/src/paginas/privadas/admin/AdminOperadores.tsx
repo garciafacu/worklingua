@@ -32,15 +32,6 @@ function opcional(valor: string): string | null {
     return valor.trim() || null;
 }
 
-/**
- * ABMC de operadores: el personal de la plataforma que trabaja en el Backoffice.
- *
- * Son usuarios de la empresa interna y no aparecen en el ABM de Usuarios, que
- * administra a las empresas clientes. El alta manda una invitación por correo y
- * crea la cuenta sin roles: los roles se asignan desde el panel del operador y
- * pueden ser varios. Las reglas (no tocar los roles propios, proteger la cuenta
- * de plataforma configurada) las valida el backend.
- */
 export function AdminOperadores() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -408,7 +399,6 @@ export function AdminOperadores() {
                                         </button>
                                     )}
 
-                                    {/* Desbloquear no es destructivo: no pide confirmación. */}
                                     {puedeModificar && estaBloqueada(fila) && (
                                         <button type="button" onClick={() => void desbloquear(fila)} className={CLASE_BOTON}>
                                             {t('admin.operadores.desbloquear')}

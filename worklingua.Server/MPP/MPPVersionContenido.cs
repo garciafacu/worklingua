@@ -17,10 +17,6 @@ namespace worklingua.Server.MPP
             oDatos = new Acceso();
         }
 
-        /// <summary>
-        /// Guarda el punto de restauración. El número de versión lo calcula el
-        /// SP dentro de su propia transacción.
-        /// </summary>
         public int Alta(BEVersionContenido Objeto)
         {
             Hdatos = new Hashtable();
@@ -34,7 +30,6 @@ namespace worklingua.Server.MPP
             return Convert.ToInt32(identidad);
         }
 
-        /// <summary>La línea de tiempo, sin el XML.</summary>
         public List<BEVersionContenido> ListarPorCurso(int cursoId)
         {
             List<BEVersionContenido> ListaBE = new List<BEVersionContenido>();
@@ -71,10 +66,6 @@ namespace worklingua.Server.MPP
             return oVersionBE;
         }
 
-        /// <summary>
-        /// Borra el punto de restauración. Es físico: una versión no tiene
-        /// nada colgando y el pedido es limpiar el historial.
-        /// </summary>
         public bool Baja(int versionContenidoId)
         {
             Hdatos = new Hashtable();

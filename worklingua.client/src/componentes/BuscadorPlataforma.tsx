@@ -12,9 +12,7 @@ import {
 } from '../tipos/busqueda';
 
 interface BuscadorPlataformaProps {
-    /** Criterios con los que arranca el formulario, leídos de la URL. */
     criteriosIniciales: CriteriosBusqueda;
-    /** Secciones que la sesión puede ver: las devuelve el backend ya filtradas. */
     secciones: SeccionBusquedaResponse[];
     buscando: boolean;
     alBuscar: (criterios: CriteriosBusqueda) => void;
@@ -43,18 +41,11 @@ function aCriterios(datos: Formulario): CriteriosBusqueda {
         texto: datos.texto.trim() || undefined,
         area: datos.area || undefined,
         seccion: datos.seccion || undefined,
-        // `Relevancia` es el valor por defecto del backend: no se manda para que
-        // la URL de una búsqueda simple quede limpia.
         ordenarPor: datos.ordenarPor === 'Relevancia' ? undefined : datos.ordenarPor,
         soloTitulo: datos.soloTitulo || undefined,
     };
 }
 
-/**
- * Formulario del buscador global: búsqueda simple por texto y, plegada, la
- * avanzada con área, sección, criterio de orden y búsqueda solo en títulos.
- * Sigue la maqueta de `BuscadorBitacora`.
- */
 export function BuscadorPlataforma({ criteriosIniciales, secciones, buscando, alBuscar }: BuscadorPlataformaProps) {
     const { t } = useTranslation();
 

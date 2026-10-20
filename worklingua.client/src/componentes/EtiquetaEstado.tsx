@@ -13,10 +13,6 @@ interface EtiquetaEstadoProps {
     tono: TonoEstado;
 }
 
-/**
- * Pastilla de estado (consulta, curso, factura). Quien la usa decide el texto ya
- * traducido y el tono, así el mismo componente sirve para vocabularios distintos.
- */
 export function EtiquetaEstado({ texto, tono }: EtiquetaEstadoProps) {
     return (
         <span

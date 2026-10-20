@@ -22,14 +22,6 @@ const TONO_FACTURA: Record<string, TonoEstado> = {
     ANULADA: 'neutro',
 };
 
-/**
- * Estado de cuenta corriente de la empresa (punto 6.b).
- *
- * Lee lo que graba la contratación: facturas, pagos, notas de crédito/débito y
- * los movimientos con su saldo acumulado. Los importes se guardan en ARS y se
- * muestran en la moneda de la cultura activa; cada comprobante conserva además la
- * moneda con la que se operó.
- */
 export function CuentaCorriente() {
     const { t } = useTranslation();
     const { formatearMoneda, formatearFecha } = useLocalizacion();

@@ -1,9 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Un empleado que cumple la condición de inactividad de una alerta.
-    /// Es quien recibe la notificación.
-    /// </summary>
     public class BEEmpleadoInactivo
     {
         #region Propiedades

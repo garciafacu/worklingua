@@ -12,7 +12,6 @@ const CLASE_TAMANO: Record<TamanoEstrellas, string> = {
 
 const POSICIONES = Array.from({ length: PUNTAJE_MAXIMO }, (_, indice) => indice + 1);
 
-/** Una estrella sólida. El color lo pone quien la usa con `text-*`. */
 export function IconoEstrella({ className = '' }: { className?: string }) {
     return (
         <svg
@@ -27,19 +26,10 @@ export function IconoEstrella({ className = '' }: { className?: string }) {
 }
 
 interface EstrellasProps {
-    /** De 0 a 5. Admite decimales: 4,5 pinta cuatro estrellas y media. */
     valor: number;
     tamano?: TamanoEstrellas;
 }
 
-/**
- * Estrellas de solo lectura, para un puntaje o un promedio.
- *
- * Son dos filas superpuestas: la de fondo en gris y la de relleno en ámbar,
- * recortada al porcentaje del valor. Así un promedio se ve con fracciones de
- * estrella sin dibujar medias estrellas a mano. Las estrellas no llevan
- * separación entre sí para que el porcentaje coincida con lo que se ve.
- */
 export function Estrellas({ valor, tamano = 'sm' }: EstrellasProps) {
     const { t } = useTranslation();
     const { formatearNumero } = useLocalizacion();

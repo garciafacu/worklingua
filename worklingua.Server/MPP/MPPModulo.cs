@@ -47,11 +47,6 @@ namespace worklingua.Server.MPP
             }
         }
 
-        /// <summary>
-        /// Alta de un módulo. Un módulo no se modifica desde el ABM: se da de
-        /// baja y se vuelve a cargar, así el avance ya registrado no cambia de
-        /// sentido. Para restaurar una versión está ActualizarTextos.
-        /// </summary>
         public int Guardar(BEModulo Objeto)
         {
             if (Objeto.ModuloId != 0)
@@ -72,11 +67,6 @@ namespace worklingua.Server.MPP
             return Convert.ToInt32(identidad);
         }
 
-        /// <summary>
-        /// Devuelve el objetivo, el contenido y el orden que tenía el módulo en
-        /// una versión. No toca el nombre: es con lo que se reconcilian los
-        /// módulos entre la versión y el curso.
-        /// </summary>
         public bool ActualizarTextos(BEModulo Objeto)
         {
             Hdatos = new Hashtable();

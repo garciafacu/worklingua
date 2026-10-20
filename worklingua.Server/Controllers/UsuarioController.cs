@@ -20,10 +20,6 @@ namespace worklingua.Server.Controllers
             oServicioHash = new ServicioHash();
         }
 
-        /// <summary>
-        /// Perfil propio (CU-001-003). No exige permiso: lo tiene cualquier sesión
-        /// y la BLL lo acota al usuario de la sesión.
-        /// </summary>
         [HttpGet("perfil")]
         [ProducesResponseType(typeof(BEPerfilRespuesta), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -167,11 +163,6 @@ namespace worklingua.Server.Controllers
             return Ok(respuesta);
         }
 
-        /// <summary>
-        /// Desbloqueo manual tras intentos fallidos (CU-003-004, camino
-        /// alternativo 4). Usa Usuario.Modificar: desbloquear es modificar la
-        /// cuenta, y así el rol no necesita un permiso más.
-        /// </summary>
         [HttpPost("{usuarioId:int}/desbloquear")]
         [ProducesResponseType(typeof(BEMensajeRespuesta), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

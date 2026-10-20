@@ -3,18 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 interface BuscadorBarraProps {
-    /** Pantalla de resultados: `/buscar` en el sitio público, `/inicio/buscar` en el privado. */
     rutaResultados: string;
-    /** Distingue los `id` cuando hay dos barras en la misma página. */
     identificador: string;
     className?: string;
     alBuscar?: () => void;
 }
 
-/**
- * Campo de búsqueda compacto de los encabezados. No busca por sí mismo: lleva
- * el término a la pantalla de resultados, que es la que consulta la API.
- */
 export function BuscadorBarra({ rutaResultados, identificador, className = '', alBuscar }: BuscadorBarraProps) {
     const { t } = useTranslation();
     const navegar = useNavigate();

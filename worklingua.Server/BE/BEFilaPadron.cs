@@ -1,9 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Una fila del CSV tal como la leyó el navegador, sin validar. Los valores
-    /// vienen como texto: la validación y la normalización son de la BLL.
-    /// </summary>
     public class BEFilaPadron
     {
         #region Propiedades
@@ -11,7 +7,6 @@ namespace worklingua.Server.BE
         public string Apellido { get; set; }
         public string Email { get; set; }
         public string Documento { get; set; }
-        /// <summary>Nombre del departamento, no el id: el CSV lo trae como texto.</summary>
         public string Departamento { get; set; }
         #endregion
 

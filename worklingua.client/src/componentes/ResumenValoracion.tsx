@@ -7,12 +7,6 @@ interface ResumenValoracionProps {
     cantidad: number;
 }
 
-/**
- * Promedio de estrellas y cantidad de valoraciones de un plan, en una línea.
- *
- * Mide siempre lo mismo, tenga o no valoraciones, para no desalinear las filas
- * de las tarjetas de plan puestas lado a lado.
- */
 export function ResumenValoracion({ promedio, cantidad }: ResumenValoracionProps) {
     const { t } = useTranslation();
     const { formatearNumero } = useLocalizacion();

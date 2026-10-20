@@ -56,7 +56,6 @@ function cargarApi(): Promise<ApiRecaptcha> {
         };
 
         etiqueta.onerror = () => {
-            // Se limpia para que un reintento posterior vuelva a pedir el script.
             promesaApi = null;
             rechazar(new Error('no se pudo descargar el script de reCAPTCHA'));
         };

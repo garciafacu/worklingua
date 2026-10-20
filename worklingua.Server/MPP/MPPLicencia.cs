@@ -43,7 +43,6 @@ namespace worklingua.Server.MPP
             return ServicioLectorFila.ATotalFilas(filas) > 0;
         }
 
-        /// <summary>Al cancelar una contratación. Devuelve cuántas revocó.</summary>
         public int RevocarPorSuscripcion(BELicencia Objeto)
         {
             Hdatos = new Hashtable();
@@ -54,7 +53,6 @@ namespace worklingua.Server.MPP
             return ServicioLectorFila.ATotalFilas(filas);
         }
 
-        /// <summary>Al dar de baja un usuario o moverlo de empresa.</summary>
         public int RevocarPorUsuario(BELicencia Objeto)
         {
             Hdatos = new Hashtable();
@@ -65,10 +63,6 @@ namespace worklingua.Server.MPP
             return ServicioLectorFila.ATotalFilas(filas);
         }
 
-        /// <summary>
-        /// Muda las licencias vigentes a la suscripción nueva al cambiar de plan,
-        /// hasta donde alcance el cupo destino. Devuelve cuántas se migraron.
-        /// </summary>
         public int Migrar(int suscripcionOrigen, int suscripcionDestino, int cupoDestino, DateTime? fechaVencimiento)
         {
             Hdatos = new Hashtable();
@@ -198,10 +192,6 @@ namespace worklingua.Server.MPP
             return oInventarioBE;
         }
 
-        /// <summary>
-        /// El lector compartido solo tiene LeerGuid, que devuelve Guid.Empty. Acá
-        /// hace falta distinguir "sin licencia" de un código vacío.
-        /// </summary>
         private Guid? LeerGuidNulo(DataRow Item, string columna)
         {
             return ServicioLectorFila.TieneValor(Item, columna)

@@ -5,14 +5,6 @@ using worklingua.Server.BLL;
 
 namespace worklingua.Server.Controllers
 {
-    /// <summary>
-    /// El diccionario de etiquetas con el que se clasifican los cursos
-    /// (CU-004-005).
-    ///
-    /// Sin permisos propios: leerlo es parte de ver cursos y darle de alta una
-    /// etiqueta es parte de clasificarlos, así que reusa Curso.Listar y
-    /// Curso.Modificar.
-    /// </summary>
     [Route("api/etiquetas")]
     public class EtiquetaController : ControladorBase
     {
@@ -36,11 +28,6 @@ namespace worklingua.Server.Controllers
             return Ok(oBLLEti.Listar());
         }
 
-        /// <summary>
-        /// Camino alternativo 1: la etiqueta no estaba en el diccionario y el
-        /// usuario confirmó agregarla. Pedir una que ya existe devuelve la que
-        /// había, no un error.
-        /// </summary>
         [HttpPost]
         [ProducesResponseType(typeof(BEEtiqueta), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

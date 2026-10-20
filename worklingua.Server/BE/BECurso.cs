@@ -14,15 +14,9 @@ namespace worklingua.Server.BE
         public bool Activo { get; set; }
         public DateTime FechaAlta { get; set; }
         public int? EmpresaId { get; set; }
-        /// <summary>Categoría sectorial (CU-004-005): TURISMO, GASTRONOMIA o IT.</summary>
         public string Sector { get; set; }
-        /// <summary>
-        /// Ventana de despliegue (CU-004-006). Las dos en null significan que
-        /// el curso está disponible siempre.
-        /// </summary>
         public DateOnly? FechaPublicacion { get; set; }
         public DateOnly? FechaFin { get; set; }
-        /// <summary>Etiquetas lógicas del curso (CU-004-005).</summary>
         public List<BEEtiqueta> Etiquetas { get; set; }
         #endregion
 

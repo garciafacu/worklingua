@@ -13,16 +13,13 @@ import {
 export interface DatoGrafico {
     etiqueta: string;
     valor: number;
-    /** Resalta una barra, por ejemplo la opción que votó el usuario. */
     destacado?: boolean;
 }
 
 interface GraficoBarrasProps {
     datos: DatoGrafico[];
-    /** Nombre de lo que se mide; se usa en el tooltip y en la tabla accesible. */
     etiquetaSerie: string;
     mensajeVacio: string;
-    /** Texto de cada valor. Por defecto, el número tal cual. */
     formatearValor?: (valor: number) => string;
 }
 
@@ -30,26 +27,11 @@ const COLOR_BARRA = '#2563eb';
 const COLOR_BARRA_SUAVE = '#93c5fd';
 const ALTO_FILA = 44;
 
-/**
- * El eje siempre incluye el cero, aunque los datos no lo toquen: el largo de una
- * barra solo se puede leer si se mide desde cero. Sin esto Recharts ajusta el
- * dominio a los datos y, por ejemplo, un único valor negativo queda dibujado como
- * una barra completa, que no dice nada.
- */
 const DOMINIO_CON_CERO: [(minimo: number) => number, (maximo: number) => number] = [
     (minimo) => Math.min(0, minimo),
     (maximo) => Math.max(0, maximo),
 ];
 
-/**
- * Barras horizontales de una sola serie: encuestas, ganancias por período y
- * rendimiento usan la misma pieza.
- *
- * Es una sola serie, así que no lleva leyenda ni un color por barra: el color no
- * codifica nada y el valor va escrito al final de cada barra. Debajo queda la
- * misma información en una tabla, que es lo que leen los lectores de pantalla y
- * lo que se ve si el gráfico no puede renderizarse.
- */
 export function GraficoBarras({ datos, etiquetaSerie, mensajeVacio, formatearValor }: GraficoBarrasProps) {
     const formatear = formatearValor ?? ((valor: number) => String(valor));
 

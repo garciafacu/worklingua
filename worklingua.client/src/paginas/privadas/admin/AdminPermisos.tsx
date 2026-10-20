@@ -26,15 +26,6 @@ const CLASE_BOTON =
 const CLASE_BOTON_PELIGRO =
     'rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo';
 
-/**
- * ABM de permisos con el patrón Composite.
- *
- * Las patentes son las que chequea el código y vienen del sistema: acá solo se
- * ven. Lo que se administra son las familias: se crean, se editan, se eliminan
- * y se componen con patentes y otras familias. Las reglas (ciclos, permisos
- * reservados, familias en uso) las valida el backend y sus mensajes se
- * muestran tal cual.
- */
 export function AdminPermisos() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();

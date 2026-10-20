@@ -36,12 +36,6 @@ namespace worklingua.Server.Controllers
             return Ok(respuesta);
         }
 
-        /// <summary>
-        /// Los departamentos asignables a un usuario de esa empresa, para el
-        /// selector del ABM de Usuarios. Pide Usuario.Modificar porque es ahí
-        /// donde se usa; sin alcance total la BLL ignora empresaId y devuelve
-        /// los de la empresa propia.
-        /// </summary>
         [HttpGet("asignables")]
         [ProducesResponseType(typeof(List<BEDepartamentoRespuesta>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

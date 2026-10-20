@@ -8,13 +8,6 @@ import { useLocalizacion } from '../../contexto/useLocalizacion';
 import { rutaContratacion } from '../../rutas/contratacionPendiente';
 import type { OfertaResponse } from '../../tipos/ofertas';
 
-/**
- * Ofertas personales (punto 6.d): las que el Backoffice dirigió a la empresa y
- * están vigentes hoy.
- *
- * Son informativas: no cambian precios. Si sugieren un plan, "Ver plan" abre la
- * contratación existente de ese plan.
- */
 export function MisOfertas() {
     const { t } = useTranslation();
     const { formatearFecha } = useLocalizacion();

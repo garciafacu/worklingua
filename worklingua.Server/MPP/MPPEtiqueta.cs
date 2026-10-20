@@ -17,7 +17,6 @@ namespace worklingua.Server.MPP
             oDatos = new Acceso();
         }
 
-        /// <summary>El diccionario global de etiquetas activas.</summary>
         public List<BEEtiqueta> Listar()
         {
             List<BEEtiqueta> ListaBE = new List<BEEtiqueta>();
@@ -51,10 +50,6 @@ namespace worklingua.Server.MPP
             return Convert.ToInt32(identidad);
         }
 
-        /// <summary>
-        /// Las etiquetas asignadas. Con cursoId en cero trae las de todos los
-        /// cursos: la grilla del ABM las necesita todas de una vez.
-        /// </summary>
         public List<BEEtiquetaCurso> ListarAsignadas(int cursoId)
         {
             List<BEEtiquetaCurso> ListaBE = new List<BEEtiquetaCurso>();
@@ -82,10 +77,6 @@ namespace worklingua.Server.MPP
             return ListaBE;
         }
 
-        /// <summary>
-        /// Deja el curso exactamente con las etiquetas indicadas: el SP borra
-        /// las anteriores e inserta estas en una sola transacción.
-        /// </summary>
         public void Reemplazar(int cursoId, List<int> etiquetaIds)
         {
             Hdatos = new Hashtable();

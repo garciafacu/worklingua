@@ -4,7 +4,6 @@ import { IconoEstrella } from './Estrellas';
 import { PUNTAJE_MAXIMO } from '../tipos/opiniones';
 
 interface SelectorEstrellasProps {
-    /** Puntaje elegido, o 0 si todavía no se eligió ninguno. */
     valor: number;
     deshabilitado?: boolean;
     alCambiar: (puntaje: number) => void;
@@ -12,14 +11,6 @@ interface SelectorEstrellasProps {
 
 const PUNTAJES = Array.from({ length: PUNTAJE_MAXIMO }, (_, indice) => indice + 1);
 
-/**
- * Elige de 1 a 5 estrellas.
- *
- * Es un grupo de radios nativo, igual que `SelectorPlanOpinion`: cada estrella es
- * un `<label>` con un `<input type="radio">` oculto. Se navega con las flechas y
- * un lector de pantalla lo anuncia como cualquier grupo de opciones. Al pasar el
- * mouse se ilumina hasta la estrella señalada, como vista previa.
- */
 export function SelectorEstrellas({ valor, deshabilitado = false, alCambiar }: SelectorEstrellasProps) {
     const { t } = useTranslation();
     const nombre = useId();

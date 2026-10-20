@@ -2,10 +2,6 @@ using System.Collections.Generic;
 
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// El inventario de licencias de una empresa: el cupo del plan contratado y
-    /// la lista de empleados con su situación.
-    /// </summary>
     public class BEInventarioRespuesta
     {
         #region Propiedades

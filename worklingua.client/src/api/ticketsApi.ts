@@ -10,11 +10,6 @@ function conEstado(ruta: string, estado?: EstadoTicket | ''): string {
     return estado ? `${ruta}?estado=${estado}` : ruta;
 }
 
-/**
- * HelpDesk. Del lado del cliente exige Ticket.Crear (el alcance lo resuelve el
- * backend: los propios, o los de la empresa con Ticket.VerEmpresa). Las rutas de
- * `administracion` exigen Ticket.Atender.
- */
 export const ticketsApi = {
     opciones: () => clienteHttp.get<OpcionesTicketResponse>('/tickets/opciones'),
 

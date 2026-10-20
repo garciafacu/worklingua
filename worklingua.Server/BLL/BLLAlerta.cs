@@ -5,20 +5,6 @@ using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// Alertas preventivas de deserción (CU-001-010).
-    ///
-    /// Una alerta es una regla: título, mensaje y una condición de inactividad
-    /// sobre un grupo de empleados. Al guardarla se emite, y se puede volver a
-    /// emitir cuando el administrador quiera. Desactivarla detiene los envíos
-    /// sin borrar nada (camino alternativo 3).
-    ///
-    /// No hay procesos de fondo en el proyecto: el envío automático que
-    /// describe el caso de uso se implementa como emisión a pedido.
-    ///
-    /// Sin Alerta.VerTodasLasEmpresas se ven y se gestionan únicamente las
-    /// alertas de la empresa del usuario, igual que Departamentos o Licencias.
-    /// </summary>
     public class BLLAlerta
     {
         private const int LongitudMaximaTitulo = 150;
@@ -54,7 +40,6 @@ namespace worklingua.Server.BLL
             return oMPPAle.Listar(oFiltroBE);
         }
 
-        /// <summary>Una alerta de otra empresa se informa como inexistente.</summary>
         public BEAlerta ListarObjeto(BEAlerta Objeto, BESesion oSesionBE)
         {
             BEAlerta oAlertaBE = oMPPAle.ListarObjeto(Objeto);
@@ -74,14 +59,6 @@ namespace worklingua.Server.BLL
             return oAlertaBE;
         }
 
-        /// <summary>
-        /// El escenario principal: valida, verifica que alguien cumpla la
-        /// condición, guarda la regla y emite (pasos 9 a 14).
-        ///
-        /// La verificación va ANTES del alta: si nadie está inactivo no se
-        /// guarda nada, que es lo que espera quien recibe el mensaje del camino
-        /// alternativo 2 y corrige la condición.
-        /// </summary>
         public BEEmisionRespuesta GuardarYEmitir(BEAlerta Objeto, BESesion oSesionBE)
         {
             Validar(Objeto);
@@ -97,11 +74,6 @@ namespace worklingua.Server.BLL
             return Emitir(Objeto.AlertaId, ListaInactivosBE);
         }
 
-        /// <summary>
-        /// Vuelve a emitir una alerta ya configurada. Recalcula quién está
-        /// inactivo hoy: el sentido de reemitir es alcanzar a quienes se
-        /// colgaron desde la última vez.
-        /// </summary>
         public BEEmisionRespuesta Reemitir(BEAlerta Objeto, BESesion oSesionBE)
         {
             BEAlerta oAlertaBE = ListarObjeto(Objeto, oSesionBE);
@@ -119,7 +91,6 @@ namespace worklingua.Server.BLL
             return Emitir(oAlertaBE.AlertaId, ListaInactivosBE);
         }
 
-        /// <summary>Camino alternativo 3: desactivar detiene los envíos.</summary>
         public BEAlerta CambiarEstado(BEAlerta Objeto, BESesion oSesionBE)
         {
             BEAlerta oAlertaBE = ListarObjeto(Objeto, oSesionBE);
@@ -138,10 +109,6 @@ namespace worklingua.Server.BLL
             return ListarObjeto(Objeto, oSesionBE);
         }
 
-        /// <summary>
-        /// Previsualiza a quiénes alcanzaría una condición, sin emitir nada.
-        /// Es lo que deja ver el formulario antes de confirmar.
-        /// </summary>
         public List<BEEmpleadoInactivo> Previsualizar(BEAlerta Objeto, BESesion oSesionBE)
         {
             ValidarCondicion(Objeto);
@@ -172,17 +139,11 @@ namespace worklingua.Server.BLL
             return respuesta;
         }
 
-        /// <summary>
-        /// El rol alcanzado es el mismo que necesita licencia: solo esas
-        /// cuentas pueden entrar a Mis cursos, así que son las únicas a las que
-        /// tiene sentido pedirles que retomen la capacitación.
-        /// </summary>
         private List<BEEmpleadoInactivo> ObtenerInactivos(BEAlerta Objeto)
         {
             return oMPPAle.ListarInactivos(Objeto, Configuracion.LicenciasRolAlcanzado);
         }
 
-        /// <summary>Camino alternativo 2.</summary>
         private void ExigirAlgunInactivo(List<BEEmpleadoInactivo> ListaInactivosBE)
         {
             if (ListaInactivosBE.Count == 0)
@@ -209,11 +170,9 @@ namespace worklingua.Server.BLL
 
             ExigirEmpresaExistente(Objeto.EmpresaId);
 
-            // Null queda como "toda la empresa"; uno de otra empresa da 400.
             Objeto.DepartamentoId = oBLLDep.ResolverParaUsuario(Objeto.DepartamentoId, Objeto.EmpresaId);
         }
 
-        /// <summary>Camino alternativo 1.</summary>
         private void Validar(BEAlerta Objeto)
         {
             Objeto.Titulo = Normalizar(Objeto.Titulo);
@@ -288,10 +247,6 @@ namespace worklingua.Server.BLL
             return respuesta;
         }
 
-        /// <summary>
-        /// Mismo patrón que el resto del Backoffice: sin alcance sobre todas
-        /// las empresas, se ve únicamente la propia.
-        /// </summary>
         private int? EmpresaQueLimita(BESesion oSesionBE)
         {
             if (oBLLSeg.Tiene(oSesionBE.UsuarioId, Permisos.AlertaVerTodasLasEmpresas))

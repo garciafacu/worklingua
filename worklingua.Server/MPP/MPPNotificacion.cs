@@ -54,11 +54,6 @@ namespace worklingua.Server.MPP
             return ServicioLectorFila.ATotalFilas(cantidad);
         }
 
-        /// <summary>
-        /// Marca como leídas las del usuario. Con notificacionId en null las
-        /// marca todas; el filtro por usuario va siempre, así que nadie puede
-        /// marcar una notificación ajena.
-        /// </summary>
         public int MarcarLeidas(int usuarioId, int? notificacionId)
         {
             Hdatos = new Hashtable();

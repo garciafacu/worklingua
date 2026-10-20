@@ -19,7 +19,6 @@ namespace worklingua.Server.BE
         public DateTime? FechaAlta { get; set; }
         public DateTime? UltimoAcceso { get; set; }
         public bool Activo { get; set; }
-        /// <summary>Hasta cuándo está bloqueada por intentos fallidos; null si no lo está.</summary>
         public DateTime? BloqueadoHasta { get; set; }
         #endregion
 

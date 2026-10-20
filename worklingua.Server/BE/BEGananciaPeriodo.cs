@@ -1,10 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Una fila del reporte de ganancias. <see cref="Clave"/> identifica el
-    /// período según la agrupación pedida (2026-09-22, 2026-W39, 2026-09 o 2026)
-    /// y la interfaz la formatea para mostrarla.
-    /// </summary>
     public class BEGananciaPeriodo
     {
         #region Propiedades

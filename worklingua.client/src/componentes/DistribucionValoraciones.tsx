@@ -4,10 +4,8 @@ import { useLocalizacion } from '../contexto/useLocalizacion';
 import { PUNTAJE_MAXIMO, type OpinionResponse } from '../tipos/opiniones';
 
 interface DistribucionValoracionesProps {
-    /** Promedio y cantidad tal como los calcula el backend para el plan. */
     promedio: number;
     cantidad: number;
-    /** Opiniones del plan: solo se usan para dibujar las barras. */
     opiniones: OpinionResponse[];
 }
 
@@ -16,14 +14,6 @@ const PUNTAJES_DESCENDENTES = Array.from(
     (_, indice) => PUNTAJE_MAXIMO - indice,
 );
 
-/**
- * Resumen de la valoración de un plan: el promedio grande y cuántas opiniones
- * hay de cada puntaje.
- *
- * El promedio y el total salen del backend. Las barras solo cuentan las
- * opiniones que ya están en pantalla, para mostrarlas; los comentarios
- * anteriores sin puntaje no suman en ninguna barra.
- */
 export function DistribucionValoraciones({ promedio, cantidad, opiniones }: DistribucionValoracionesProps) {
     const { t } = useTranslation();
     const { formatearNumero } = useLocalizacion();

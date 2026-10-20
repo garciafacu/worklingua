@@ -37,16 +37,6 @@ function formularioInicial() {
 
 type Formulario = ReturnType<typeof formularioInicial>;
 
-/**
- * Reportes de ganancias (Formulario, punto 15.b).
- *
- * La ganancia es el cobrado neto: los pagos con tarjeta aprobados menos las
- * notas de crédito. La tabla muestra además lo facturado, que incluye lo que
- * quedó en cuenta corriente y todavía no entró.
- *
- * El bloque por zona siempre abarca todas las zonas: es el desglose del mismo
- * período, y por eso no toma el filtro de zona del formulario.
- */
 export function AdminReportes() {
     const { t } = useTranslation();
     const { formatearMoneda, formatearNumero } = useLocalizacion();
@@ -95,10 +85,6 @@ export function AdminReportes() {
         setCriterios(inicial);
     }
 
-    /**
-     * Exporta la tabla que se está viendo. Son los mismos datos que ya están en
-     * pantalla, así que se arman acá y no hace falta un endpoint aparte.
-     */
     function exportar(nombre: string, encabezados: string[], filas: (string | number)[][]) {
         descargarCsv(
             `${nombre}-${criterios.desde}-${criterios.hasta}.csv`,

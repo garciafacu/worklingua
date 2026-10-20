@@ -1,9 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// El detalle por empleado. Viajan todos los activos, hayan tocado un curso
-    /// o no: quien no empezó nada es lo más accionable del panel.
-    /// </summary>
     public class BERendimientoEmpleado
     {
         #region Propiedades

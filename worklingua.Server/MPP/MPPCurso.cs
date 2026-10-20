@@ -146,11 +146,6 @@ namespace worklingua.Server.MPP
             return Convert.ToInt32(identidad);
         }
 
-        /// <summary>
-        /// Sector y ventana de despliegue (CU-004-005 y CU-004-006). Los
-        /// parámetros se omiten cuando no hay valor: el SP los tiene con
-        /// default NULL y así "sin programar" no necesita un DBNull explícito.
-        /// </summary>
         private void AgregarClasificacion(BECurso Objeto)
         {
             if (!string.IsNullOrEmpty(Objeto.Sector))

@@ -7,10 +7,6 @@ using worklingua.Server.Services;
 
 namespace worklingua.Server.MPP
 {
-    /// <summary>
-    /// Consultas de los reportes. Son de solo lectura: agregan lo que ya
-    /// grabaron la contratación y la facturación.
-    /// </summary>
     public class MPPReporte
     {
         Acceso oDatos;

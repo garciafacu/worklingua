@@ -5,7 +5,6 @@ import type { NoticiaResponse } from '../tipos/noticias';
 
 const LONGITUD_EXTRACTO = 220;
 
-/** El resumen cargado, o el comienzo del contenido cuando no hay resumen. */
 function extracto(noticia: NoticiaResponse): string {
     if (noticia.resumen) {
         return noticia.resumen;
@@ -18,7 +17,6 @@ function extracto(noticia: NoticiaResponse): string {
         : `${contenido.slice(0, LONGITUD_EXTRACTO).trimEnd()}...`;
 }
 
-/** Una noticia del listado público: fecha, título, extracto y enlace al detalle. */
 export function TarjetaNoticia({ noticia }: { noticia: NoticiaResponse }) {
     const { t } = useTranslation();
     const { formatearFecha } = useLocalizacion();

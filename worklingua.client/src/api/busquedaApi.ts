@@ -33,13 +33,6 @@ function armarConsulta(criterios: CriteriosBusqueda, idioma: string): string {
     return `?${parametros.toString()}`;
 }
 
-/**
- * Buscador global de páginas y secciones.
- *
- * Es público: sin sesión devuelve solo el sitio público. Con sesión,
- * `clienteHttp` manda el token y el backend suma las pantallas privadas a las
- * que la persona tiene permiso. El idioma decide sobre qué textos se busca.
- */
 export const busquedaApi = {
     buscar: (criterios: CriteriosBusqueda, idioma: string) =>
         clienteHttp.get<PaginaBuscableResponse[]>(`/busqueda${armarConsulta(criterios, idioma)}`),

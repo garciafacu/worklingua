@@ -1,9 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Ganancias agrupadas por zona: la provincia de la empresa cliente, o
-    /// "Sin zona" cuando la empresa no la tiene cargada.
-    /// </summary>
     public class BEGananciaZona
     {
         #region Propiedades

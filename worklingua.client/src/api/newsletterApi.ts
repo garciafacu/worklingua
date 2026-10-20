@@ -9,7 +9,6 @@ import type {
 } from '../tipos/newsletter';
 
 export const newsletterApi = {
-    /** Público. Responde lo mismo exista o no el correo, para no revelar quién está suscripto. */
     suscribir: (datos: SuscribirNewsletterRequest) =>
         clienteHttp.post<MensajeResponse>('/newsletter/suscripciones', datos),
 
@@ -19,13 +18,11 @@ export const newsletterApi = {
     darDeBaja: (token: string) =>
         clienteHttp.post<MensajeResponse>('/newsletter/suscripciones/baja', { token }),
 
-    /** Backoffice: requiere Newsletter.Listar. */
     listarSuscriptores: () =>
         clienteHttp.get<SuscriptorNewsletterResponse[]>('/newsletter/suscriptores'),
 
     listarEnvios: () => clienteHttp.get<EnvioNewsletterResponse[]>('/newsletter/envios'),
 
-    /** Backoffice: requiere Newsletter.Enviar. */
     previsualizar: (cuerpo: EnviarNewsletterRequest) =>
         clienteHttp.post<VistaPreviaNewsletterResponse>('/newsletter/envios/previsualizar', cuerpo),
 

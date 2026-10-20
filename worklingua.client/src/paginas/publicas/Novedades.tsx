@@ -11,20 +11,11 @@ import type { NoticiaResponse } from '../../tipos/noticias';
 const TAMANIOS_PAGINA = [6, 12, 24] as const;
 
 interface Resultado {
-    /** Idioma con el que se pidió: si no es el actual, la carga está en curso. */
     idioma: string;
     noticias: NoticiaResponse[];
     error: string | null;
 }
 
-/**
- * Página pública de Novedades.
- *
- * Muestra las noticias escritas en el idioma de la interfaz y se vuelve a pedir
- * al cambiarlo. Si ese idioma no tiene ninguna, la API devuelve las del español
- * y la pantalla lo avisa. La paginación es local: el volumen de noticias no
- * justifica paginar en el servidor.
- */
 export function Novedades() {
     const { t } = useTranslation();
     const { idiomaActual, idiomas } = useLocalizacion();

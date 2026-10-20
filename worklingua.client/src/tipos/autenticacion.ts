@@ -1,12 +1,3 @@
-// Tipos de los contratos que expone la API de WorkLingua.
-// Se mantienen alineados con worklingua.Server/Contratos.
-
-/**
- * Auto-registro: da de alta la empresa y su primer usuario.
- *
- * No lleva empresaId (antes se elegia una existente) ni rolId: el rol lo decide
- * el servidor.
- */
 export interface RegistroUsuarioRequest {
     razonSocial: string;
     cuit: string;
@@ -60,7 +51,6 @@ export interface EmpresaResponse {
     razonSocial: string;
 }
 
-/** Usuario autenticado tal como lo guarda el contexto de sesión. */
 export interface UsuarioSesion {
     usuarioId: number;
     nombre: string;

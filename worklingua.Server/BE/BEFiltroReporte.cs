@@ -7,10 +7,8 @@ namespace worklingua.Server.BE
 
         public DateOnly? Hasta { get; set; }
 
-        /// <summary>DIA, SEMANA, MES o ANIO. Vacío se toma como MES.</summary>
         public string Agrupacion { get; set; }
 
-        /// <summary>Provincia de la empresa cliente. Vacío son todas las zonas.</summary>
         public string Provincia { get; set; }
         #endregion
 

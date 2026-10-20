@@ -38,7 +38,6 @@ if (!fs.existsSync(certFilePath) || !fs.existsSync(keyFilePath)) {
 const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}` :
     env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0] : 'https://localhost:7127';
 
-// https://vitejs.dev/config/
 export default defineConfig({
     plugins: [plugin(), tailwindcss()],
     resolve: {
@@ -52,8 +51,6 @@ export default defineConfig({
                 target,
                 secure: false
             },
-            // Los activos pedagogicos los sirve el backend desde su propia
-            // carpeta, fuera de wwwroot: sin esto no se abren en desarrollo.
             '^/activos': {
                 target,
                 secure: false

@@ -5,23 +5,8 @@ using worklingua.Server.BE;
 
 namespace worklingua.Server.Services
 {
-    /// <summary>
-    /// Convierte el estado de un curso en un documento XML y vuelve a leerlo
-    /// (CU-004-004 y punto 23 del Formulario de Avances).
-    ///
-    /// Es el único uso de XML del proyecto. Se eligió `XDocument` y no
-    /// `XmlSerializer` porque el documento es un contrato que se guarda en la
-    /// base y se lee años después: acá se ve exactamente qué se escribe y qué
-    /// se espera, sin depender de cómo estén formadas las BE hoy.
-    ///
-    /// El documento guarda **nombres, no ids**: los ids de etiquetas, módulos y
-    /// activos no significan nada al restaurar, porque esas filas pueden haber
-    /// cambiado. El archivo de un activo sí viaja por su ruta, que es lo único
-    /// que lo identifica en disco.
-    /// </summary>
     public static class ServicioXml
     {
-        /// <summary>Versión del formato, por si el documento cambia de forma.</summary>
         public const string FormatoActual = "1";
 
         public static string Armar(BESnapshotCurso Objeto)
@@ -72,8 +57,6 @@ namespace worklingua.Server.Services
                     new XAttribute("estado", Texto(oActivoBE.Estado)),
                     new XElement("descripcion", Texto(oActivoBE.Descripcion)));
 
-                // El módulo viaja por nombre, como todo lo demás: al restaurar,
-                // el módulo del snapshot puede ser una fila distinta.
                 Agregar(activo, "modulo", oActivoBE.Modulo);
 
                 activos.Add(activo);
@@ -84,10 +67,6 @@ namespace worklingua.Server.Services
             return new XDocument(new XDeclaration("1.0", "utf-8", null), raiz).ToString();
         }
 
-        /// <summary>
-        /// Lee el documento. Un XML que no se puede parsear es un error de
-        /// negocio, no una excepción cruda: la versión está corrupta.
-        /// </summary>
         public static BESnapshotCurso Leer(string xml)
         {
             XDocument documento;

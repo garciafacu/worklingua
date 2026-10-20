@@ -21,10 +21,6 @@ namespace worklingua.Server.BLL
             oBLLSeg = new BLLSeguridad();
         }
 
-        /// <summary>
-        /// El ABM de Empresas. Sin Empresa.VerTodasLasEmpresas es "Mi empresa":
-        /// solo la empresa del usuario de la sesión.
-        /// </summary>
         public List<BEEmpresa> ListarAdministracion(BESesion oSesionBE)
         {
             int? empresaQueLimita = EmpresaQueLimita(oSesionBE);
@@ -40,7 +36,6 @@ namespace worklingua.Server.BLL
             return new List<BEEmpresa> { ListarObjeto(oFiltroBE) };
         }
 
-        /// <summary>Una empresa ajena se informa como inexistente.</summary>
         public BEEmpresa ListarObjeto(BEEmpresa Objeto, BESesion oSesionBE)
         {
             int? empresaQueLimita = EmpresaQueLimita(oSesionBE);

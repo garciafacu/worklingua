@@ -3,15 +3,9 @@ import type { MensajeResponse } from '../tipos/autenticacion';
 import type { GuardarOperadorRequest } from '../tipos/operadores';
 import type { RolResponse, UsuarioAdminResponse } from '../tipos/usuarios';
 
-/**
- * Backoffice. Operadores de la plataforma: cuentas de la empresa interna.
- * Cada operación exige su permiso `Operador.*`, exclusivo del rol de plataforma.
- */
 export const operadoresApi = {
-    /** Incluye las invitaciones pendientes (`activo: false`). */
     listar: () => clienteHttp.get<UsuarioAdminResponse[]>('/operadores'),
 
-    /** Crea la cuenta inactiva, sin roles, y manda el correo de invitación. */
     crear: (cuerpo: GuardarOperadorRequest) =>
         clienteHttp.post<UsuarioAdminResponse>('/operadores', cuerpo),
 
@@ -23,7 +17,6 @@ export const operadoresApi = {
     reinvitar: (usuarioId: number) =>
         clienteHttp.post<MensajeResponse>(`/operadores/${usuarioId}/reinvitar`),
 
-    /** Desbloquea una cuenta trabada por intentos fallidos. Requiere Operador.Modificar. */
     desbloquear: (usuarioId: number) =>
         clienteHttp.post<MensajeResponse>(`/operadores/${usuarioId}/desbloquear`),
 

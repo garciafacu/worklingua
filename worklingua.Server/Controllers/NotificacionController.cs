@@ -4,13 +4,6 @@ using worklingua.Server.BLL;
 
 namespace worklingua.Server.Controllers
 {
-    /// <summary>
-    /// La bandeja de la campana. No pide permiso: alcanza con tener sesión,
-    /// porque recibir notificaciones no es una función de administración.
-    ///
-    /// Todo se resuelve con el UsuarioId de la sesión; el cliente nunca manda
-    /// a qué usuario pertenece la bandeja.
-    /// </summary>
     [Route("api/notificaciones")]
     public class NotificacionController : ControladorBase
     {
@@ -33,7 +26,6 @@ namespace worklingua.Server.Controllers
             return Ok(oBLLNot.ObtenerBandeja(oSesionBE));
         }
 
-        /// <summary>Marca todas las no leídas del usuario.</summary>
         [HttpPost("leidas")]
         [ProducesResponseType(typeof(BEBandejaNotificaciones), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

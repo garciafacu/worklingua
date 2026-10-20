@@ -44,7 +44,6 @@ namespace worklingua.Server.MPP
         {
             List<BERendimientoDepartamento> ListaBE = new List<BERendimientoDepartamento>();
 
-            // Este SP no filtra por departamento: justamente compara entre todos.
             DataTable Dt = oDatos.Leer("sp_Progreso_RendimientoPorDepartamento", ArmarFiltro(Objeto, false));
 
             foreach (DataRow Item in Dt.Rows)
@@ -89,10 +88,6 @@ namespace worklingua.Server.MPP
             return ListaBE;
         }
 
-        /// <summary>
-        /// Los tres SP comparten empresa y fechas; solo dos aceptan departamento.
-        /// Las fechas viajan como DateOnly y el SP las recibe como DATE.
-        /// </summary>
         private Hashtable ArmarFiltro(BEFiltroRendimiento Objeto, bool conDepartamento)
         {
             Hdatos = new Hashtable();

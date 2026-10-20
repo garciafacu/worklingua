@@ -10,7 +10,6 @@ namespace worklingua.Server.BE
         public string Descripcion { get; set; }
         public DateTime? FechaAlta { get; set; }
         public bool? Activo { get; set; }
-        /// <summary>Usuarios activos asignados. Lo calcula el SP.</summary>
         public int Empleados { get; set; }
         #endregion
 

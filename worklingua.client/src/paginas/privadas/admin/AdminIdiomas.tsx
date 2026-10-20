@@ -17,22 +17,6 @@ const FORMULARIO_VACIO = {
 
 type Formulario = typeof FORMULARIO_VACIO;
 
-/**
- * ABM de los idiomas de la PLATAFORMA: aquellos en los que se puede mostrar la
- * interfaz de WorkLingua.
- *
- * Este catálogo no tiene nada que ver con lo que enseña un curso, que es texto
- * libre en el propio curso. Ver `docs/modelo-datos.md` (Idioma).
- *
- * A diferencia del resto del Backoffice, acá **sí se muestran los inactivos**:
- * desactivar un idioma lo saca del selector del sitio pero conserva todas sus
- * traducciones, y tiene que poder reactivarse. Es la excepción documentada a la
- * regla de la Etapa 6.
- *
- * Al crear un idioma nuevo, el backend le genera automáticamente todas las
- * claves de traducción existentes, en blanco. Hasta que alguien las complete
- * desde el ABM de Traducciones, el sitio las muestra en español por fallback.
- */
 export function AdminIdiomas() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -45,7 +29,6 @@ export function AdminIdiomas() {
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
-    /** Fuerza releer el listado despues de guardar, activar o dar de baja. */
     const [recarga, setRecarga] = useState(0);
     const [guardando, setGuardando] = useState(false);
 
@@ -53,9 +36,6 @@ export function AdminIdiomas() {
     const puedeModificar = tienePermiso('Idioma.Modificar');
     const puedeDarDeBaja = tienePermiso('Idioma.Baja');
 
-    // En useCallback para poder ir en las dependencias de los efectos que lo
-    // usan: sin eso el linter avisa, y el mensaje de error quedaría en el idioma
-    // anterior después de cambiar de idioma.
     const mensajeDeError = useCallback(
         (excepcion: unknown, clave: string) =>
             excepcion instanceof ErrorApi ? excepcion.message : t(clave),
@@ -72,8 +52,6 @@ export function AdminIdiomas() {
             .finally(() => setCargando(false));
     }, [recarga, mensajeDeError]);
 
-    // El filtro es en cliente a propósito: el catálogo son decenas de filas y ya
-    // están todas en memoria. Un endpoint de búsqueda sería un viaje de más.
     const visibles = useMemo(() => {
         const termino = busqueda.trim().toLowerCase();
 
@@ -172,7 +150,6 @@ export function AdminIdiomas() {
         }
     }
 
-    /** El idioma base no se puede desactivar ni dar de baja: es el del fallback. */
     function esIdiomaBase(idioma: IdiomaAdminResponse): boolean {
         return idioma.codigoISO.toLowerCase() === IDIOMA_BASE;
     }

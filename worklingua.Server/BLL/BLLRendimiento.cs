@@ -4,21 +4,8 @@ using worklingua.Server.MPP;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// El panel de rendimiento formativo (CU-001-004).
-    ///
-    /// Es solo consulta: compone en una respuesta las cifras de cabecera, la
-    /// comparación entre departamentos y el detalle por empleado, que vienen de
-    /// tres Stored Procedures distintos porque la DAL devuelve un DataTable por
-    /// llamada.
-    ///
-    /// No exige licencia: quien supervisa el avance de su equipo no está
-    /// consumiendo la capacitación, y el Administrador Empresa no tiene licencia
-    /// propia (CU-001-005).
-    /// </summary>
     public class BLLRendimiento
     {
-        /// <summary>El mismo tope que los reportes de ganancias.</summary>
         private const int AniosMaximos = 5;
 
         MPPRendimiento oMPPRen;
@@ -42,8 +29,6 @@ namespace worklingua.Server.BLL
 
             BEEmpresa oEmpresaBE = ObtenerEmpresaObligatoria(Objeto.EmpresaId);
 
-            // Mismo criterio que el ABM de Usuarios: un departamento de otra
-            // empresa no devuelve un panel vacío, avisa que no existe ahí.
             Objeto.DepartamentoId = oBLLDep.ResolverParaUsuario(
                 Objeto.DepartamentoId, Objeto.EmpresaId);
 
@@ -60,15 +45,6 @@ namespace worklingua.Server.BLL
             return respuesta;
         }
 
-        /// <summary>
-        /// El costo es lo único que el caso de uso llama "retorno de inversión".
-        /// Se divide lo facturado por lo que efectivamente se capacitó; con cero
-        /// módulos o cero empleados queda en cero en vez de dividir por cero.
-        ///
-        /// Con un departamento elegido no se calcula nada: la factura es de la
-        /// empresa entera y dividirla por el avance de un solo sector daría un
-        /// costo inventado.
-        /// </summary>
         private void CalcularCostos(BERendimientoResumen oResumenBE, bool porDepartamento)
         {
             if (porDepartamento)
@@ -91,10 +67,6 @@ namespace worklingua.Server.BLL
                 : decimal.Round(facturado / oResumenBE.EmpleadosConActividad, 2);
         }
 
-        /// <summary>
-        /// Impone la empresa a quien no tiene alcance total, pone las fechas por
-        /// defecto y valida el rango (camino alternativo 1).
-        /// </summary>
         private void Normalizar(BEFiltroRendimiento Objeto, BESesion oSesionBE)
         {
             int? empresaQueLimita = EmpresaQueLimita(oSesionBE);
@@ -149,10 +121,6 @@ namespace worklingua.Server.BLL
             return oEmpresaBE;
         }
 
-        /// <summary>
-        /// Mismo patrón que el resto del Backoffice: sin alcance sobre todas las
-        /// empresas, se ve únicamente la propia.
-        /// </summary>
         private int? EmpresaQueLimita(BESesion oSesionBE)
         {
             if (oBLLSeg.Tiene(oSesionBE.UsuarioId, Permisos.CursoVerTodasLasEmpresas))

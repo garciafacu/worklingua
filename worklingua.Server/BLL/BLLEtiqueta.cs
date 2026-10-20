@@ -7,22 +7,10 @@ using worklingua.Server.MPP;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// El diccionario de etiquetas con el que se clasifican los cursos
-    /// (CU-004-005).
-    ///
-    /// El diccionario es global: la misma etiqueta sirve para cursos de
-    /// cualquier empresa, que es lo que la vuelve útil para buscar. Por eso no
-    /// tiene alcance propio; quién puede clasificar lo decide el curso.
-    /// </summary>
     public class BLLEtiqueta
     {
         private const int LongitudMaximaNombre = 50;
 
-        /// <summary>
-        /// Paso 10: la etiqueta no admite caracteres especiales. Letras (con
-        /// acentos y ñ), números, espacios y guiones.
-        /// </summary>
         private static readonly Regex Permitidos =
             new Regex(@"^[\p{L}\p{Nd} \-]+$", RegexOptions.Compiled);
 
@@ -43,13 +31,6 @@ namespace worklingua.Server.BLL
             return oMPPEti.ListarAsignadas(cursoId);
         }
 
-        /// <summary>
-        /// Completa las etiquetas de una lista de cursos con una sola consulta,
-        /// en vez de una por fila.
-        ///
-        /// Lo usan el ABM de Cursos y Mis cursos: las dos pantallas muestran la
-        /// clasificación, y así el armado vive en un solo lugar.
-        /// </summary>
         public void AgregarACursos(List<BECurso> ListaCursoBE)
         {
             if (ListaCursoBE == null || ListaCursoBE.Count == 0)
@@ -74,11 +55,6 @@ namespace worklingua.Server.BLL
             }
         }
 
-        /// <summary>
-        /// Da de alta una etiqueta en el diccionario (camino alternativo 1).
-        /// Si ya existe devuelve la que había: el diccionario no admite
-        /// duplicados y pedirla dos veces no es un error.
-        /// </summary>
         public BEEtiqueta Crear(BEEtiqueta Objeto)
         {
             string nombre = Normalizar(Objeto.Nombre);
@@ -100,11 +76,6 @@ namespace worklingua.Server.BLL
             return oNuevaBE;
         }
 
-        /// <summary>
-        /// Deja el curso con exactamente estas etiquetas. Acepta las que ya
-        /// están en el diccionario: una que no existe es un error, porque
-        /// crearla es una decisión que el usuario confirma aparte.
-        /// </summary>
         public void AsignarACurso(int cursoId, List<BEEtiqueta> ListaBE)
         {
             List<int> etiquetaIds = new List<int>();
@@ -122,11 +93,6 @@ namespace worklingua.Server.BLL
             oMPPEti.Reemplazar(cursoId, etiquetaIds);
         }
 
-        /// <summary>
-        /// Resuelve una etiqueta pedida contra el diccionario, por id o por
-        /// nombre. El nombre se compara sin acentos ni mayúsculas, igual que
-        /// lo hace el índice único.
-        /// </summary>
         private int ExigirDelDiccionario(BEEtiqueta Objeto, List<BEEtiqueta> ListaDiccionarioBE)
         {
             foreach (BEEtiqueta oEtiquetaBE in ListaDiccionarioBE)
@@ -185,7 +151,6 @@ namespace worklingua.Server.BLL
             }
         }
 
-        /// <summary>Espacios de más colapsados y recortada.</summary>
         private string Normalizar(string nombre)
         {
             if (nombre == null)
@@ -196,10 +161,6 @@ namespace worklingua.Server.BLL
             return Regex.Replace(nombre.Trim(), @"\s+", " ");
         }
 
-        /// <summary>
-        /// Clave de comparación: sin mayúsculas ni acentos, para que
-        /// "Recepción" y "recepcion" sean la misma etiqueta.
-        /// </summary>
         private string Clave(string nombre)
         {
             if (nombre == null)

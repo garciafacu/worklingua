@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useSesion } from '../../contexto/useSesion';
 
-/** Pantalla posterior al login. Confirma que la sesión y los roles llegaron bien. */
 export function Panel() {
     const { t } = useTranslation();
     const { usuario } = useSesion();

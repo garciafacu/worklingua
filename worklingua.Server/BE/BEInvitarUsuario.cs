@@ -21,7 +21,6 @@ namespace worklingua.Server.BE
         [StringLength(20, ErrorMessage = "El documento no puede superar los 20 caracteres.")]
         public string Documento { get; set; }
 
-        /// <summary>Opcional: cero o null dejan al empleado sin departamento.</summary>
         public int? DepartamentoId { get; set; }
 
         [Required(ErrorMessage = "El correo es obligatorio.")]

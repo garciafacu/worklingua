@@ -17,10 +17,6 @@ namespace worklingua.Server.MPP
             oDatos = new Acceso();
         }
 
-        /// <summary>
-        /// Todas las alertas, incluidas las desactivadas. Con EmpresaId en cero
-        /// trae las de todas las empresas: el alcance lo decide la BLL.
-        /// </summary>
         public List<BEAlerta> Listar(BEAlerta Objeto)
         {
             List<BEAlerta> ListaAlertaBE = new List<BEAlerta>();
@@ -85,10 +81,6 @@ namespace worklingua.Server.MPP
             return ServicioLectorFila.ATotalFilas(filas) > 0;
         }
 
-        /// <summary>
-        /// Los empleados que cumplen la condición de inactividad. Es la única
-        /// consulta que define qué significa estar inactivo.
-        /// </summary>
         public List<BEEmpleadoInactivo> ListarInactivos(BEAlerta Objeto, string rol)
         {
             List<BEEmpleadoInactivo> ListaBE = new List<BEEmpleadoInactivo>();
@@ -121,11 +113,6 @@ namespace worklingua.Server.MPP
             return ListaBE;
         }
 
-        /// <summary>
-        /// Emite la alerta a los usuarios indicados y devuelve cuántas
-        /// notificaciones se crearon. Los ids son los que devolvió
-        /// <see cref="ListarInactivos" />: el SP no recalcula la condición.
-        /// </summary>
         public int Emitir(int alertaId, List<int> usuarioIds)
         {
             Hdatos = new Hashtable();

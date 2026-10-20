@@ -8,10 +8,6 @@ import { TarjetaAuth } from '../componentes/TarjetaAuth';
 
 type EstadoConfirmacion = 'procesando' | 'confirmada' | 'fallida';
 
-/**
- * Destino del enlace del correo de confirmación del newsletter. Confirma apenas
- * se abre, igual que `ConfirmarCuenta`.
- */
 export function ConfirmarNewsletter() {
     const { t } = useTranslation();
     const [parametros] = useSearchParams();
@@ -20,7 +16,6 @@ export function ConfirmarNewsletter() {
     const [estado, setEstado] = useState<EstadoConfirmacion>(token ? 'procesando' : 'fallida');
     const [error, setError] = useState<string | null>(null);
 
-    // StrictMode ejecuta los efectos dos veces en desarrollo: se confirma una sola vez.
     const yaEnviado = useRef(false);
 
     useEffect(() => {

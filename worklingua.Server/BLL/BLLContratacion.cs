@@ -254,9 +254,6 @@ namespace worklingua.Server.BLL
                 estado == BLLSuscripcion.EstadoActiva ? Hoy() : (DateOnly?)null,
                 "Cancelada por el cliente.");
 
-            // La contratación deja de existir, así que sus licencias dejan de
-            // habilitar: se revocan todas y el plan gratuito que entra en su
-            // lugar arranca con el cupo libre (CU-001-005).
             int revocadas = oBLLLic.RevocarPorSuscripcion(oResultadoBE.Suscripcion.SuscripcionId);
 
             if (revocadas > 0)
@@ -406,14 +403,6 @@ namespace worklingua.Server.BLL
                 "Pago aprobado.");
         }
 
-        /// <summary>
-        /// Al cambiar de plan las licencias vigentes se mudan a la contratación
-        /// nueva. Si el plan destino tiene menos cupo, el excedente queda
-        /// revocado: se conserva a quien la tiene hace más tiempo (CU-001-005).
-        ///
-        /// Va después de Aprobar y no adentro porque necesita las dos
-        /// suscripciones ya con su estado definitivo.
-        /// </summary>
         private void MigrarLicencias(
             BESuscripcion oVigenteBE, BEResultadoContratacion oResultadoBE, int usuarioId)
         {

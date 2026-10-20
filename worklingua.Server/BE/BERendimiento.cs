@@ -2,7 +2,6 @@ using System.Collections.Generic;
 
 namespace worklingua.Server.BE
 {
-    /// <summary>El panel completo: cifras, comparación y detalle.</summary>
     public class BERendimiento
     {
         #region Propiedades

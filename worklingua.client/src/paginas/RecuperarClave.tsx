@@ -23,8 +23,6 @@ export function RecuperarClave() {
         setCargando(true);
 
         try {
-            // El backend responde lo mismo exista o no la cuenta, asi que la
-            // pantalla tampoco distingue los dos casos.
             const respuesta = await autenticacionApi.recuperarClave(email.trim());
             setMensaje(respuesta.mensaje);
             setEmail('');

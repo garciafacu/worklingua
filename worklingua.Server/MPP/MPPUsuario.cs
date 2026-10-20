@@ -58,15 +58,6 @@ namespace worklingua.Server.MPP
             return Convert.ToInt32(identidad);
         }
 
-        /// <summary>
-        /// El documento cifrado y su huella, que van siempre juntos.
-        ///
-        /// Cuando no hay documento el parámetro de la huella no se manda: la DAL
-        /// arma los parámetros con AddWithValue y un DBNull suelto se infiere
-        /// como nvarchar, que SQL Server no convierte a varbinary. Los dos SP
-        /// declaran @DocumentoHash con default NULL, así que omitirlo graba NULL,
-        /// que es justo lo que corresponde.
-        /// </summary>
         private void AgregarDocumento(Hashtable Hdatos, string documento)
         {
             Hdatos.Add("@Documento", oServicioCifrado.Cifrar(documento));
@@ -79,10 +70,6 @@ namespace worklingua.Server.MPP
             }
         }
 
-        /// <summary>
-        /// Busca por la huella determinística del documento: el valor cifrado no
-        /// se puede comparar en SQL. Ver <see cref="ServicioCifrado.HashDeterministico"/>.
-        /// </summary>
         public BEUsuario ObtenerPorDocumento(BEUsuario Objeto)
         {
             byte[] huella = oServicioCifrado.HashDeterministico(Objeto.Documento);
@@ -316,14 +303,6 @@ namespace worklingua.Server.MPP
             return oDatos.Escribir("sp_Usuario_ActualizarUltimoAcceso", Hdatos);
         }
 
-        /// <summary>
-        /// Suma un intento fallido y bloquea la cuenta si llega al tope. El SP
-        /// hace las dos cosas en un solo UPDATE para que dos intentos
-        /// simultáneos no se pisen el contador.
-        ///
-        /// Devuelve el estado resultante, que es lo que la BLL necesita para
-        /// saber si tiene que informar credenciales inválidas o bloqueo.
-        /// </summary>
         public BEUsuario RegistrarIntentoFallido(BEUsuario Objeto, int intentosMaximos, int minutosBloqueo)
         {
             Hdatos = new Hashtable();
@@ -362,8 +341,6 @@ namespace worklingua.Server.MPP
 
             oUsuarioBE.UsuarioId = ServicioLectorFila.LeerEntero(Item, "UsuarioId");
             oUsuarioBE.EmpresaId = ServicioLectorFila.LeerEntero(Item, "EmpresaId");
-            // Los operadores comparten este mapeo y su SP no trae departamento:
-            // el lector devuelve null cuando la columna no viene.
             oUsuarioBE.DepartamentoId = ServicioLectorFila.LeerEnteroNulo(Item, "DepartamentoId");
             oUsuarioBE.Nombre = ServicioLectorFila.LeerTexto(Item, "Nombre");
             oUsuarioBE.Apellido = ServicioLectorFila.LeerTexto(Item, "Apellido");

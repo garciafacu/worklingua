@@ -3,16 +3,10 @@ import { useTranslation } from 'react-i18next';
 
 interface PaginaEstaticaProps {
     titulo: string;
-    /** Fecha de última actualización, para los textos legales. */
     actualizado?: string;
     children: ReactNode;
 }
 
-/**
- * Maqueta de las páginas de texto largo (institucional, términos, privacidad).
- * Fija el ancho de lectura y el ritmo de los títulos y párrafos en un solo lugar,
- * para que las cuatro páginas se vean iguales sin repetir clases.
- */
 export function PaginaEstatica({ titulo, actualizado, children }: PaginaEstaticaProps) {
     const { t } = useTranslation();
 

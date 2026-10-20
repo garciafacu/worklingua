@@ -13,20 +13,6 @@ import { IDIOMA_BASE } from '../../../i18n/configuracion';
 import type { IdiomaAdminResponse } from '../../../tipos/idiomas';
 import type { TraduccionAdminResponse } from '../../../tipos/traducciones';
 
-/**
- * ABM de las traducciones de la interfaz.
- *
- * Al elegir un idioma se listan **todas** las claves del catálogo, no solo las
- * que ese idioma ya tiene: el Stored Procedure recorre las del español con un
- * LEFT JOIN, así que una clave sin traducir aparece igual, marcada como
- * pendiente.
- *
- * La columna en español está siempre a la vista y es de solo lectura: es el
- * original contra el que se traduce.
- *
- * Un texto vacío es un valor válido y significa "vuelve a estar pendiente": el
- * sitio la muestra otra vez en español por fallback.
- */
 export function AdminTraducciones() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -35,7 +21,6 @@ export function AdminTraducciones() {
     const [idiomas, setIdiomas] = useState<IdiomaAdminResponse[]>([]);
     const [idiomaId, setIdiomaId] = useState<number | null>(null);
     const [filas, setFilas] = useState<TraduccionAdminResponse[]>([]);
-    /** Textos editados que todavía no se guardaron, indexados por clave. */
     const [editadas, setEditadas] = useState<Record<string, string>>({});
     const [busqueda, setBusqueda] = useState('');
     const [soloPendientes, setSoloPendientes] = useState(false);
@@ -53,10 +38,6 @@ export function AdminTraducciones() {
         [t],
     );
 
-    // El catálogo de idiomas se pide una sola vez. Arranca elegido el idioma que
-    // la persona está usando, salvo que sea el español: traducir el español al
-    // español no tiene sentido, así que en ese caso se ofrece el primer idioma
-    // que no sea el base.
     useEffect(() => {
         idiomasApi
             .listarAdministracion()
@@ -75,18 +56,8 @@ export function AdminTraducciones() {
             .catch((excepcion) =>
                 setError(mensajeDeError(excepcion, 'admin.traducciones.errorIdiomas')),
             );
-        // Solo al montar: cambiar de idioma la interfaz no debe reordenar la
-        // pantalla que se está usando para traducir.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // La grilla se pide al servidor con los filtros aplicados, no se filtra en
-    // memoria: son cientos de claves y el SP ya sabe resolver "solo pendientes".
-    //
-    // Sin idioma elegido no se llama a la API y la grilla queda vacía. Eso se
-    // resuelve al renderizar, con `filasVisibles`, y no con un setState en el
-    // cuerpo del efecto: escribir estado ahí dispara un render en cascada
-    // (react-hooks/set-state-in-effect).
     useEffect(() => {
         if (idiomaId === null) {
             return;
@@ -109,16 +80,11 @@ export function AdminTraducciones() {
             .finally(() => setCargando(false));
     }, [idiomaId, busqueda, soloPendientes, recarga, mensajeDeError]);
 
-    // `cargando` lo encienden los manejadores, no el efecto: escribir estado en
-    // el cuerpo de un efecto dispara un render en cascada. Es el mismo criterio
-    // que ya usa AdminBitacora con su bandera `buscando`.
     function filtrar(aplicar: () => void) {
         setCargando(true);
         aplicar();
     }
 
-    // Cambiar de idioma descarta lo editado: guardarlo contra otro idioma sería
-    // escribir en el lugar equivocado.
     function elegirIdioma(nuevo: number) {
         filtrar(() => {
             setIdiomaId(nuevo);
@@ -131,7 +97,6 @@ export function AdminTraducciones() {
         setEditadas((actuales) => ({ ...actuales, [clave]: valor }));
     }
 
-    /** El texto que se muestra en el campo: lo editado si lo hay, si no lo guardado. */
     function textoDe(fila: TraduccionAdminResponse): string {
         return editadas[fila.clave] ?? fila.texto;
     }
@@ -142,8 +107,6 @@ export function AdminTraducciones() {
         return editado !== undefined && editado !== fila.texto;
     }
 
-    // Sin idioma elegido no hay nada que mostrar, aunque `filas` conserve lo del
-    // idioma anterior.
     const filasVisibles = idiomaId === null ? [] : filas;
 
     const sucias = filasVisibles.filter(estaSucia);
@@ -202,7 +165,6 @@ export function AdminTraducciones() {
                     >
                         <option value="">{t('admin.traducciones.filtro.elegirIdioma')}</option>
                         {idiomas
-                            // El español es el original: no se traduce a sí mismo.
                             .filter((idioma) => idioma.codigoISO !== IDIOMA_BASE)
                             .map((idioma) => (
                                 <option key={idioma.idiomaId} value={idioma.idiomaId}>

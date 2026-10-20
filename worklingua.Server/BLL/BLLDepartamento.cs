@@ -4,11 +4,6 @@ using worklingua.Server.MPP;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// El organigrama departamental (CU-001-009). Sin
-    /// Departamento.VerTodasLasEmpresas se ve y se gestiona únicamente el
-    /// organigrama de la empresa del usuario, igual que "Mi empresa".
-    /// </summary>
     public class BLLDepartamento
     {
         private const int LongitudMaximaNombre = 100;
@@ -42,15 +37,6 @@ namespace worklingua.Server.BLL
             return ListaDepartamentoBE == null ? new List<BEDepartamento>() : ListaDepartamentoBE;
         }
 
-        /// <summary>
-        /// Los departamentos que se le pueden asignar a un usuario de una
-        /// empresa: solo los activos, porque uno dado de baja ya no es parte del
-        /// organigrama.
-        ///
-        /// Quien no tiene alcance sobre todas las empresas recibe siempre los de
-        /// la suya, sin importar qué empresa haya pedido: es el mismo criterio
-        /// con el que el backend le fuerza la empresa al guardar el usuario.
-        /// </summary>
         public List<BEDepartamento> ListarAsignables(BEDepartamento Objeto, BESesion oSesionBE)
         {
             int? empresaQueLimita = EmpresaQueLimita(oSesionBE);
@@ -75,7 +61,6 @@ namespace worklingua.Server.BLL
             return ListaDepartamentoBE == null ? new List<BEDepartamento>() : ListaDepartamentoBE;
         }
 
-        /// <summary>Un departamento de otra empresa se informa como inexistente.</summary>
         public BEDepartamento ListarObjeto(BEDepartamento Objeto, BESesion oSesionBE)
         {
             BEDepartamento oDepartamentoBE = ListarObjeto(Objeto);
@@ -113,8 +98,6 @@ namespace worklingua.Server.BLL
             }
             else
             {
-                // La empresa de un departamento no se cambia: mover el sector de
-                // empresa dejaría a sus empleados en un organigrama ajeno.
                 Objeto.EmpresaId = ListarObjeto(Objeto, oSesionBE).EmpresaId;
             }
 
@@ -172,10 +155,6 @@ namespace worklingua.Server.BLL
             return oMPPDep.CambiarEstado(Objeto);
         }
 
-        /// <summary>
-        /// Valida que un departamento se pueda asignar a un usuario de esa
-        /// empresa. Devuelve null cuando el usuario queda sin departamento.
-        /// </summary>
         public int? ResolverParaUsuario(int? departamentoId, int empresaId)
         {
             if (!departamentoId.HasValue || departamentoId.Value == 0)
@@ -211,10 +190,6 @@ namespace worklingua.Server.BLL
             return oDepartamentoBE;
         }
 
-        /// <summary>
-        /// Sin esto una empresa inexistente llega al INSERT y la FK revienta como
-        /// error 500 en vez de un 400 con un mensaje entendible.
-        /// </summary>
         private void ExigirEmpresaExistente(int empresaId)
         {
             foreach (BEEmpresa oEmpresaBE in oBLLEmp.ListarTodo())
@@ -260,10 +235,6 @@ namespace worklingua.Server.BLL
             return oUsuarioBE.EmpresaId;
         }
 
-        /// <summary>
-        /// El nombre es único dentro de la empresa y solo entre los activos: un
-        /// sector dado de baja no tiene por qué bloquear el nombre.
-        /// </summary>
         private bool ExisteOtroConNombre(BEDepartamento Objeto)
         {
             BEDepartamento oFiltroBE = new BEDepartamento();

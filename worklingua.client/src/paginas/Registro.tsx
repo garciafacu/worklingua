@@ -38,22 +38,6 @@ const FORMULARIO_VACIO: FormularioRegistro = {
 
 const LARGO_CUIT = 11;
 
-/**
- * Registro público: da de alta la EMPRESA y su primer usuario.
- *
- * Ya no hay selector de empresa —antes se elegía una existente— porque quien
- * completa este formulario es una empresa que llega desde el sitio, no un
- * empleado de una empresa ya cargada. Los empleados entran por invitación desde
- * el Backoffice.
- *
- * Tampoco hay selector de rol: el rol lo asigna el servidor (Administrador
- * Empresa) y ni siquiera existe como campo del contrato, así que no puede pedirse
- * otro.
- *
- * Con `?contratar=<planId>` (plan elegido en el Catálogo) el plan se recuerda al
- * registrarse: la cuenta se confirma desde el correo y el login retoma la
- * contratación.
- */
 export function Registro() {
     const { t } = useTranslation();
     const [parametros] = useSearchParams();
@@ -78,11 +62,6 @@ export function Registro() {
         setErrorCaptcha(undefined);
     }
 
-    /**
-     * Validaciones de UX, no de negocio: acá solo se evita un viaje al servidor
-     * por errores evidentes. Las reglas reales (fortaleza de clave, correo o CUIT
-     * ya registrados) las aplica la BLL y no se replican.
-     */
     function validar(): boolean {
         const errores: Partial<Record<keyof FormularioRegistro, string>> = {};
 

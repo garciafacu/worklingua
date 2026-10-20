@@ -5,13 +5,6 @@ using worklingua.Server.BLL;
 
 namespace worklingua.Server.Controllers
 {
-    /// <summary>
-    /// Versiones de un curso (CU-004-004) y clonado (CU-004-002).
-    ///
-    /// Sin permisos propios: ver el historial es listar el curso, crear un
-    /// punto de restauración o restaurarlo es modificarlo, y clonar es dar de
-    /// alta uno nuevo.
-    /// </summary>
     [Route("api/cursos")]
     public class VersionCursoController : ControladorBase
     {
@@ -24,7 +17,6 @@ namespace worklingua.Server.Controllers
             oBLLBit = new BLLBitacora();
         }
 
-        /// <summary>La línea de tiempo del curso. No trae el XML.</summary>
         [HttpGet("{cursoId:int}/versiones")]
         [ProducesResponseType(typeof(List<BEVersionContenido>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -37,7 +29,6 @@ namespace worklingua.Server.Controllers
             return Ok(oBLLVer.ListarPorCurso(cursoId, oSesionBE));
         }
 
-        /// <summary>Una versión con su documento XML.</summary>
         [HttpGet("versiones/{versionId:int}")]
         [ProducesResponseType(typeof(BEVersionContenido), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -50,7 +41,6 @@ namespace worklingua.Server.Controllers
             return Ok(oBLLVer.Obtener(versionId, oSesionBE));
         }
 
-        /// <summary>Camino alternativo 2: el punto de restauración manual.</summary>
         [HttpPost("{cursoId:int}/versiones")]
         [ProducesResponseType(typeof(BEVersionContenido), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -77,7 +67,6 @@ namespace worklingua.Server.Controllers
             return StatusCode(StatusCodes.Status201Created, oVersionBE);
         }
 
-        /// <summary>El escenario principal: vuelve el curso a esa versión.</summary>
         [HttpPost("versiones/{versionId:int}/restaurar")]
         [ProducesResponseType(typeof(BEResultadoRestauracion), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -103,7 +92,6 @@ namespace worklingua.Server.Controllers
             return Ok(respuesta);
         }
 
-        /// <summary>Borra un punto de restauración que ya no hace falta.</summary>
         [HttpDelete("versiones/{versionId:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -128,7 +116,6 @@ namespace worklingua.Server.Controllers
             return NoContent();
         }
 
-        /// <summary>Camino alternativo 3: qué cambió entre dos versiones.</summary>
         [HttpGet("versiones/comparar")]
         [ProducesResponseType(typeof(List<BEDiferenciaVersion>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -143,7 +130,6 @@ namespace worklingua.Server.Controllers
             return Ok(oBLLVer.Comparar(izquierda, derecha, oSesionBE));
         }
 
-        /// <summary>CU-004-002: duplica el curso con sus módulos y activos.</summary>
         [HttpPost("{cursoId:int}/clonar")]
         [ProducesResponseType(typeof(BEResultadoRestauracion), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

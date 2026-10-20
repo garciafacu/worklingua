@@ -15,11 +15,6 @@ import {
     rutaContratacion,
 } from '../rutas/contratacionPendiente';
 
-/**
- * Inicio de sesión. Con `?contratar=<planId>` (el visitante eligió un plan en el
- * Catálogo) avisa que la contratación sigue después de ingresar y, al entrar,
- * lleva directo al formulario de ese plan en lugar del Panel.
- */
 export function Login() {
     const { t } = useTranslation();
     const navegar = useNavigate();
@@ -54,8 +49,6 @@ export function Login() {
                 replace: true,
             });
         } catch (excepcion) {
-            // El backend ya devuelve un mensaje apto para el usuario, incluido el
-            // caso de la cuenta sin confirmar (403).
             setError(excepcion instanceof ErrorApi ? excepcion.message : t('auth.login.error'));
         } finally {
             setCargando(false);

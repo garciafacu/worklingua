@@ -2,10 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Lo que el propio usuario puede cambiar de su perfil (CU-001-003). El resto
-    /// de sus datos lo modifica un administrador.
-    /// </summary>
     public class BEModificarPerfil
     {
         #region Propiedades

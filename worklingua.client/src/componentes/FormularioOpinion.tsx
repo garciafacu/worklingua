@@ -5,24 +5,11 @@ import { LARGO_MAXIMO_OPINION, type OpinionResponse } from '../tipos/opiniones';
 
 interface FormularioOpinionProps {
     nombrePlan: string;
-    /**
-     * La valoración que esta sesión ya dejó sobre el plan, o null. El estado del
-     * formulario arranca de acá: quien lo usa le cambia la `key` cuando cambia la
-     * valoración, en lugar de sincronizarla con un efecto.
-     */
     valoracionPropia: OpinionResponse | null;
     enviando: boolean;
     alGuardar: (puntaje: number, texto: string) => Promise<boolean>;
 }
 
-/**
- * Formulario para valorar el plan elegido: estrellas obligatorias y comentario
- * opcional.
- *
- * Hay una sola valoración por persona y por plan, así que si ya existe el
- * formulario se abre con ella y guardar la actualiza. Solo se valida lo mínimo
- * para la experiencia de uso; las reglas y sus mensajes viven en la BLL.
- */
 export function FormularioOpinion({
     nombrePlan,
     valoracionPropia,
@@ -40,8 +27,6 @@ export function FormularioOpinion({
 
         const guardado = await alGuardar(puntaje, texto);
 
-        // En un alta se limpia; en una edición el padre remonta el formulario
-        // con la valoración guardada.
         if (guardado && !esEdicion) {
             setPuntaje(0);
             setTexto('');

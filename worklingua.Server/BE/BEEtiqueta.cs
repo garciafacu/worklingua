@@ -1,11 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Una etiqueta del diccionario global (CU-004-005).
-    ///
-    /// El diccionario es compartido: la misma etiqueta sirve para cursos de
-    /// cualquier empresa, que es lo que la hace útil para buscar.
-    /// </summary>
     public class BEEtiqueta
     {
         #region Propiedades

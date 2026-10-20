@@ -6,7 +6,6 @@ interface PaginadorProps {
     totalRegistros: number;
     tamanioPagina: number;
     tamaniosDisponibles: readonly number[];
-    /** Deshabilita los controles mientras hay una consulta en vuelo. */
     ocupado?: boolean;
     alCambiarPagina: (pagina: number) => void;
     alCambiarTamanio: (tamanio: number) => void;
@@ -15,15 +14,6 @@ interface PaginadorProps {
 const CLASE_BOTON =
     'rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo disabled:cursor-not-allowed disabled:opacity-50';
 
-/**
- * Navegación entre páginas de un listado que pagina en el servidor.
- *
- * No sabe qué se está paginando: recibe la posición y avisa hacia dónde ir. El
- * contenedor es el que consulta.
- *
- * No renderiza nada si no hay resultados: el listado ya muestra su propio
- * mensaje de vacío y un paginador de cero páginas no dice nada.
- */
 export function Paginador({
     pagina,
     totalPaginas,

@@ -5,13 +5,8 @@ namespace worklingua.Server.BE
     public class BEGuardarAlerta
     {
         #region Propiedades
-        /// <summary>
-        /// Solo lo manda quien tiene alcance sobre todas las empresas. Al resto
-        /// la BLL le impone la propia, así que acá puede venir en cero.
-        /// </summary>
         public int EmpresaId { get; set; }
 
-        /// <summary>Null o cero significa toda la empresa.</summary>
         public int? DepartamentoId { get; set; }
 
         [Required(ErrorMessage = "Debe completar el título y el contenido del mensaje.")]

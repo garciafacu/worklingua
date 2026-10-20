@@ -1,9 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Opción de respuesta de una encuesta. <see cref="Total"/> es la cantidad de
-    /// votos que recibió: viene del mismo listado y alimenta el gráfico.
-    /// </summary>
     public class BEOpcionEncuesta
     {
         #region Propiedades

@@ -5,7 +5,6 @@ interface AlertaProps {
     mensaje: string | null;
 }
 
-/** Mensaje de resultado de una operación. No renderiza nada si no hay mensaje. */
 export function Alerta({ tipo, mensaje }: AlertaProps) {
     if (!mensaje) {
         return null;

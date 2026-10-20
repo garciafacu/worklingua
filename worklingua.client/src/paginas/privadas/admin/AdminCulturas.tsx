@@ -27,18 +27,6 @@ const FORMULARIO_VACIO = {
 
 type Formulario = typeof FORMULARIO_VACIO;
 
-/**
- * ABM de las culturas: la configuración regional de cada idioma de plataforma.
- *
- * Define con qué locale, moneda, formato de fecha y separadores numéricos se
- * muestra el sitio cuando alguien elige ese idioma.
- *
- * **Sobre la tasa de conversión.** Los precios se guardan una sola vez, en la
- * moneda base (pesos argentinos). Cada cultura los multiplica por su tasa antes
- * de mostrarlos. La tasa se carga a mano acá: no hay integración con ninguna API
- * de cotización, así que si nadie la actualiza envejece y los importes en otra
- * moneda dejan de ser fieles.
- */
 export function AdminCulturas() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -58,9 +46,6 @@ export function AdminCulturas() {
     const puedeModificar = tienePermiso('Cultura.Modificar');
     const puedeDarDeBaja = tienePermiso('Cultura.Baja');
 
-    // En useCallback para poder ir en las dependencias de los efectos que lo
-    // usan: sin eso el linter avisa, y el mensaje de error quedaría en el idioma
-    // anterior después de cambiar de idioma.
     const mensajeDeError = useCallback(
         (excepcion: unknown, clave: string) =>
             excepcion instanceof ErrorApi ? excepcion.message : t(clave),

@@ -5,10 +5,6 @@ interface ModalProps {
     titulo: string;
     descripcion?: string;
     abierto: boolean;
-    /**
-     * `ancho` da lugar a un listado con acciones; `normal` es el diálogo de
-     * confirmación o el formulario corto.
-     */
     ancho?: 'normal' | 'ancho';
     alCerrar: () => void;
     children: ReactNode;
@@ -19,21 +15,6 @@ const ANCHOS: Record<'normal' | 'ancho', string> = {
     ancho: 'w-[min(48rem,calc(100vw-2rem))]',
 };
 
-/**
- * Diálogo modal sobre el elemento nativo `<dialog>`.
- *
- * Se usa `showModal()` y no un div posicionado a mano porque el elemento nativo
- * ya resuelve lo difícil: contiene el foco, cierra con Escape, oscurece el fondo
- * con `::backdrop` y se anuncia como diálogo a los lectores de pantalla. Un
- * modal casero tendría que reimplementar las cuatro cosas y suele fallar en la
- * primera.
- *
- * El evento `close` del elemento se escucha igual, porque Escape cierra el
- * diálogo por fuera de React y el estado de arriba tiene que enterarse.
- *
- * El id del título sale de `useId` y no de una constante, para que dos modales
- * montados a la vez no dejen el `aria-labelledby` apuntando al título del otro.
- */
 export function Modal({
     titulo,
     descripcion,
@@ -67,8 +48,6 @@ export function Modal({
             ref={referencia}
             aria-labelledby={idTitulo}
             onClose={alCerrar}
-            // Clic sobre el fondo: el target es el propio dialog solo cuando se
-            // toca el ::backdrop, porque el contenido vive en el div de adentro.
             onClick={(evento) => {
                 if (evento.target === referencia.current) {
                     alCerrar();

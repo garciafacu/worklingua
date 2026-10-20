@@ -6,7 +6,6 @@ interface CampoTextoProps extends InputHTMLAttributes<HTMLInputElement> {
     error?: string;
 }
 
-/** Campo de formulario con etiqueta y mensaje de error asociados. */
 export function CampoTexto({ etiqueta, identificador, error, ...resto }: CampoTextoProps) {
     const idError = `${identificador}-error`;
 

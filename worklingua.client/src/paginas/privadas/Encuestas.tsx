@@ -8,13 +8,6 @@ import { GraficoBarras, type DatoGrafico } from '../../componentes/GraficoBarras
 import { useLocalizacion } from '../../contexto/useLocalizacion';
 import type { EncuestaResponse } from '../../tipos/encuestas';
 
-/**
- * Encuestas vigentes (Formulario, puntos 3 y 10).
- *
- * Cada una se responde una sola vez. Mientras el usuario no vota ve las opciones
- * y, apenas responde, el backend devuelve los totales y en el mismo lugar aparece
- * el gráfico con el resultado.
- */
 export function Encuestas() {
     const { t } = useTranslation();
     const { idiomaActual, formatearFecha } = useLocalizacion();

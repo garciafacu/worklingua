@@ -24,7 +24,6 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public ActionResult<List<BECursoRespuesta>> Buscar([FromQuery] BEFiltroCurso oFiltroBE)
         {
-            // No hay consulta pública: cada empresa ve los cursos globales y los propios.
             BESesion oSesionBE = ExigirPermiso(Permisos.CursoListar);
 
             List<BECurso> ListaCursoBE = oBLLCur.Buscar(oFiltroBE, oSesionBE);

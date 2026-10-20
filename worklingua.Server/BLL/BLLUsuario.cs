@@ -188,19 +188,11 @@ namespace worklingua.Server.BLL
             ReenviarInvitacion(oUsuarioBE, BLLBitacora.ModuloUsuario);
         }
 
-        /// <summary>
-        /// ¿Ese correo ya está tomado? Devuelve true o false en vez de lanzar,
-        /// porque el padrón necesita informar la fila, no abortar el archivo.
-        /// </summary>
         public bool ExisteEmail(string email)
         {
             return ObtenerPorEmail(email) != null;
         }
 
-        /// <summary>
-        /// ¿Ese documento ya está tomado? Un documento vacío nunca lo está: es
-        /// opcional y la unicidad solo se exige cuando viene cargado.
-        /// </summary>
         public bool ExisteDocumento(string documento)
         {
             if (string.IsNullOrWhiteSpace(documento))
@@ -214,15 +206,6 @@ namespace worklingua.Server.BLL
             return oMPPUsu.ObtenerPorDocumento(oFiltroBE) != null;
         }
 
-        /// <summary>
-        /// Alta por invitación de una fila del padrón (CU-001-002).
-        ///
-        /// A diferencia de <see cref="Invitar"/>, recibe la empresa y el rol ya
-        /// resueltos: el padrón los resuelve una sola vez para todo el archivo,
-        /// porque ObtenerEmpresaSeleccionable y ObtenerRolObligatorio releen el
-        /// catálogo completo en cada llamada. Las validaciones de fila ya las
-        /// hizo la BLL del padrón, que necesita reportarlas y no cortar.
-        /// </summary>
         public BEUsuario InvitarDelPadron(BEUsuario oUsuarioBE, BERol oRolBE, string razonSocial)
         {
             CrearInvitacion(
@@ -337,9 +320,6 @@ namespace worklingua.Server.BLL
             oUsuarioBE.Idioma = oActualBE.Idioma;
             oUsuarioBE.NivelIdioma = oActualBE.NivelIdioma;
 
-            // La licencia pertenece a la contratación de la empresa anterior: si
-            // el usuario se muda, hay que revocarla y que la empresa nueva le
-            // asigne una de su propio cupo (CU-001-005).
             if (oActualBE.EmpresaId != oUsuarioBE.EmpresaId)
             {
                 oBLLLic.RevocarPorUsuario(oUsuarioBE.UsuarioId);
@@ -564,8 +544,6 @@ namespace worklingua.Server.BLL
 
             oBLLSes.CerrarPorUsuario(oCerrarBE);
 
-            // Una cuenta dada de baja no puede seguir ocupando un cupo del plan
-            // (CU-001-005).
             int licenciasRevocadas = oBLLLic.RevocarPorUsuario(oUsuarioBE.UsuarioId);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
@@ -703,11 +681,6 @@ namespace worklingua.Server.BLL
             }
         }
 
-        /// <summary>
-        /// El documento es opcional, así que solo se exige unicidad cuando viene
-        /// cargado. La búsqueda va por la huella determinística: el documento se
-        /// guarda cifrado y no se puede comparar en SQL.
-        /// </summary>
         private void ExigirDocumentoDisponible(BEUsuario Objeto)
         {
             if (string.IsNullOrWhiteSpace(Objeto.Documento))
@@ -820,9 +793,6 @@ namespace worklingua.Server.BLL
         {
             BEUsuario oUsuarioBE = ObtenerPorEmail(Objeto.Email);
 
-            // El bloqueo se mira ANTES de validar la clave: una cuenta bloqueada
-            // no entra ni con la clave correcta, que es justamente el punto
-            // (CU-003-004).
             ExigirNoBloqueada(oUsuarioBE);
 
             if (oUsuarioBE == null || oSesionBE.UsuarioId != oUsuarioBE.UsuarioId)
@@ -836,9 +806,6 @@ namespace worklingua.Server.BLL
                     "Intento fallido para " + Objeto.Email + ".",
                     BLLBitacora.NivelAdvertencia));
 
-                // Si el correo no existe no hay fila donde contar, y la
-                // respuesta es la misma de siempre para no delatar qué cuentas
-                // existen.
                 if (oUsuarioBE != null)
                 {
                     ContarIntentoFallido(oUsuarioBE);
@@ -880,13 +847,6 @@ namespace worklingua.Server.BLL
             return ArmarResultado(oUsuarioBE, oSesionCreadaBE.Token);
         }
 
-        /// <summary>
-        /// Corta el login si la cuenta está bloqueada y el bloqueo sigue vigente.
-        ///
-        /// Un bloqueo vencido no lo limpia ningún proceso de fondo: simplemente
-        /// deja de cumplirse esta condición y el login sigue normal. El contador
-        /// se reinicia solo cuando la persona entra bien.
-        /// </summary>
         private void ExigirNoBloqueada(BEUsuario oUsuarioBE)
         {
             if (oUsuarioBE == null || !EstaBloqueada(oUsuarioBE))
@@ -902,10 +862,6 @@ namespace worklingua.Server.BLL
             return oUsuarioBE.BloqueadoHasta.HasValue && oUsuarioBE.BloqueadoHasta.Value > DateTime.Now;
         }
 
-        /// <summary>
-        /// El mensaje del paso 13 del caso de uso, sin la parte del correo: en
-        /// este alcance no se manda alerta al titular.
-        /// </summary>
         private string MensajeBloqueo(BEUsuario oUsuarioBE)
         {
             int minutos = (int)Math.Ceiling((oUsuarioBE.BloqueadoHasta.Value - DateTime.Now).TotalMinutes);
@@ -920,11 +876,6 @@ namespace worklingua.Server.BLL
                 " o pedile a un administrador que la desbloquee.";
         }
 
-        /// <summary>
-        /// Suma el intento y, si ese intento fue el que disparó el bloqueo, lo
-        /// informa como tal en vez de como credenciales inválidas: si no, la
-        /// persona se entera recién en el intento siguiente.
-        /// </summary>
         private void ContarIntentoFallido(BEUsuario oUsuarioBE)
         {
             BEUsuario oEstadoBE = oMPPUsu.RegistrarIntentoFallido(
@@ -948,10 +899,6 @@ namespace worklingua.Server.BLL
             throw new ExcepcionNegocio(TipoErrorNegocio.CuentaBloqueada, MensajeBloqueo(oEstadoBE));
         }
 
-        /// <summary>
-        /// Desbloqueo manual por un administrador (camino alternativo 4):
-        /// reinicia el contador y rehabilita el ingreso.
-        /// </summary>
         public BEUsuario Desbloquear(BEUsuario Objeto, BESesion oSesionBE)
         {
             BEUsuario oUsuarioBE = ObtenerObligatorio(Objeto.UsuarioId);
@@ -962,7 +909,6 @@ namespace worklingua.Server.BLL
             return Liberar(oUsuarioBE, BLLBitacora.ModuloUsuario);
         }
 
-        /// <summary>Lo mismo para los operadores, que tienen su propia pantalla.</summary>
         public BEUsuario DesbloquearOperador(BEUsuario Objeto, BESesion oSesionBE)
         {
             BEUsuario oUsuarioBE = ObtenerOperadorObligatorio(Objeto.UsuarioId);
@@ -1029,20 +975,11 @@ namespace worklingua.Server.BLL
                 oBLLSeg.ObtenerPermisos(oUsuarioBE.UsuarioId));
         }
 
-        /// <summary>
-        /// Perfil del usuario de la sesión (CU-001-003). El id sale siempre de la
-        /// sesión, así que nadie puede consultar el perfil de otro por acá.
-        /// </summary>
         public BEPerfilRespuesta ObtenerPerfil(BESesion oSesionBE)
         {
             return ArmarPerfil(ObtenerObligatorio(oSesionBE.UsuarioId));
         }
 
-        /// <summary>
-        /// Autogestión de los datos personales (CU-001-003). Solo cambian nombre,
-        /// apellido y fecha de nacimiento: el correo es el usuario de ingreso y el
-        /// documento es único, así que esos los modifica un administrador.
-        /// </summary>
         public void ModificarPerfil(BEUsuario Objeto, BESesion oSesionBE)
         {
             BEUsuario oActualBE = ObtenerObligatorio(oSesionBE.UsuarioId);

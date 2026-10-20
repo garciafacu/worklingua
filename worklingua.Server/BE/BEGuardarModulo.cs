@@ -9,11 +9,9 @@ namespace worklingua.Server.BE
         [StringLength(150, ErrorMessage = "El nombre del módulo no puede superar los 150 caracteres.")]
         public string Nombre { get; set; }
 
-        /// <summary>El objetivo del módulo.</summary>
         [StringLength(500, ErrorMessage = "El objetivo no puede superar los 500 caracteres.")]
         public string Descripcion { get; set; }
 
-        /// <summary>El texto de la lección.</summary>
         [StringLength(8000, ErrorMessage = "El contenido no puede superar los 8000 caracteres.")]
         public string Contenido { get; set; }
 

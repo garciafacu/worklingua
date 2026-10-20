@@ -8,13 +8,6 @@ import { Boton } from '../componentes/Boton';
 import { CampoTexto } from '../componentes/CampoTexto';
 import { TarjetaAuth } from '../componentes/TarjetaAuth';
 
-/**
- * Destino del enlace del correo de invitación.
- *
- * A diferencia de restablecer la clave, acá la cuenta todavía no está activa: el
- * mismo pedido define la primera clave y la activa. Por eso el token es de tipo
- * invitación y no de recupero.
- */
 export function CompletarInvitacion() {
     const { t } = useTranslation();
     const [parametros] = useSearchParams();

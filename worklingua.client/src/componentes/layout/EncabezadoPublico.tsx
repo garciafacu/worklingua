@@ -20,7 +20,6 @@ interface EnlacesProps {
     alNavegar?: () => void;
 }
 
-/** Los mismos enlaces sirven al menú horizontal y al desplegable; cambia el envoltorio. */
 function EnlacesPublicos({ className, claseBotonIngreso, alNavegar }: EnlacesProps) {
     const { t } = useTranslation();
     const { pathname } = useLocation();
@@ -41,8 +40,6 @@ function EnlacesPublicos({ className, claseBotonIngreso, alNavegar }: EnlacesPro
             ))}
 
             {enLogin ? (
-                // Ya estamos en /login: el botón se muestra activo pero
-                // deshabilitado, no tiene sentido navegar a la misma pantalla.
                 <span
                     className={`${claseBotonIngreso} cursor-not-allowed opacity-60`}
                     aria-disabled="true"
@@ -59,10 +56,6 @@ function EnlacesPublicos({ className, claseBotonIngreso, alNavegar }: EnlacesPro
     );
 }
 
-/**
- * Navegación horizontal del sitio público. En pantallas chicas los enlaces se
- * pliegan detrás de un botón; el estado vive acá porque no le interesa a nadie más.
- */
 export function EncabezadoPublico() {
     const { t } = useTranslation();
     const [desplegado, setDesplegado] = useState(false);

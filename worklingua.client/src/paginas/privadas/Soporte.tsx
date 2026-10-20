@@ -14,15 +14,6 @@ import { ESTADOS_TICKET, type EstadoTicket, type OpcionesTicketResponse, type Ti
 
 const FORMULARIO_VACIO = { suscripcionId: '', cursoId: '', asunto: '', texto: '' };
 
-/**
- * HelpDesk del cliente (puntos 6.c y 16): consultas asincrónicas sobre lo
- * contratado, con su historial de mensajes.
- *
- * Cada consulta se asocia a una contratación de la empresa y, opcionalmente, a un
- * curso. El usuario ve las suyas; con `Ticket.VerEmpresa`, las de toda la
- * empresa (eso lo resuelve el backend). `?ticket=<id>` abre una directamente: es
- * el enlace de los avisos por correo.
- */
 export function Soporte() {
     const { t } = useTranslation();
     const { formatearFecha, idiomaActual } = useLocalizacion();

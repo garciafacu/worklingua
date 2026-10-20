@@ -10,10 +10,6 @@ namespace worklingua.Server.BE
         public DateTime? FechaAsignacion { get; set; }
         public DateTime? FechaVencimiento { get; set; }
         public string Estado { get; set; }
-        /// <summary>
-        /// Estado de la suscripción que emitió la licencia. Una licencia ACTIVA
-        /// de una suscripción que ya no lo está no habilita nada.
-        /// </summary>
         public string EstadoSuscripcion { get; set; }
         #endregion
 

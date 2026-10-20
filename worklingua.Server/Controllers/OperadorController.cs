@@ -110,11 +110,6 @@ namespace worklingua.Server.Controllers
             return Ok(respuesta);
         }
 
-        /// <summary>
-        /// Desbloqueo manual de un operador (CU-003-004, camino alternativo 4).
-        /// Va acá porque los operadores no aparecen en el ABM de Usuarios: sin
-        /// esta acción no habría forma de desbloquear a uno.
-        /// </summary>
         [HttpPost("{usuarioId:int}/desbloquear")]
         [ProducesResponseType(typeof(BEMensajeRespuesta), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

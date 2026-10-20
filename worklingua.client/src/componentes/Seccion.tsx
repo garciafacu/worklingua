@@ -4,14 +4,9 @@ interface SeccionProps {
     titulo: string;
     descripcion?: string;
     children: ReactNode;
-    /** Alterna el fondo para separar visualmente secciones contiguas. */
     fondoAlterno?: boolean;
 }
 
-/**
- * Bloque de contenido de una página pública: encabezado y cuerpo dentro del
- * mismo ancho máximo. Evita repetir la maqueta en cada página estática.
- */
 export function Seccion({ titulo, descripcion, children, fondoAlterno = false }: SeccionProps) {
     return (
         <section className={fondoAlterno ? 'bg-superficie' : 'bg-fondo'}>

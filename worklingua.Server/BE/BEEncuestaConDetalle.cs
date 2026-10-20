@@ -2,11 +2,6 @@ using System.Collections.Generic;
 
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Encuesta con todo lo que necesita la pantalla: sus opciones con los votos,
-    /// el total de respuestas, si sigue vigente y qué votó el usuario de la sesión
-    /// (<see cref="OpcionElegidaId"/> en null cuando todavía no respondió).
-    /// </summary>
     public class BEEncuestaConDetalle
     {
         #region Propiedades

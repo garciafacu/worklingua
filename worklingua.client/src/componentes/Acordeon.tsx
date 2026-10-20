@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 
 interface AcordeonProps {
-    /** Base de los `id` del botón y del panel; tiene que ser única en la página. */
     identificador: string;
     titulo: string;
     abierto: boolean;
@@ -9,10 +8,6 @@ interface AcordeonProps {
     children: ReactNode;
 }
 
-/**
- * Bloque que se expande y se contrae. El estado lo maneja quien lo usa, para
- * poder abrir o cerrar varios a la vez (por ejemplo, al limpiar una búsqueda).
- */
 export function Acordeon({ identificador, titulo, abierto, alAlternar, children }: AcordeonProps) {
     const idBoton = `${identificador}-boton`;
     const idPanel = `${identificador}-panel`;
@@ -44,7 +39,6 @@ export function Acordeon({ identificador, titulo, abierto, alAlternar, children 
                 </button>
             </h3>
 
-            {/* El panel cerrado queda en el DOM con `hidden` para que `aria-controls` apunte a algo. */}
             <div
                 id={idPanel}
                 role="region"

@@ -12,9 +12,7 @@ namespace worklingua.Server.BE
         public int? DuracionHoras { get; set; }
         public string Idioma { get; set; }
         public bool EsGlobal { get; set; }
-        /// <summary>Categoría sectorial (CU-004-005).</summary>
         public string Sector { get; set; }
-        /// <summary>Etiquetas lógicas del curso (CU-004-005).</summary>
         public List<BEEtiqueta> Etiquetas { get; set; }
         #endregion
 

@@ -8,20 +8,10 @@ import { CampanaNotificaciones } from './CampanaNotificaciones';
 import { SelectorIdioma } from './SelectorIdioma';
 
 interface BarraSuperiorProps {
-    /** Abre y cierra el menú lateral en pantallas chicas. */
     alternarMenu: () => void;
     menuAbierto: boolean;
 }
 
-/**
- * Barra horizontal fija del área privada. Es estática: siempre muestra lo mismo
- * (marca, selector de idioma, usuario y salida), sin depender de la ruta ni de
- * los permisos.
- *
- * Ocupa todo el alto que le da `LayoutPrivado` (`--alto-barra`) en vez de
- * medirse por su propio padding: el menú lateral se cuelga de esa misma medida
- * para quedar pegado justo debajo, y con un alto variable quedarían desalineados.
- */
 export function BarraSuperior({ alternarMenu, menuAbierto }: BarraSuperiorProps) {
     const { t } = useTranslation();
     const { usuario, cerrarSesion } = useSesion();

@@ -26,14 +26,6 @@ const CLASE_BOTON =
 const CLASE_BOTON_PELIGRO =
     'rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo';
 
-/**
- * ABM de roles y asignación de permisos.
- *
- * A un rol se le asignan patentes o familias; lo que se ve debajo de cada una
- * es lo que el rol recibe por contenerla. Solo se pueden quitar las
- * asignaciones directas (las raíces del árbol del rol): para sacar algo que
- * llega por una familia hay que editar la familia en el ABM de Permisos.
- */
 export function AdminRoles() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();

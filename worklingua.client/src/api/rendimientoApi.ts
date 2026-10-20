@@ -26,13 +26,6 @@ function aConsulta(filtros: FiltrosRendimiento): string {
 }
 
 export const rendimientoApi = {
-    /**
-     * El panel completo: cifras, comparación entre departamentos y detalle por
-     * empleado. Requiere Curso.VerProgresoEmpresa.
-     *
-     * Sin Curso.VerTodasLasEmpresas el backend ignora `empresaId` y responde
-     * con la empresa del usuario de la sesión.
-     */
     obtener: (filtros: FiltrosRendimiento) =>
         clienteHttp.get<RendimientoResponse>(`/rendimiento${aConsulta(filtros)}`),
 };

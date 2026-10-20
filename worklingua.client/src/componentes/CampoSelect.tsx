@@ -7,7 +7,6 @@ interface CampoSelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
     children: ReactNode;
 }
 
-/** Selector con etiqueta y mensaje de error, gemelo de CampoTexto. */
 export function CampoSelect({ etiqueta, identificador, error, children, ...resto }: CampoSelectProps) {
     const idError = `${identificador}-error`;
 

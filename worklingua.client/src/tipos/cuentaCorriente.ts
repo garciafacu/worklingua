@@ -1,12 +1,5 @@
 import type { NotaCreditoDebitoResponse, PagoResponse } from './contrataciones';
 
-/**
- * Estado de cuenta corriente de la empresa, espejo de
- * `BE/BEEstadoCuentaCorriente.cs`.
- *
- * Los importes están en la moneda base (ARS): se muestran con `formatearMoneda`.
- * Saldo positivo es deuda; negativo, saldo a favor.
- */
 export interface EstadoCuentaCorrienteResponse {
     saldo: number;
     saldoNotasCredito: number;

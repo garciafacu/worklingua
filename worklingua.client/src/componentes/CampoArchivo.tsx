@@ -4,19 +4,10 @@ interface CampoArchivoProps extends InputHTMLAttributes<HTMLInputElement> {
     etiqueta: string;
     identificador: string;
     error?: string;
-    /** Nombre del archivo elegido, para mostrarlo debajo. */
     archivo?: string | null;
-    /** Para poder limpiar el control después de subir: su valor no es controlado. */
     ref?: Ref<HTMLInputElement>;
 }
 
-/**
- * Selector de archivo, con el mismo contrato que `CampoTexto`.
- *
- * Es el único control de carga del proyecto: el resto de los formularios son de
- * texto. Muestra el nombre del archivo elegido porque el control nativo lo
- * recorta y no se lee bien.
- */
 export function CampoArchivo({
     etiqueta,
     identificador,

@@ -14,14 +14,12 @@ import { CampoTexto } from './CampoTexto';
 
 interface FormularioContratacionProps {
     plan: PlanResponse;
-    /** Se llama solo con una contratación aprobada; un rechazo se muestra acá. */
     alContratado: (resultado: ContratacionResponse) => void;
     alCancelar: () => void;
 }
 
 const TARJETA_VACIA = { numero: '', titular: '', vencimiento: '', codigoSeguridad: '' };
 
-/** Diferencia que se tolera al comparar importes convertidos y redondeados a centavos. */
 const TOLERANCIA = 0.005;
 
 function aCentavos(valor: number): number {
@@ -34,14 +32,6 @@ function leerImporte(texto: string): number {
     return Number.isFinite(valor) ? valor : Number.NaN;
 }
 
-/**
- * Contratación de un plan: resumen, medios de pago y datos de la tarjeta.
- *
- * Los medios se combinan así: lo que se marca de saldo a favor (NC) y de cuenta
- * corriente se escribe en la moneda de la operación, y la tarjeta paga el resto.
- * El backend recalcula todo en ARS y es quien decide: los topes de acá son solo
- * para avisar antes de enviar.
- */
 export function FormularioContratacion({ plan, alContratado, alCancelar }: FormularioContratacionProps) {
     const { t } = useTranslation();
     const { cultura, formatearMoneda } = useLocalizacion();

@@ -28,21 +28,14 @@ function armarConsulta(criterios: CriteriosTraduccion): string {
 }
 
 export const traduccionesApi = {
-    /**
-     * El bundle de un idioma. Público: sin él no se puede pintar ni el login.
-     *
-     * Lo consume el backend de i18next definido en `src/i18n/backendTraducciones.ts`.
-     */
     obtenerBundle: (codigoISO: string) =>
         clienteHttp.get<BundleTraducciones>(`/traducciones/${encodeURIComponent(codigoISO)}`),
 
-    /** Backoffice. Requiere el permiso Traduccion.Listar. */
     listarAdministracion: (criterios: CriteriosTraduccion) =>
         clienteHttp.get<TraduccionAdminResponse[]>(
             `/traducciones/administracion${armarConsulta(criterios)}`,
         ),
 
-    /** Guardado en lote de las filas editadas. Requiere Traduccion.Modificar. */
     guardar: (cuerpo: GuardarTraduccionesRequest) =>
         clienteHttp.put<MensajeResponse>('/traducciones', cuerpo),
 };

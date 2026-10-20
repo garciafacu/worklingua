@@ -1,5 +1,3 @@
-// Config temporal solo para mirar las pantallas en el navegador: HTTP, sin
-// certificado. Se borra al terminar la verificacion.
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import plugin from '@vitejs/plugin-react';

@@ -4,11 +4,6 @@ using worklingua.Server.MPP;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// Reportes de ganancias y tablero del negocio (Formulario, puntos 15.b y
-    /// 15.c). La ganancia es el cobrado neto: los pagos con tarjeta aprobados
-    /// menos las notas de crédito emitidas, en la moneda base.
-    /// </summary>
     public class BLLReporte
     {
         public const string AgrupacionDia = "DIA";
@@ -48,10 +43,6 @@ namespace worklingua.Server.BLL
             return oTableroBE;
         }
 
-        /// <summary>
-        /// Completa el período con el año en curso cuando no llega, acota la
-        /// ventana y deja la agrupación en uno de los cuatro valores válidos.
-        /// </summary>
         private void Normalizar(BEFiltroReporte Objeto)
         {
             DateOnly hoy = DateOnly.FromDateTime(DateTime.Now);

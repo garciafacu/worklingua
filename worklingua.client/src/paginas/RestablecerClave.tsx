@@ -8,7 +8,6 @@ import { Boton } from '../componentes/Boton';
 import { CampoTexto } from '../componentes/CampoTexto';
 import { TarjetaAuth } from '../componentes/TarjetaAuth';
 
-/** Destino del enlace del correo de recupero de clave. */
 export function RestablecerClave() {
     const { t } = useTranslation();
     const [parametros] = useSearchParams();

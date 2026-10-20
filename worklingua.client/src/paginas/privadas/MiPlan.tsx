@@ -19,18 +19,6 @@ import type { ContratacionResponse } from '../../tipos/contrataciones';
 import type { PlanResponse } from '../../tipos/planes';
 import type { SuscripcionResponse } from '../../tipos/suscripciones';
 
-/**
- * El plan de la empresa y el catálogo completo, con la contratación.
- *
- * Cada plan que no es el vigente ofrece "Contratar", que abre el formulario de
- * medios de pago. La contratación vigente paga se puede cancelar: el backend
- * anula la factura, emite una NC total y devuelve la empresa al plan Free.
- * Contratar y cancelar exigen `Suscripcion.Contratar`; sin ese permiso la
- * pantalla queda en modo consulta.
- *
- * `?contratar=<planId>` abre el formulario directamente: es el enlace que usa el
- * Catálogo público.
- */
 export function MiPlan() {
     const { t } = useTranslation();
     const { cultura, formatearFecha } = useLocalizacion();
@@ -50,9 +38,6 @@ export function MiPlan() {
     const puedeContratar = tienePermiso(PERMISOS.suscripcionContratar);
     const planIdAContratar = Number(parametros.get('contratar')) || null;
 
-    // La suscripción se pide aparte de los catálogos porque su 404 no es un
-    // error de pantalla: significa "esta empresa todavía no tiene plan", que es
-    // el caso de las creadas antes del auto-registro.
     const pedirSuscripcion = useCallback(
         () =>
             suscripcionesApi.obtenerLaMia().catch((excepcion: unknown) => {

@@ -1,10 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Un campo que cambió entre dos versiones (CU-004-004, camino
-    /// alternativo 3). El `Campo` es la clave con la que la pantalla busca su
-    /// traducción; los valores ya vienen como texto listo para mostrar.
-    /// </summary>
     public class BEDiferenciaVersion
     {
         #region Propiedades

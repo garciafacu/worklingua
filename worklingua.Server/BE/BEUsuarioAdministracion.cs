@@ -7,7 +7,6 @@ namespace worklingua.Server.BE
         #region Propiedades
         public BEUsuario Usuario { get; set; }
         public string Empresa { get; set; }
-        /// <summary>Nombre del departamento; el id va en <see cref="BEUsuario"/>.</summary>
         public string Departamento { get; set; }
         public int RolId { get; set; }
         public List<string> Roles { get; set; }

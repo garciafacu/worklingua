@@ -31,14 +31,11 @@ function aConsulta(filtros: FiltrosReporte): string {
 }
 
 export const reportesApi = {
-    /** Ganancias por período. Requiere Reporte.Ver. */
     ganancias: (filtros: FiltrosReporte) =>
         clienteHttp.get<GananciaPeriodoResponse[]>(`/reportes/ganancias${aConsulta(filtros)}`),
 
-    /** Ganancias por zona (provincia de la empresa cliente). */
     gananciasPorZona: (filtros: FiltrosReporte) =>
         clienteHttp.get<GananciaZonaResponse[]>(`/reportes/ganancias/zonas${aConsulta(filtros)}`),
 
-    /** Indicadores del tablero del negocio. */
     tablero: () => clienteHttp.get<TableroResponse>('/reportes/tablero'),
 };

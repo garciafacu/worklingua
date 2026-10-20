@@ -3,21 +3,9 @@ import type { ActivoResponse } from '../tipos/activos';
 
 interface ListaActivosProps {
     activos: ActivoResponse[];
-    /**
-     * Compacta: una fila con miniatura y enlace, para los índices.
-     * Completa: el recurso se consume en la página —la imagen se ve y el audio
-     * se escucha—, que es lo que hace que una lección sea una lección.
-     */
     compacta?: boolean;
 }
 
-/**
- * Material pedagógico (CU-004-001) tal como lo consume el empleado. Lo usan
- * Mis cursos, para el material general, y la lección, para el del módulo.
- *
- * Quien la usa ya recibió solo los activos publicados y vigentes: el backend
- * los filtra en `BLLActivoPedagogico.ListarPublicados`.
- */
 export function ListaActivos({ activos, compacta = false }: ListaActivosProps) {
     const { t } = useTranslation();
 

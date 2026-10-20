@@ -9,10 +9,6 @@ const DESTINOS = [
     { etiqueta: 'layout.publico.iniciarSesion', ruta: '/login' },
 ];
 
-/**
- * Destino de las rutas que no existen. Se muestra la página en lugar de
- * redirigir a la portada para que quede claro que la dirección estaba mal.
- */
 export function NoEncontrado() {
     const { t } = useTranslation();
 

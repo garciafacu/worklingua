@@ -1,10 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Una notificación en la bandeja del usuario. La emite una alerta
-    /// preventiva (CU-001-010); el caso de uso habla de dispositivos móviles,
-    /// que esta plataforma no tiene, así que llega a la campana.
-    /// </summary>
     public class BENotificacion
     {
         #region Propiedades

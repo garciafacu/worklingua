@@ -1,9 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Una etiqueta asignada a un curso. Es lo que devuelve el listado de
-    /// asignaciones, que trae el curso al que pertenece cada una.
-    /// </summary>
     public class BEEtiquetaCurso
     {
         #region Propiedades

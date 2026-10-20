@@ -6,16 +6,10 @@ type AccionesNodo = (nodo: PermisoResponse, padre: PermisoResponse | null) => Re
 
 interface ArbolPermisosProps {
     permisos: PermisoResponse[];
-    /** Botones de cada nodo. `padre` es null en las raíces. */
     acciones?: AccionesNodo;
     mensajeVacio: string;
 }
 
-/**
- * Jerarquía de permisos: las familias muestran anidado todo lo que contienen.
- *
- * La usan el ABM de Permisos (todo el árbol) y el de Roles (lo asignado a un rol).
- */
 export function ArbolPermisos({ permisos, acciones, mensajeVacio }: ArbolPermisosProps) {
     if (permisos.length === 0) {
         return <p className="text-sm text-texto-suave">{mensajeVacio}</p>;

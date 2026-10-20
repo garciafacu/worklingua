@@ -5,10 +5,6 @@ namespace worklingua.Server.BE
     public class BEGuardarDepartamento
     {
         #region Propiedades
-        /// <summary>
-        /// Solo lo manda quien tiene alcance sobre todas las empresas. Al resto
-        /// la BLL le impone la propia, así que acá puede venir en cero.
-        /// </summary>
         public int EmpresaId { get; set; }
 
         [Required(ErrorMessage = "El nombre del departamento es obligatorio.")]

@@ -7,24 +7,8 @@ using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// Alta masiva de empleados desde el padrón (CU-001-002).
-    ///
-    /// El procesamiento tiene dos pasos y los dos pasan por acá: primero se
-    /// valida todo sin escribir nada (previsualización) y después se confirma.
-    /// El archivo entero viaja las dos veces, así que la confirmación revalida
-    /// de cero y no confía en lo que el cliente dice que ya estaba bien.
-    ///
-    /// La importación es parcial: las filas con error se descartan y las válidas
-    /// entran igual, como pide el caso de prueba CP-001.
-    /// </summary>
     public class BLLPadron
     {
-        /// <summary>
-        /// Tope de filas por archivo. Cada invitación manda un correo de forma
-        /// síncrona, con un cliente SMTP nuevo y 20 s de timeout: sin tope, un
-        /// archivo grande con el correo lento deja la petición colgada.
-        /// </summary>
         public const int FilasMaximas = 25;
 
         private const int LongitudMaximaNombre = 80;
@@ -64,8 +48,6 @@ namespace worklingua.Server.BLL
             BEEmpresa oEmpresaBE = ObtenerEmpresaSeleccionable(empresaId);
             BERol oRolBE = ObtenerRolEmpleado();
 
-            // Empresa, rol y organigrama se resuelven una sola vez para todo el
-            // archivo: resolverlos por fila reléería los catálogos completos.
             Dictionary<string, int> departamentos = ObtenerDepartamentos(empresaId);
 
             int cupoDisponible = oBLLLic.ObtenerCupoDisponible(empresaId);
@@ -99,16 +81,10 @@ namespace worklingua.Server.BLL
             return respuesta;
         }
 
-        /// <summary>
-        /// Valida fila por fila y arma el detalle. No escribe nada: lo usan
-        /// tanto la previsualización como la confirmación.
-        /// </summary>
         private BEResultadoPadron Validar(BEPadron Objeto, Dictionary<string, int> departamentos)
         {
             BEResultadoPadron respuesta = new BEResultadoPadron();
 
-            // Los correos repetidos DENTRO del archivo también son un error: si
-            // no, la primera fila entra y la segunda explota contra la base.
             HashSet<string> emailsDelArchivo = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             HashSet<string> documentosDelArchivo = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -118,7 +94,6 @@ namespace worklingua.Server.BLL
 
                 BEResultadoFilaPadron oResultadoBE = new BEResultadoFilaPadron();
 
-                // +2: la fila 1 es el encabezado y el índice arranca en cero.
                 oResultadoBE.Fila = indice + 2;
                 oResultadoBE.Nombre = Normalizar(oFilaBE.Nombre);
                 oResultadoBE.Apellido = Normalizar(oFilaBE.Apellido);
@@ -157,11 +132,6 @@ namespace worklingua.Server.BLL
             return respuesta;
         }
 
-        /// <summary>
-        /// Devuelve el motivo del rechazo, o null si la fila está bien. Se
-        /// informa un solo motivo por fila: es el primero que aparece, para que
-        /// el mensaje sea accionable en vez de una lista.
-        /// </summary>
         private string Revisar(
             BEResultadoFilaPadron oFilaBE,
             string documento,
@@ -233,11 +203,6 @@ namespace worklingua.Server.BLL
             return null;
         }
 
-        /// <summary>
-        /// Manda las invitaciones de las filas válidas. Si una falla, se anota
-        /// en su fila y el resto del lote sigue: un correo roto no tira el
-        /// archivo entero.
-        /// </summary>
         private void Invitar(
             BEPadron Objeto,
             BEResultadoPadron respuesta,
@@ -263,9 +228,6 @@ namespace worklingua.Server.BLL
                 oUsuarioBE.Documento = Normalizar(Objeto.Filas[indice].Documento);
                 oUsuarioBE.DepartamentoId = ResolverDepartamento(oResultadoBE.Departamento, departamentos);
 
-                // La clave es descartable: la verdadera la define la persona
-                // desde el enlace de la invitación. Es el mismo criterio que
-                // usa UsuarioController al invitar de a uno.
                 oUsuarioBE.PasswordHash = oServicioHash.Hashear(Guid.NewGuid().ToString());
 
                 try
@@ -300,11 +262,6 @@ namespace worklingua.Server.BLL
                 : null;
         }
 
-        /// <summary>
-        /// El organigrama de la empresa indexado por nombre. El CSV trae el
-        /// departamento como texto, y comparar en memoria evita una consulta
-        /// por fila. Case-insensitive, igual que el ABM de Departamentos.
-        /// </summary>
         private Dictionary<string, int> ObtenerDepartamentos(int empresaId)
         {
             Dictionary<string, int> departamentos = new Dictionary<string, int>();
@@ -345,11 +302,6 @@ namespace worklingua.Server.BLL
             }
         }
 
-        /// <summary>
-        /// CA3 del caso de uso: si no hay cupo para todas las altas, no se
-        /// importa nada. Es a todo o nada a propósito: importar la mitad dejaría
-        /// al resto del padrón sin poder acceder y sin aviso.
-        /// </summary>
         private void ExigirCupoSuficiente(int validas, int cupoDisponible)
         {
             if (validas > cupoDisponible)
@@ -402,10 +354,6 @@ namespace worklingua.Server.BLL
                 "La empresa seleccionada no existe o no está disponible para asignar usuarios.");
         }
 
-        /// <summary>
-        /// El padrón da de alta empleados, no administradores: el rol es siempre
-        /// el alcanzado por las licencias (Licencias:RolAlcanzado).
-        /// </summary>
         private BERol ObtenerRolEmpleado()
         {
             BERol oRolBE = oBLLRol.ObtenerPorNombre(Configuracion.LicenciasRolAlcanzado);
@@ -443,11 +391,6 @@ namespace worklingua.Server.BLL
             return true;
         }
 
-        /// <summary>
-        /// Clave de comparación de nombres de departamento: sin mayúsculas y sin
-        /// acentos. Un padrón escrito en Excel trae "recepcion" tanto como
-        /// "Recepción", y la base ya compara así por su propia intercalación.
-        /// </summary>
         private string Clave(string nombre)
         {
             string descompuesto = nombre.Trim().ToUpperInvariant().Normalize(NormalizationForm.FormD);

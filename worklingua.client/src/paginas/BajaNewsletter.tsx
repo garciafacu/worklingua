@@ -7,13 +7,6 @@ import { Alerta } from '../componentes/Alerta';
 import { Boton } from '../componentes/Boton';
 import { TarjetaAuth } from '../componentes/TarjetaAuth';
 
-/**
- * Destino del enlace de baja que trae cada newsletter.
- *
- * A diferencia de la confirmación, la baja pide un clic: algunos filtros de
- * correo abren los enlaces para analizarlos y darían de baja a la persona sin
- * que lo haya pedido.
- */
 export function BajaNewsletter() {
     const { t } = useTranslation();
     const [parametros] = useSearchParams();

@@ -16,10 +16,6 @@ namespace worklingua.Server.Controllers
             oBLLBit = new BLLBitacora();
         }
 
-        /// <summary>
-        /// El inventario de licencias. Sin Licencia.VerTodasLasEmpresas la BLL
-        /// ignora empresaId y devuelve el de la empresa propia.
-        /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(BEInventarioRespuesta), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

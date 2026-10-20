@@ -26,21 +26,10 @@ function opcional(valor: string): string | null {
     return valor.trim() || null;
 }
 
-/**
- * ABM de las empresas cliente.
- *
- * Dos empresas están protegidas y no se pueden dar de baja: la interna de
- * plataforma, que aloja al Super Admin, y la que reciben por defecto los
- * registros públicos. Tampoco se puede dar de baja una empresa que todavía
- * tenga usuarios activos; eso lo valida el backend.
- */
 export function AdminEmpresas() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
 
-    // En useCallback para poder ir en las dependencias de los efectos que lo
-    // usan: sin eso el linter avisa, y el mensaje de error quedaría en el idioma
-    // anterior después de cambiar de idioma.
     const mensajeDeError = useCallback(
         (excepcion: unknown, clave: string) =>
             excepcion instanceof ErrorApi ? excepcion.message : t(clave),
@@ -54,15 +43,12 @@ export function AdminEmpresas() {
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
-    /** Fuerza releer el listado despues de guardar o dar de baja. */
     const [recarga, setRecarga] = useState(0);
     const [guardando, setGuardando] = useState(false);
 
     const puedeCrear = tienePermiso('Empresa.Alta');
     const puedeModificar = tienePermiso('Empresa.Modificar');
     const puedeDarDeBaja = tienePermiso('Empresa.Baja');
-    // Sin alcance total la pantalla es "Mi empresa": el backend devuelve y deja
-    // modificar solo la empresa del usuario.
     const alcanceTotal = tienePermiso('Empresa.VerTodasLasEmpresas');
 
     useEffect(() => {

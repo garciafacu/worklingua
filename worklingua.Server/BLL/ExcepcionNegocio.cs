@@ -19,12 +19,6 @@ namespace worklingua.Server.BLL
             this.Tipo = tipo;
         }
 
-        /// <summary>
-        /// Un conflicto que la pantalla puede resolver sola proponiendo un
-        /// valor. Lo usa el nombre duplicado de un activo pedagógico
-        /// (CU-004-001, camino alternativo 1): el backend decide la
-        /// nomenclatura sugerida y el usuario solo acepta o la cambia.
-        /// </summary>
         public ExcepcionNegocio(TipoErrorNegocio tipo, string mensaje, string sugerencia)
             : this(tipo, mensaje)
         {

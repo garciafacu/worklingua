@@ -17,9 +17,7 @@ namespace worklingua.Server.BE
         public DateTime? FechaAlta { get; set; }
         public DateTime? UltimoAcceso { get; set; }
         public bool? Activo { get; set; }
-        /// <summary>Fallos consecutivos de login; un ingreso exitoso lo vuelve a cero.</summary>
         public int IntentosFallidos { get; set; }
-        /// <summary>Hasta cuándo está bloqueada. NULL = no bloqueada (CU-003-004).</summary>
         public DateTime? BloqueadoHasta { get; set; }
         #endregion
 

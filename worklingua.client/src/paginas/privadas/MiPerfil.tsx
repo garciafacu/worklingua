@@ -11,10 +11,6 @@ import type { PerfilResponse } from '../../tipos/perfil';
 
 const CLASE_SECCION = 'mt-6 rounded-2xl border border-borde bg-superficie p-6';
 
-/**
- * Fecha local de hoy en `yyyy-MM-dd`, el formato de `<input type="date">`. No
- * se usa `toISOString` porque es UTC: en Argentina, de noche, daría mañana.
- */
 function hoy(): string {
     const fecha = new Date();
     const mes = String(fecha.getMonth() + 1).padStart(2, '0');
@@ -23,10 +19,6 @@ function hoy(): string {
     return `${fecha.getFullYear()}-${mes}-${dia}`;
 }
 
-/**
- * Datos que el usuario no puede cambiar desde acá. El correo es su usuario de
- * ingreso y el documento es único: los modifica un administrador.
- */
 function DatosCuenta({ perfil }: { perfil: PerfilResponse }) {
     const { t } = useTranslation();
     const filas: [string, string][] = [
@@ -54,12 +46,6 @@ function DatosCuenta({ perfil }: { perfil: PerfilResponse }) {
     );
 }
 
-/**
- * Mi perfil: autogestión de los datos personales (CU-001-003).
- *
- * Solo se editan nombre, apellido y fecha de nacimiento. Al guardar se relee la
- * sesión para que el nombre de la barra superior quede al día.
- */
 export function MiPerfil() {
     const { t } = useTranslation();
     const { refrescarSesion } = useSesion();

@@ -2,10 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// El cuadro de diálogo del paso 7 de CU-004-002: lo único que se pide para
-    /// clonar es el nombre de la copia.
-    /// </summary>
     public class BEClonarCurso
     {
         #region Propiedades

@@ -38,21 +38,8 @@ function EtiquetaNivel({ nivel }: { nivel: string | null }) {
     );
 }
 
-/**
- * Consulta de la bitácora de seguridad y auditoría.
- *
- * Los filtros y la paginación los resuelve `sp_Bitacora_Buscar`: la pantalla
- * nunca descarga la bitácora entera. Cambiar un filtro vuelve a la primera
- * página; cambiar de página conserva los filtros.
- *
- * Consultar la bitácora no deja registro en la propia bitácora, por decisión
- * explícita: si lo hiciera, cada búsqueda y cada cambio de página agregarían
- * ruido al listado que se está mirando.
- */
 export function AdminBitacora() {
     const { t } = useTranslation();
-    // Fecha y hora completas con la cultura activa: en una auditoría el minuto
-    // exacto importa, y el formato lo decide la cultura, no un locale fijo.
     const { formatearFecha } = useLocalizacion();
 
     function mensajeDeError(excepcion: unknown, clave: string): string {
@@ -68,9 +55,6 @@ export function AdminBitacora() {
     const [cargando, setCargando] = useState(true);
     const [buscando, setBuscando] = useState(false);
 
-    // La consulta la dispara el cambio de criterios, no el envío del formulario:
-    // así la carga inicial, cada búsqueda y cada cambio de página pasan por el
-    // mismo camino y no hay tres lugares donde manejar el error.
     useEffect(() => {
         bitacoraApi
             .buscar({ ...filtros, pagina, tamanioPagina })
@@ -86,7 +70,6 @@ export function AdminBitacora() {
                 setCargando(false);
                 setBuscando(false);
             });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filtros, pagina, tamanioPagina]);
 
     function buscar(nuevos: FiltrosBitacora) {
@@ -138,8 +121,6 @@ export function AdminBitacora() {
         },
         {
             encabezado: t('comun.campo.descripcion'),
-            // La descripción es nvarchar(MAX): sin recorte, una sola fila larga
-            // desarma la tabla. El texto completo queda en el title.
             celda: (fila) => (
                 <span
                     className="line-clamp-2 block max-w-md"

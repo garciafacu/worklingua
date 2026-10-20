@@ -6,10 +6,8 @@ import type {
 } from '../tipos/culturas';
 
 export const culturasApi = {
-    /** Las culturas activas. Público: el sitio las necesita antes del login. */
     listar: () => clienteHttp.get<CulturaResponse[]>('/culturas'),
 
-    /** Backoffice. Requiere el permiso Cultura.Listar. Incluye las desactivadas. */
     listarAdministracion: () => clienteHttp.get<CulturaAdminResponse[]>('/culturas/administracion'),
 
     crear: (cuerpo: GuardarCulturaRequest) =>

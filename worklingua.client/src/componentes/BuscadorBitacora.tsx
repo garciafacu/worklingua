@@ -58,9 +58,6 @@ export function BuscadorBitacora({ buscando, alBuscar }: BuscadorBitacoraProps) 
 
     function limpiar() {
         setFormulario(FORMULARIO_VACIO);
-        // Objeto nuevo en cada limpieza: el contenedor rehace la consulta cuando
-        // cambia la identidad de los criterios, así que reutilizar una constante
-        // haría que dos limpiezas seguidas no dispararan la segunda.
         alBuscar({});
     }
 

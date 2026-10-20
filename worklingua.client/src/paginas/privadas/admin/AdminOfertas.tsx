@@ -36,10 +36,6 @@ const FORMULARIO_VACIO = {
 
 type Formulario = typeof FORMULARIO_VACIO;
 
-/**
- * ABM de ofertas personales (punto 6.d): cada oferta va dirigida a UNA empresa
- * cliente y puede sugerir un plan. Son informativas: no alteran precios.
- */
 export function AdminOfertas() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();

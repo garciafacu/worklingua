@@ -8,7 +8,6 @@ import { Boton } from '../componentes/Boton';
 import { CampoTexto } from '../componentes/CampoTexto';
 import { TarjetaAuth } from '../componentes/TarjetaAuth';
 
-/** Cambio de clave con la sesión abierta. Requiere la clave actual. */
 export function CambiarClave() {
     const { t } = useTranslation();
 

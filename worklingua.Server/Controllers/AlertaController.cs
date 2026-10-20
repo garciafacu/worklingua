@@ -17,10 +17,6 @@ namespace worklingua.Server.Controllers
             oBLLBit = new BLLBitacora();
         }
 
-        /// <summary>
-        /// El panel (pasos 3 a 5). Sin Alerta.VerTodasLasEmpresas la BLL acota
-        /// la lista a la empresa del usuario de la sesión.
-        /// </summary>
         [HttpGet]
         [ProducesResponseType(typeof(List<BEAlertaRespuesta>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -39,10 +35,6 @@ namespace worklingua.Server.Controllers
             return Ok(respuesta);
         }
 
-        /// <summary>
-        /// A quiénes alcanzaría la condición, sin emitir nada. Pide
-        /// Alerta.Alta porque es el paso previo a crear una.
-        /// </summary>
         [HttpGet("alcance")]
         [ProducesResponseType(typeof(List<BEEmpleadoInactivo>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -63,7 +55,6 @@ namespace worklingua.Server.Controllers
             return Ok(oBLLAle.Previsualizar(oFiltroBE, oSesionBE));
         }
 
-        /// <summary>El escenario principal: guardar y emitir (pasos 6 a 14).</summary>
         [HttpPost]
         [ProducesResponseType(typeof(BEEmisionRespuesta), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -89,7 +80,6 @@ namespace worklingua.Server.Controllers
             return StatusCode(StatusCodes.Status201Created, respuesta);
         }
 
-        /// <summary>Vuelve a emitir una alerta activa.</summary>
         [HttpPost("{alertaId:int}/emitir")]
         [ProducesResponseType(typeof(BEEmisionRespuesta), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -118,7 +108,6 @@ namespace worklingua.Server.Controllers
             return Ok(respuesta);
         }
 
-        /// <summary>Camino alternativo 3: activar o desactivar la regla.</summary>
         [HttpPatch("{alertaId:int}/estado")]
         [ProducesResponseType(typeof(BEAlertaRespuesta), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

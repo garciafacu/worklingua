@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { CaracteristicaResponse } from '../tipos/caracteristicas';
 
-/** Una característica del catálogo más lo que ofrece el plan que se está editando. */
 export interface FilaCaracteristicaPlan {
     caracteristica: CaracteristicaResponse;
     asociada: boolean;
@@ -12,28 +11,11 @@ export interface FilaCaracteristicaPlan {
 interface SelectorCaracteristicasPlanProps {
     filas: FilaCaracteristicaPlan[];
     cargando: boolean;
-    /** Sin permiso de modificar, el selector queda de solo lectura. */
     puedeGuardar: boolean;
-    /** Ausente cuando la sesión no puede ver el catálogo. */
     alAdministrarCatalogo?: () => void;
     alCambiar: (caracteristicaId: number, cambios: Partial<FilaCaracteristicaPlan>) => void;
 }
 
-/**
- * Define qué características tiene un plan y con qué valor.
- *
- * Muestra el catálogo activo completo, no solo lo ya asociado: asociar una
- * característica nueva es marcar su casilla, y desasociarla es desmarcarla. Al
- * guardar se manda el conjunto entero y el backend reemplaza lo que había, así
- * que lo desmarcado queda desasociado.
- *
- * "Incluida" separa el ✓ del —: una característica puede estar asociada al plan
- * y aun así mostrarse como no incluida, que es lo que permite dejar constancia
- * explícita de lo que el plan no ofrece.
- *
- * Es un componente controlado: el estado vive en `FormularioPlan` porque el plan
- * y sus características se guardan con un mismo botón.
- */
 export function SelectorCaracteristicasPlan({
     filas,
     cargando,

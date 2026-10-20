@@ -1,9 +1,7 @@
 import { clienteHttp } from './clienteHttp';
 import type { GuardarPermisoRequest, PermisoResponse } from '../tipos/permisos';
 
-/** Backoffice. Cada operación exige su permiso `Permiso.*`, exclusivo del rol de plataforma. */
 export const permisosApi = {
-    /** Las raíces de la jerarquía, cada una con su subárbol. */
     listar: () => clienteHttp.get<PermisoResponse[]>('/permisos'),
 
     crear: (cuerpo: GuardarPermisoRequest) =>

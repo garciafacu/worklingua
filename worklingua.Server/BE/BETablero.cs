@@ -2,10 +2,6 @@ using System.Collections.Generic;
 
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Indicadores del negocio para el tablero del Backoffice. Los importes
-    /// están en la moneda base (ARS): los convierte la interfaz.
-    /// </summary>
     public class BETablero
     {
         #region Propiedades

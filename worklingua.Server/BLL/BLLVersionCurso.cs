@@ -5,21 +5,6 @@ using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// Trazabilidad de versiones de un curso (CU-004-004) y clonado de cursos
-    /// (CU-004-002).
-    ///
-    /// Un punto de restauración es el curso entero —datos, clasificación,
-    /// ventana, etiquetas, módulos y activos— serializado a XML. El documento
-    /// es la versión: restaurar es leerlo y volver a aplicarlo.
-    ///
-    /// Los dos casos de uso comparten el mismo armado del snapshot, y por eso
-    /// viven juntos: clonar es tomar el estado actual y escribirlo en un curso
-    /// nuevo; restaurar es tomar un estado viejo y escribirlo sobre el mismo.
-    ///
-    /// El alcance lo decide el curso: se reusa BLLCurso, así un curso de otra
-    /// empresa responde igual que en el ABM.
-    /// </summary>
     public class BLLVersionCurso
     {
         private const int LongitudMaximaObservaciones = 500;
@@ -48,10 +33,6 @@ namespace worklingua.Server.BLL
             return oMPPVer.ListarPorCurso(cursoId);
         }
 
-        /// <summary>
-        /// Camino alternativo 2: el punto de restauración manual. Congela el
-        /// estado actual del curso y lo guarda como XML.
-        /// </summary>
         public BEVersionContenido Crear(int cursoId, string observaciones, BESesion oSesionBE)
         {
             BECurso oCursoBE = oBLLCur.ExigirGestion(Filtro(cursoId), oSesionBE);
@@ -73,13 +54,6 @@ namespace worklingua.Server.BLL
             return oVersionBE;
         }
 
-        /// <summary>
-        /// El escenario principal: vuelve el curso al estado de la versión.
-        ///
-        /// Antes de aplicar nada guarda el estado actual como una versión
-        /// automática: restaurar no puede ser el movimiento que pierde lo que
-        /// había.
-        /// </summary>
         public BEResultadoRestauracion Restaurar(int versionContenidoId, BESesion oSesionBE)
         {
             BEVersionContenido oVersionBE = oMPPVer.ListarObjeto(versionContenidoId);
@@ -98,12 +72,6 @@ namespace worklingua.Server.BLL
             return Aplicar(oCursoBE.CursoId, oSnapshotBE, oSesionBE, true);
         }
 
-        /// <summary>
-        /// Elimina un punto de restauración que ya no hace falta.
-        ///
-        /// Exige poder gestionar el curso, igual que crear o restaurar: una
-        /// versión de un curso ajeno responde que no existe.
-        /// </summary>
         public BEVersionContenido Eliminar(int versionContenidoId, BESesion oSesionBE)
         {
             BEVersionContenido oVersionBE = oMPPVer.ListarObjeto(versionContenidoId);
@@ -120,11 +88,6 @@ namespace worklingua.Server.BLL
             return oVersionBE;
         }
 
-        /// <summary>
-        /// CU-004-002: duplica el curso con sus módulos y activos. Los activos
-        /// apuntan al mismo archivo —el caso de uso pide no alterar los
-        /// recursos originales— y la copia nace sin programar.
-        /// </summary>
         public BEResultadoRestauracion Clonar(int cursoId, string nombre, BESesion oSesionBE)
         {
             BECurso oOrigenBE = oBLLCur.ExigirGestion(Filtro(cursoId), oSesionBE);
@@ -132,7 +95,6 @@ namespace worklingua.Server.BLL
             BESnapshotCurso oSnapshotBE = Armar(oOrigenBE);
 
             oSnapshotBE.Curso.Nombre = Normalizar(nombre);
-            // La copia no hereda la programación: se publica cuando esté lista.
             oSnapshotBE.Curso.FechaPublicacion = null;
             oSnapshotBE.Curso.FechaFin = null;
 
@@ -142,18 +104,11 @@ namespace worklingua.Server.BLL
             CopiarDatos(oSnapshotBE.Curso, oCopiaBE);
             oCopiaBE.Etiquetas = ResolverEtiquetas(oSnapshotBE.Curso.Etiquetas);
 
-            // Guardar valida el nombre disponible (camino alternativo 1) y el
-            // alcance, y asigna la empresa como en cualquier alta.
             oCopiaBE = oBLLCur.Guardar(oCopiaBE, oSesionBE);
 
             return Aplicar(oCopiaBE.CursoId, oSnapshotBE, oSesionBE, false);
         }
 
-        /// <summary>
-        /// Camino alternativo 3: qué cambió entre dos versiones. Devuelve una
-        /// fila por campo distinto; las dos versiones tienen que ser del mismo
-        /// curso.
-        /// </summary>
         public List<BEDiferenciaVersion> Comparar(
             int versionIzquierdaId, int versionDerechaId, BESesion oSesionBE)
         {
@@ -189,7 +144,6 @@ namespace worklingua.Server.BLL
             return ListaBE;
         }
 
-        /// <summary>Arma el snapshot del curso tal como está hoy.</summary>
         private BESnapshotCurso Armar(BECurso oCursoBE)
         {
             BESnapshotCurso oSnapshotBE = new BESnapshotCurso();
@@ -202,7 +156,6 @@ namespace worklingua.Server.BLL
 
             foreach (BEActivoPedagogico oActivoBE in oMPPAct.ListarPorCurso(oFiltroActivoBE))
             {
-                // Un activo dado de baja no forma parte del estado del curso.
                 if (oActivoBE.Activo == true)
                 {
                     oSnapshotBE.Activos.Add(oActivoBE);
@@ -226,19 +179,6 @@ namespace worklingua.Server.BLL
             return oMPPVer.ListarObjeto(oVersionBE.VersionContenidoId);
         }
 
-        /// <summary>
-        /// Escribe el snapshot sobre un curso: datos, etiquetas, módulos y
-        /// activos. Lo usan restaurar y clonar.
-        ///
-        /// Módulos y activos se reconcilian por nombre: se da de baja lo que no
-        /// está en el snapshot y se agrega lo que falta. No se borra nada,
-        /// porque los módulos tienen progreso de empleados colgando.
-        /// </summary>
-        /// <param name="aplicarDatos">
-        /// Falso al clonar: el curso recién creado ya nació con los datos del
-        /// snapshot, y volver a guardarlos chocaría con la validación de nombre
-        /// único contra sí mismo.
-        /// </param>
         private BEResultadoRestauracion Aplicar(
             int cursoId, BESnapshotCurso oSnapshotBE, BESesion oSesionBE, bool aplicarDatos)
         {
@@ -280,9 +220,6 @@ namespace worklingua.Server.BLL
 
                 if (oExistenteBE != null && oExistenteBE.Activo == true)
                 {
-                    // El módulo sobrevive —tiene progreso colgando— pero su
-                    // objetivo, su contenido y su orden sí vuelven a los de la
-                    // versión: si no, restaurar dejaría la lección a medias.
                     ActualizarSiCambio(oExistenteBE, oDelSnapshotBE);
 
                     continue;
@@ -319,11 +256,6 @@ namespace worklingua.Server.BLL
             oMPPMod.ActualizarTextos(oActualBE);
         }
 
-        /// <summary>
-        /// Camino alternativo 2 de CU-004-002 y 1 de CU-004-004: el activo cuyo
-        /// archivo ya no está en disco se omite en vez de heredar un enlace
-        /// roto, y se informa cuántos quedaron afuera.
-        /// </summary>
         private void AplicarActivos(
             int cursoId, BESnapshotCurso oSnapshotBE, BEResultadoRestauracion respuesta)
         {
@@ -332,8 +264,6 @@ namespace worklingua.Server.BLL
 
             List<BEActivoPedagogico> ListaActualBE = oMPPAct.ListarPorCurso(oFiltroBE);
 
-            // Los módulos del destino ya están aplicados, así que acá se puede
-            // volver a atar cada activo al suyo por nombre.
             List<BEModulo> ListaModuloBE = oMPPMod.ListarPorCurso(Filtro(cursoId)) ?? new List<BEModulo>();
 
             foreach (BEActivoPedagogico oActualBE in ListaActualBE)
@@ -354,8 +284,6 @@ namespace worklingua.Server.BLL
                     respuesta.Omitidos++;
                     respuesta.NombresOmitidos.Add(oDelSnapshotBE.Nombre);
 
-                    // Si ya estaba vigente, tampoco puede quedarse: el punto de
-                    // omitirlo es no dejar el curso con un enlace roto.
                     if (oExistenteBE != null && oExistenteBE.Activo == true)
                     {
                         oExistenteBE.Activo = false;
@@ -377,27 +305,17 @@ namespace worklingua.Server.BLL
                 BEActivoPedagogico oNuevoBE = new BEActivoPedagogico();
 
                 oNuevoBE.CursoId = cursoId;
-                // Si el módulo ya no está, el activo vuelve a ser material
-                // general del curso en lugar de perderse.
                 oNuevoBE.ModuloId = oModuloBE == null ? (int?)null : oModuloBE.ModuloId;
                 oNuevoBE.Nombre = oDelSnapshotBE.Nombre;
                 oNuevoBE.TipoContenido = oDelSnapshotBE.TipoContenido;
                 oNuevoBE.Descripcion = oDelSnapshotBE.Descripcion;
                 oNuevoBE.UrlArchivo = oDelSnapshotBE.UrlArchivo;
-                // El estado viaja con el activo: una copia o una restauración que
-                // deja todo en borrador es material que el alumno no ve, y desde
-                // la pantalla parece que no se copió nada.
                 oNuevoBE.Estado = oDelSnapshotBE.Estado;
 
                 oMPPAct.Alta(oNuevoBE);
             }
         }
 
-        /// <summary>
-        /// Resuelve las etiquetas del snapshot contra el diccionario de hoy.
-        /// Una que ya no existe se descarta: el snapshot guarda nombres, no
-        /// ids, justamente para no depender de filas que pudieron cambiar.
-        /// </summary>
         private List<BEEtiqueta> ResolverEtiquetas(List<BEEtiqueta> ListaBE)
         {
             List<BEEtiqueta> ListaResueltaBE = new List<BEEtiqueta>();

@@ -4,20 +4,6 @@ import { notificacionesApi } from '../../api/notificacionesApi';
 import { useLocalizacion } from '../../contexto/useLocalizacion';
 import type { BandejaResponse } from '../../tipos/notificaciones';
 
-/**
- * La campana de notificaciones (CU-001-010).
- *
- * El caso de uso manda las alertas a "dispositivos móviles"; esta plataforma es
- * web, así que llegan acá. La bandeja no pide permiso: cualquier sesión puede
- * recibir notificaciones.
- *
- * Se lee al montar y cada vez que se abre el panel, sin polling: una alerta la
- * emite un administrador a mano, no es un flujo en tiempo real que justifique
- * un intervalo corriendo en cada pestaña.
- *
- * Si la bandeja falla, la campana simplemente no se muestra: es accesoria y no
- * tiene sentido romper la barra superior por ella.
- */
 export function CampanaNotificaciones() {
     const { t } = useTranslation();
     const { formatearFecha } = useLocalizacion();
@@ -33,8 +19,6 @@ export function CampanaNotificaciones() {
             .catch(() => setBandeja(null));
     }, []);
 
-    // Cerrar al hacer clic afuera o con Escape: el panel tapa contenido y
-    // quedarse abierto al navegar es molesto.
     useEffect(() => {
         if (!abierta) {
             return;

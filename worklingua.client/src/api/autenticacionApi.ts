@@ -18,7 +18,6 @@ export const autenticacionApi = {
     login: (datos: LoginRequest) =>
         clienteHttp.post<LoginResponse>('/autenticacion/login', datos),
 
-    /** Roles y permisos vigentes de la sesión abierta, resueltos de nuevo contra la base. */
     sesion: () => clienteHttp.get<LoginResponse>('/autenticacion/sesion'),
 
     logout: () => clienteHttp.post<void>('/autenticacion/logout'),

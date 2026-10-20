@@ -2,22 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { useLocalizacion } from '../../contexto/useLocalizacion';
 
 interface SelectorIdiomaProps {
-    /** Clases extra del contenedor, para acomodarlo en cada barra. */
     className?: string;
 }
 
-/**
- * Elige el idioma de la interfaz.
- *
- * Los idiomas salen de `GET /api/idiomas`, que devuelve **solo los activos**:
- * un idioma desactivado desde el Backoffice desaparece de acá en el acto.
- *
- * La elección vive en el navegador (`localStorage`), no en `Usuario`: es una
- * preferencia del dispositivo, no un dato de la persona.
- *
- * Con un solo idioma activo no se muestra nada: un selector de una sola opción
- * es ruido.
- */
 export function SelectorIdioma({ className = '' }: SelectorIdiomaProps) {
     const { t } = useTranslation();
     const { idiomas, idiomaActual, cambiarIdioma } = useLocalizacion();

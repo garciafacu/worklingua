@@ -1,15 +1,5 @@
 import { descargarTexto } from './descarga';
 
-/**
- * Parser de CSV mínimo para el padrón de empleados.
- *
- * Solo parte el texto en filas y columnas: no valida ni interpreta nada, de eso
- * se encarga el backend. Contempla lo que de verdad sale de un Excel en
- * castellano: separador `,` o `;`, comillas dobles con `""` adentro, BOM al
- * principio y saltos CRLF.
- */
-
-/** Una fila ya partida en celdas, con el número de línea del archivo. */
 export interface FilaCsv {
     numero: number;
     celdas: string[];
@@ -17,7 +7,6 @@ export interface FilaCsv {
 
 const BOM = '﻿';
 
-/** Elige el separador contando cuál aparece más en la primera línea. */
 function detectarSeparador(primeraLinea: string): string {
     let comas = 0;
     let puntoYComas = 0;
@@ -36,10 +25,6 @@ function detectarSeparador(primeraLinea: string): string {
     return puntoYComas > comas ? ';' : ',';
 }
 
-/**
- * Parte el contenido en filas. Las líneas en blanco se descartan: un CSV
- * exportado suele terminar con un salto de línea de más.
- */
 export function parsearCsv(contenido: string): FilaCsv[] {
     const texto = contenido.startsWith(BOM) ? contenido.slice(1) : contenido;
 
@@ -76,7 +61,6 @@ export function parsearCsv(contenido: string): FilaCsv[] {
 
         if (dentroDeComillas) {
             if (caracter === '"') {
-                // Dos comillas seguidas son una comilla literal.
                 if (texto[i + 1] === '"') {
                     valor += '"';
                     i++;
@@ -101,7 +85,6 @@ export function parsearCsv(contenido: string): FilaCsv[] {
         }
     }
 
-    // La última fila puede no terminar en salto de línea.
     if (valor !== '' || celdas.length > 0) {
         cerrarFila();
     }
@@ -109,10 +92,6 @@ export function parsearCsv(contenido: string): FilaCsv[] {
     return filas;
 }
 
-/**
- * Ubica las columnas por nombre de encabezado, sin distinguir mayúsculas ni
- * acentos: un archivo puede traer "email", "Email" o "E-mail".
- */
 export function indiceDeColumnas(encabezado: string[]): Record<string, number> {
     const indices: Record<string, number> = {};
 
@@ -131,30 +110,18 @@ export function indiceDeColumnas(encabezado: string[]): Record<string, number> {
     return indices;
 }
 
-/** Escapa una celda: entre comillas solo si hace falta. */
 function escribirCelda(valor: string | number): string {
     const texto = String(valor ?? '');
 
     return /[";\r\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
 }
 
-/**
- * Arma el texto de un CSV con `;` como separador, que es lo que espera un Excel
- * configurado en castellano.
- */
 export function generarCsv(encabezados: string[], filas: (string | number)[][]): string {
     const lineas = [encabezados, ...filas].map((fila) => fila.map(escribirCelda).join(';'));
 
     return lineas.join('\r\n');
 }
 
-/**
- * Descarga el CSV como archivo, sin pasar por el backend: el navegador ya tiene
- * los datos en pantalla, así que un endpoint de exportación solo repetiría la
- * consulta.
- *
- * Lleva BOM porque sin él Excel abre los acentos mal.
- */
 export function descargarCsv(nombreArchivo: string, contenido: string): void {
     descargarTexto(nombreArchivo, BOM + contenido, 'text/csv;charset=utf-8');
 }

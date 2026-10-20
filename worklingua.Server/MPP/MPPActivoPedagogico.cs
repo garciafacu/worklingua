@@ -17,10 +17,6 @@ namespace worklingua.Server.MPP
             oDatos = new Acceso();
         }
 
-        /// <summary>
-        /// Todos los activos del curso, incluidos los dados de baja: el panel
-        /// los muestra atenuados y permite reactivarlos.
-        /// </summary>
         public List<BEActivoPedagogico> ListarPorCurso(BEActivoPedagogico Objeto)
         {
             List<BEActivoPedagogico> ListaBE = new List<BEActivoPedagogico>();
@@ -65,9 +61,6 @@ namespace worklingua.Server.MPP
             Hdatos.Add("@Descripcion", Objeto.Descripcion);
             Hdatos.Add("@UrlArchivo", Objeto.UrlArchivo);
 
-            // El parámetro se manda solo si hay estado: sin él el SP aplica su
-            // default 'BORRADOR', que es lo que pide la subida normal. Mandarlo
-            // en null escribiría NULL en una columna NOT NULL, no el default.
             if (!string.IsNullOrEmpty(Objeto.Estado))
             {
                 Hdatos.Add("@Estado", Objeto.Estado);
@@ -78,7 +71,6 @@ namespace worklingua.Server.MPP
             return Convert.ToInt32(identidad);
         }
 
-        /// <summary>Publicar o volver a borrador.</summary>
         public bool CambiarEstado(BEActivoPedagogico Objeto)
         {
             Hdatos = new Hashtable();
@@ -90,7 +82,6 @@ namespace worklingua.Server.MPP
             return ServicioLectorFila.ATotalFilas(filas) > 0;
         }
 
-        /// <summary>Baja lógica y reactivación.</summary>
         public bool CambiarActivo(BEActivoPedagogico Objeto)
         {
             Hdatos = new Hashtable();

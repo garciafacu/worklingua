@@ -5,17 +5,6 @@ using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// Las licencias SaaS (CU-001-005). El cupo lo da el plan contratado
-    /// (`PlanSuscripcion.CantidadLicencias`) y se consume con las licencias
-    /// ACTIVA de la suscripción vigente.
-    ///
-    /// No hay pool pre-aprovisionado: la fila se crea al asignar. Revocar no
-    /// borra nada, pasa a REVOCADA y libera el cupo.
-    ///
-    /// Sin Licencia.VerTodasLasEmpresas se ve y se gestiona únicamente el
-    /// inventario de la empresa del usuario, igual que "Mi empresa".
-    /// </summary>
     public class BLLLicencia
     {
         public const string EstadoActiva = "ACTIVA";
@@ -36,10 +25,6 @@ namespace worklingua.Server.BLL
             oBLLEmp = new BLLEmpresa();
         }
 
-        /// <summary>
-        /// El inventario de una empresa: cupo del plan y empleados con su
-        /// situación. Con alcance total hay que decir qué empresa se mira.
-        /// </summary>
         public BEInventarioRespuesta ObtenerInventario(int empresaId, BESesion oSesionBE)
         {
             int? empresaQueLimita = EmpresaQueLimita(oSesionBE);
@@ -89,9 +74,6 @@ namespace worklingua.Server.BLL
             BESuscripcionConPlan oSuscripcionBE = ObtenerSuscripcionVigente(oUsuarioBE.EmpresaId);
             int suscripcionId = oSuscripcionBE.Suscripcion.SuscripcionId;
 
-            // Quien administra la empresa no necesita licencia: gastarle un cupo
-            // no le habilita nada y con el plan gratuito dejaría sin acceso al
-            // único empleado.
             if (!NecesitaLicencia(oUsuarioBE))
             {
                 throw new ExcepcionNegocio(
@@ -125,7 +107,6 @@ namespace worklingua.Server.BLL
             return oLicenciaBE;
         }
 
-        /// <summary>Revocar libera el cupo sin borrar el histórico.</summary>
         public BEUsuario Revocar(BELicencia Objeto, BESesion oSesionBE)
         {
             BELicencia oLicenciaBE = ObtenerLicenciaObligatoria(Objeto.LicenciaId);
@@ -142,11 +123,6 @@ namespace worklingua.Server.BLL
             return oUsuarioBE;
         }
 
-        /// <summary>
-        /// Una licencia vale si está ACTIVA y su suscripción también: al cancelar
-        /// una contratación las licencias quedan revocadas, pero si alguna
-        /// quedara colgada, esta comprobación la ignora igual.
-        /// </summary>
         public bool TieneLicenciaVigente(int usuarioId)
         {
             BELicencia oFiltroBE = new BELicencia();
@@ -159,14 +135,6 @@ namespace worklingua.Server.BLL
                    oLicenciaBE.EstadoSuscripcion == BLLSuscripcion.EstadoActiva;
         }
 
-        /// <summary>
-        /// Exige licencia para entrar a los cursos y registrar progreso.
-        ///
-        /// Solo alcanza al rol configurado en `Licencias:RolAlcanzado`: quien
-        /// administra la empresa gestiona las licencias pero no consume cupo, y
-        /// con el plan gratuito, que trae una sola, si no fuera así no quedaría
-        /// ninguna para un empleado.
-        /// </summary>
         public void ExigirLicenciaVigente(BEUsuario oUsuarioBE)
         {
             if (!NecesitaLicencia(oUsuarioBE))
@@ -208,7 +176,6 @@ namespace worklingua.Server.BLL
             return false;
         }
 
-        /// <summary>Al cancelar una contratación. Devuelve cuántas revocó.</summary>
         public int RevocarPorSuscripcion(int suscripcionId)
         {
             BELicencia oFiltroBE = new BELicencia();
@@ -217,7 +184,6 @@ namespace worklingua.Server.BLL
             return oMPPLic.RevocarPorSuscripcion(oFiltroBE);
         }
 
-        /// <summary>Al dar de baja un usuario o moverlo de empresa.</summary>
         public int RevocarPorUsuario(int usuarioId)
         {
             BELicencia oFiltroBE = new BELicencia();
@@ -226,11 +192,6 @@ namespace worklingua.Server.BLL
             return oMPPLic.RevocarPorUsuario(oFiltroBE);
         }
 
-        /// <summary>
-        /// Al cambiar de plan. Las licencias vigentes pasan a la suscripción
-        /// nueva; si el plan destino tiene menos cupo, el excedente queda
-        /// revocado y se conserva a quien la tiene hace más tiempo.
-        /// </summary>
         public int Migrar(BESuscripcionConPlan oOrigenBE, BESuscripcionConPlan oDestinoBE)
         {
             if (oOrigenBE == null || oDestinoBE == null)
@@ -245,11 +206,6 @@ namespace worklingua.Server.BLL
                 AVencimiento(oDestinoBE));
         }
 
-        /// <summary>
-        /// Cuántas licencias le quedan libres a la empresa. Lo usa el padrón
-        /// para no invitar a más gente de la que puede acceder, sin tener que
-        /// levantar el inventario completo ni exigir Licencia.Listar.
-        /// </summary>
         public int ObtenerCupoDisponible(int empresaId)
         {
             BESuscripcionConPlan oSuscripcionBE = ObtenerSuscripcionVigente(empresaId);
@@ -268,11 +224,6 @@ namespace worklingua.Server.BLL
             return oMPPLic.ContarActivas(oFiltroBE);
         }
 
-        /// <summary>
-        /// La licencia vence cuando vence la contratación. Es informativo: quien
-        /// decide si la licencia vale es el estado de la suscripción, para no
-        /// tener dos fuentes de verdad que se puedan desincronizar.
-        /// </summary>
         private DateTime? AVencimiento(BESuscripcionConPlan oSuscripcionBE)
         {
             DateOnly? fechaFin = oSuscripcionBE.Suscripcion.FechaFin;
@@ -342,7 +293,6 @@ namespace worklingua.Server.BLL
             return oEmpresaBE;
         }
 
-        /// <summary>Una licencia de otra empresa se informa como inexistente.</summary>
         private void ExigirAlcanceSobre(int empresaId, BESesion oSesionBE)
         {
             int? empresaQueLimita = EmpresaQueLimita(oSesionBE);

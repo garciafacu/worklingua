@@ -1,10 +1,5 @@
 namespace worklingua.Server.BE
 {
-    /// <summary>
-    /// Una fila del inventario: un empleado de la empresa, con su licencia si la
-    /// tiene. Los empleados sin licencia también viajan, porque son justamente a
-    /// quienes se les puede asignar una.
-    /// </summary>
     public class BEInventarioLicencia
     {
         #region Propiedades

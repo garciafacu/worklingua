@@ -12,21 +12,9 @@ import { CampoTexto } from './CampoTexto';
 interface PanelVersionesProps {
     cursoId: number;
     puedeModificar: boolean;
-    /** Avisa que el curso cambió, para que el ABM relea el listado. */
     alRestaurar: () => void;
 }
 
-/**
- * Historial de versiones de un curso (CU-004-004).
- *
- * Cada punto de restauración es el curso entero serializado a XML: datos,
- * clasificación, ventana, etiquetas, módulos y activos. Restaurar lee ese
- * documento y lo vuelve a aplicar, dejando antes una versión automática con lo
- * que había, así que nunca es un movimiento irreversible.
- *
- * El XML se puede ver tal cual: es el único lugar del proyecto donde el
- * formato del punto 23 del Formulario queda a la vista.
- */
 export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVersionesProps) {
     const { t } = useTranslation();
     const { formatearFecha } = useLocalizacion();
@@ -36,7 +24,6 @@ export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVe
     const [seleccionadas, setSeleccionadas] = useState<number[]>([]);
     const [diferencias, setDiferencias] = useState<DiferenciaVersionResponse[] | null>(null);
     const [xmlVisible, setXmlVisible] = useState<VersionResponse | null>(null);
-    /** Id de la versión que está esperando confirmación de borrado. */
     const [confirmandoBaja, setConfirmandoBaja] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
@@ -103,7 +90,6 @@ export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVe
         }
     }
 
-    /** Dos a la vez: elegir una tercera reemplaza a la más vieja. */
     function alternarSeleccion(versionId: number) {
         setDiferencias(null);
 
@@ -142,10 +128,6 @@ export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVe
         }
     }
 
-    /**
-     * El XML se pide completo recién acá: el historial viaja sin él, así que
-     * descargar es la única forma de llevárselo sin abrirlo en pantalla.
-     */
     async function descargarXml(version: VersionResponse) {
         setError(null);
 
@@ -171,7 +153,6 @@ export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVe
             await versionesApi.eliminar(version.versionContenidoId);
 
             setExito(t('admin.cursos.versiones.exitoEliminar'));
-            // Si estaba elegida para comparar o abierta, dejarla afuera.
             setSeleccionadas(seleccionadas.filter((id) => id !== version.versionContenidoId));
             setDiferencias(null);
 
@@ -337,7 +318,6 @@ export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVe
                         </div>
                     )}
 
-                    {/* Camino alternativo 3: qué cambió entre las dos. */}
                     {diferencias !== null && (
                         <div className="rounded-lg border border-borde p-3">
                             <h3 className="m-0 text-sm font-semibold text-texto">
@@ -392,7 +372,6 @@ export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVe
                         </div>
                     )}
 
-                    {/* El documento XML del punto 23, tal cual se guarda. */}
                     {xmlVisible !== null && (
                         <div className="rounded-lg border border-borde p-3">
                             <h3 className="m-0 text-sm font-semibold text-texto">

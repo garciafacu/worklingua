@@ -6,12 +6,6 @@ using worklingua.Server.BLL;
 
 namespace worklingua.Server.Controllers
 {
-    /// <summary>
-    /// Activos pedagógicos de un curso (CU-004-001).
-    ///
-    /// Sin permisos propios: se gestionan dentro del ABM de Cursos y reusan
-    /// Curso.Listar y Curso.Modificar, igual que los módulos.
-    /// </summary>
     [Route("api/activos")]
     public class ActivoController : ControladorBase
     {
@@ -46,13 +40,6 @@ namespace worklingua.Server.Controllers
             return Ok(respuesta);
         }
 
-        /// <summary>
-        /// El escenario principal. Llega como multipart porque trae el archivo;
-        /// es el único endpoint del proyecto que no recibe JSON.
-        ///
-        /// Con confirmarNombre en true el usuario ya aceptó la nomenclatura
-        /// sugerida del camino alternativo 1.
-        /// </summary>
         [HttpPost]
         [ProducesResponseType(typeof(BEActivoRespuesta), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -94,7 +81,6 @@ namespace worklingua.Server.Controllers
             return StatusCode(StatusCodes.Status201Created, Mapear(oGuardadoBE));
         }
 
-        /// <summary>Publicar o volver a borrador.</summary>
         [HttpPatch("{activoId:int}/publicacion")]
         [ProducesResponseType(typeof(BEActivoRespuesta), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -124,7 +110,6 @@ namespace worklingua.Server.Controllers
             return Ok(Mapear(oActivoBE));
         }
 
-        /// <summary>Baja lógica y reactivación.</summary>
         [HttpPatch("{activoId:int}/estado")]
         [ProducesResponseType(typeof(BEActivoRespuesta), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -153,10 +138,6 @@ namespace worklingua.Server.Controllers
             return Ok(Mapear(oActivoBE));
         }
 
-        /// <summary>
-        /// Pasa el archivo de la petición a una BE: la BLL valida y guarda sin
-        /// conocer IFormFile, que es un tipo de la capa web.
-        /// </summary>
         private BEArchivoSubido ALeido(IFormFile archivo)
         {
             if (archivo == null || archivo.Length == 0)

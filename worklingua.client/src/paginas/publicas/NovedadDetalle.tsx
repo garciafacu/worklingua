@@ -13,7 +13,6 @@ interface Resultado {
     error: string | null;
 }
 
-/** Detalle público de una noticia. El contenido es texto plano, nunca HTML. */
 export function NovedadDetalle() {
     const { t } = useTranslation();
     const { formatearFecha } = useLocalizacion();

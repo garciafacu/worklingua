@@ -30,10 +30,6 @@ namespace worklingua.Server.BLL
             oBLLEti = new BLLEtiqueta();
         }
 
-        /// <summary>
-        /// Mis cursos. Es el punto por el que pasa tambien Guardar, asi que el
-        /// control de licencia vive aca una sola vez (CU-001-005).
-        /// </summary>
         public List<BECursoConProgreso> ListarPorUsuario(BESesion oSesionBE)
         {
             BEUsuario oUsuarioBE = oBLLUsu.ObtenerPorId(oSesionBE.UsuarioId);
@@ -47,13 +43,6 @@ namespace worklingua.Server.BLL
             return ListaCursoBE;
         }
 
-        /// <summary>
-        /// Suma a cada curso su material de apoyo (CU-004-001).
-        ///
-        /// Va acá y no en el SP de progreso porque la DAL devuelve un DataTable
-        /// por llamada, y qué activo está disponible lo decide
-        /// BLLActivoPedagogico: los cursos ya los filtró el alcance de arriba.
-        /// </summary>
         private void AgregarActivosYClasificacion(List<BECursoConProgreso> ListaCursoBE)
         {
             List<BECurso> ListaSoloCursoBE = new List<BECurso>();
@@ -64,8 +53,6 @@ namespace worklingua.Server.BLL
                 ListaSoloCursoBE.Add(oCursoBE.Curso);
             }
 
-            // La clasificación se arma en BLLEtiqueta, el mismo lugar que usa
-            // el ABM de Cursos (CU-004-005).
             oBLLEti.AgregarACursos(ListaSoloCursoBE);
         }
 
