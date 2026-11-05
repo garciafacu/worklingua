@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import type { UsuarioSesion } from '../tipos/autenticacion';
+import type { UsuarioSesion } from '../tipos/usuarios';
 
 export interface EstadoSesion {
     usuario: UsuarioSesion | null;

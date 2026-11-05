@@ -6,22 +6,12 @@ namespace worklingua.Server.BLL
 {
     public class BLLInstalacion
     {
-        MPPUsuario oMPPUsu;
-        MPPRol oMPPRol;
-        BLLRol oBLLRol;
-        BLLEmpresa oBLLEmp;
-        BLLBitacora oBLLBit;
-        ServicioHash oServicioHash;
-
-        public BLLInstalacion()
-        {
-            oMPPUsu = new MPPUsuario();
-            oMPPRol = new MPPRol();
-            oBLLRol = new BLLRol();
-            oBLLEmp = new BLLEmpresa();
-            oBLLBit = new BLLBitacora();
-            oServicioHash = new ServicioHash();
-        }
+        MPPUsuario oMPPUsu = new MPPUsuario();
+        MPPRol oMPPRol = new MPPRol();
+        BLLRol oBLLRol = new BLLRol();
+        BLLEmpresa oBLLEmp = new BLLEmpresa();
+        BLLBitacora oBLLBit = new BLLBitacora();
+        ServicioHash oServicioHash = new ServicioHash();
 
         public void AsegurarSuperAdmin()
         {
@@ -107,13 +97,8 @@ namespace worklingua.Server.BLL
             AsignarRol(oUsuarioBE.UsuarioId, oRolBE.RolId);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloInstalacion,
-                "SuperAdminCreado",
-                "Alta de la cuenta de plataforma " + email + " con rol " + oRolBE.Nombre + ".",
-                null));
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloInstalacion, "SuperAdminCreado",
+                "Alta de la cuenta de plataforma " + email + " con rol " + oRolBE.Nombre + ".", null));
 
             ServicioLog.Informacion(
                 "Cuenta de plataforma creada: " + email + " (rol '" + oRolBE.Nombre + "', empresa '" +

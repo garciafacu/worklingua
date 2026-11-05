@@ -16,3 +16,12 @@ export function Alerta({ tipo, mensaje }: AlertaProps) {
         </p>
     );
 }
+
+export function AlertasResultado({ error, exito }: { error: string | null; exito: string | null }) {
+    return (
+        <div className="mt-6 flex flex-col gap-3">
+            <Alerta tipo="error" mensaje={error} />
+            <Alerta tipo="exito" mensaje={exito} />
+        </div>
+    );
+}

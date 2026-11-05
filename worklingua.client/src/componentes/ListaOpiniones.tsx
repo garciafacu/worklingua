@@ -1,38 +1,21 @@
 import { useTranslation } from 'react-i18next';
-import { Estrellas } from './Estrellas';
 import { useLocalizacion } from '../contexto/useLocalizacion';
 import type { OpinionResponse } from '../tipos/opiniones';
+import { Estrellas } from './Estrellas';
 
 interface ListaOpinionesProps {
     opiniones: OpinionResponse[];
-    /** Muestra a qué plan pertenece cada opinión, útil al buscar entre planes. */
     mostrarPlan?: boolean;
     mensajeVacio: string;
-    /** Cuál está esperando confirmación de borrado, o null si ninguna. */
     confirmando: number | null;
-    /** Deshabilita las acciones mientras hay un borrado en vuelo. */
     eliminando: boolean;
     alPedirConfirmacion: (comentarioId: number | null) => void;
     alEliminar: (comentarioId: number) => void;
 }
 
-/**
- * Botón de acción de fila, igual al de la tabla de Usuarios del Backoffice.
- *
- * Es la misma combinación de clases que usa `AdminUsuarios` en Editar, Reenviar
- * y Desactivar; se repite acá en vez de inventar un estilo propio para que
- * eliminar una opinión se vea como cualquier otra acción del sistema.
- *
- * El borde, el texto y el fondo del hover los pone cada botón: es lo único que
- * cambia entre la variante neutra y la destructiva. El hover NO va acá porque
- * dos utilidades `hover:bg-*` sobre el mismo elemento se resuelven por el orden
- * del CSS generado y no por el del atributo, así que la base le ganaría a la
- * variante la mitad de las veces.
- */
 const CLASE_ACCION =
     'rounded-lg border bg-superficie px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60';
 
-/** Las dos primeras letras del autor, para el avatar. */
 function iniciales(autor: string): string {
     const partes = autor.trim().split(/\s+/).filter(Boolean);
 
@@ -46,7 +29,6 @@ function iniciales(autor: string): string {
     return `${primera}${segunda}`.toUpperCase();
 }
 
-/** Opiniones publicadas, de la más nueva a la más vieja. */
 export function ListaOpiniones({
     opiniones,
     mostrarPlan = false,
@@ -57,7 +39,6 @@ export function ListaOpiniones({
     alEliminar,
 }: ListaOpinionesProps) {
     const { t } = useTranslation();
-    // La fecha se formatea con la cultura activa, no con un locale fijo.
     const { formatearFecha } = useLocalizacion();
 
     if (opiniones.length === 0) {
@@ -107,8 +88,6 @@ export function ListaOpiniones({
                                     </p>
                                 </div>
 
-                                {/* Los comentarios anteriores a la valoración no
-                                    tienen puntaje: se muestran sin estrellas. */}
                                 {opinion.puntaje !== null && (
                                     <p className="mt-1.5 mb-0 flex items-center gap-2">
                                         <Estrellas valor={opinion.puntaje} />
@@ -134,9 +113,6 @@ export function ListaOpiniones({
                                     </p>
                                 )}
 
-                                {/* Confirmación en línea y no window.confirm(): el
-                                    diálogo nativo bloquea la pestaña entera. Sigue el
-                                    mismo patrón que la baja de AdminUsuarios. */}
                                 {opinion.puedeEliminar && (
                                     <div className="mt-4 flex flex-wrap items-center gap-2">
                                         {enConfirmacion ? (

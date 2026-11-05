@@ -2,7 +2,6 @@ namespace worklingua.Server.BE
 {
     public class BEComentario
     {
-        #region Propiedades
         public int ComentarioId { get; set; }
         public int UsuarioId { get; set; }
         public int PlanId { get; set; }
@@ -10,29 +9,70 @@ namespace worklingua.Server.BE
         public int? Puntaje { get; set; }
         public DateTime FechaAlta { get; set; }
         public bool Activo { get; set; }
-        #endregion
+    }
 
-        public BEComentario()
+    public class BEComentarioConAutor
+    {
+        public BEComentario Comentario { get; set; }
+        public string Autor { get; set; }
+        public string Plan { get; set; }
+
+        public BEComentarioConAutor()
         {
-
         }
 
-        public BEComentario(
-            int comentarioId,
-            int usuarioId,
-            int planId,
-            string texto,
-            int? puntaje,
-            DateTime fechaAlta,
-            bool activo)
+        public BEComentarioConAutor(BEComentario comentario, string autor, string plan)
         {
-            this.ComentarioId = comentarioId;
-            this.UsuarioId = usuarioId;
+            this.Comentario = comentario;
+            this.Autor = autor;
+            this.Plan = plan;
+        }
+    }
+
+    public class BEComentarioRespuesta
+    {
+        public int ComentarioId { get; set; }
+        public int PlanId { get; set; }
+        public string Plan { get; set; }
+        public string Autor { get; set; }
+        public string Texto { get; set; }
+        public int? Puntaje { get; set; }
+        public DateTime FechaAlta { get; set; }
+        public bool EsPropio { get; set; }
+        public bool PuedeEliminar { get; set; }
+    }
+
+    public class BECrearComentario
+    {
+        public int PlanId { get; set; }
+        public int Puntaje { get; set; }
+        public string Texto { get; set; }
+    }
+
+    public class BEFiltroComentario
+    {
+        public int? PlanId { get; set; }
+        public string Texto { get; set; }
+        public DateTime? Desde { get; set; }
+        public DateTime? Hasta { get; set; }
+
+        public BEFiltroComentario()
+        {
+        }
+
+        public BEFiltroComentario(int? planId, string texto, DateTime? desde, DateTime? hasta)
+        {
             this.PlanId = planId;
             this.Texto = texto;
-            this.Puntaje = puntaje;
-            this.FechaAlta = fechaAlta;
-            this.Activo = activo;
+            this.Desde = desde;
+            this.Hasta = hasta;
         }
+    }
+
+    public class BEResumenValoracion
+    {
+        public int PlanId { get; set; }
+        public decimal Promedio { get; set; }
+        public int Cantidad { get; set; }
     }
 }

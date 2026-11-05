@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
 import { empresasApi } from '../../../api/empresasApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { BotonAccion, BotonesFormulario, ConfirmarBaja } from '../../../componentes/Boton';
+import { CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import type { EmpresaAdminResponse, GuardarEmpresaRequest } from '../../../tipos/empresas';
 
 const FORMULARIO_VACIO = {
@@ -30,11 +30,7 @@ export function AdminEmpresas() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     const [empresas, setEmpresas] = useState<EmpresaAdminResponse[]>([]);
     const [formulario, setFormulario] = useState<Formulario>(FORMULARIO_VACIO);
@@ -177,10 +173,7 @@ export function AdminEmpresas() {
                     : t('admin.empresas.miEmpresa.descripcion')}
             </p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -287,23 +280,12 @@ export function AdminEmpresas() {
                             />
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null
-                                    ? t('admin.empresas.formulario.crear')
-                                    : t('comun.boton.guardarCambios')}
-                            </Boton>
-
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.empresas.formulario.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}
@@ -323,13 +305,9 @@ export function AdminEmpresas() {
                             acciones={(fila) => (
                                 <div className="flex justify-end gap-2">
                                     {puedeModificar && (
-                                        <button
-                                            type="button"
-                                            onClick={() => editar(fila)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => editar(fila)}>
                                             {t('comun.boton.editar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {!alcanceTotal ? null : fila.protegido ? (
@@ -338,32 +316,12 @@ export function AdminEmpresas() {
                                         </span>
                                     ) : (
                                         puedeDarDeBaja &&
-                                        (confirmandoBaja === fila.empresaId ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void darDeBaja(fila)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                                >
-                                                    {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
-                                                    {t('comun.boton.no')}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => setConfirmandoBaja(fila.empresaId)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                            >
-                                                {t('comun.boton.darDeBaja')}
-                                            </button>
-                                        ))
+                                        (<ConfirmarBaja
+                                            confirmando={confirmandoBaja === fila.empresaId}
+                                            onPedir={() => setConfirmandoBaja(fila.empresaId)}
+                                            onConfirmar={() => void darDeBaja(fila)}
+                                            onCancelar={() => setConfirmandoBaja(null)}
+                                        />)
                                     )}
                                 </div>
                             )}

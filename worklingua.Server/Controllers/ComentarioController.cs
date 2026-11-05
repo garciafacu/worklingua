@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using worklingua.Server.BE;
 using worklingua.Server.BLL;
@@ -8,16 +7,9 @@ namespace worklingua.Server.Controllers
     [Route("api/comentarios")]
     public class ComentarioController : ControladorBase
     {
-        BLLComentario oBLLCom;
-        BLLSesion oBLLSes;
-        BLLSeguridad oBLLSeg;
-
-        public ComentarioController()
-        {
-            oBLLCom = new BLLComentario();
-            oBLLSes = new BLLSesion();
-            oBLLSeg = new BLLSeguridad();
-        }
+        BLLComentario oBLLCom = new BLLComentario();
+        BLLSesion oBLLSes = new BLLSesion();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
 
         [HttpGet]
         [ProducesResponseType(typeof(List<BEComentarioRespuesta>), StatusCodes.Status200OK)]
@@ -40,6 +32,8 @@ namespace worklingua.Server.Controllers
         public ActionResult<List<BEComentarioRespuesta>> Buscar(
             [FromQuery] BEFiltroComentario oFiltroBE)
         {
+            oBLLCom.Validar(oFiltroBE);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.ComentarioParticipar);
 
             List<BEComentarioConAutor> ListaComentarioBE = oBLLCom.Buscar(oFiltroBE);
@@ -79,6 +73,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<BEComentarioRespuesta> Crear([FromBody] BECrearComentario peticion)
         {
+            oBLLCom.Validar(peticion);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.ComentarioParticipar);
 
             BEComentario oComentarioBE = new BEComentario();
@@ -101,7 +97,7 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public IActionResult Eliminar(int comentarioId)
         {
-            BESesion oSesionBE = ObtenerSesionActiva();
+            BESesion oSesionBE = ExigirPermiso(Permisos.ComentarioParticipar);
 
             BEComentario oComentarioBE = new BEComentario();
             oComentarioBE.ComentarioId = comentarioId;

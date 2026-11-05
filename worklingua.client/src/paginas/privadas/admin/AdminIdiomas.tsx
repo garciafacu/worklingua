@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
 import { idiomasApi } from '../../../api/idiomasApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { BotonAccion, BotonesFormulario, ConfirmarBaja } from '../../../componentes/Boton';
+import { CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { IDIOMA_BASE } from '../../../i18n/configuracion';
 import type { GuardarIdiomaRequest, IdiomaAdminResponse } from '../../../tipos/idiomas';
 
@@ -36,11 +36,7 @@ export function AdminIdiomas() {
     const puedeModificar = tienePermiso('Idioma.Modificar');
     const puedeDarDeBaja = tienePermiso('Idioma.Baja');
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         idiomasApi
@@ -182,10 +178,7 @@ export function AdminIdiomas() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.idiomas.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -227,23 +220,12 @@ export function AdminIdiomas() {
                             <p className="ayuda">{t('admin.idiomas.formulario.ayudaAlta')}</p>
                         )}
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null
-                                    ? t('admin.idiomas.formulario.crear')
-                                    : t('comun.boton.guardarCambios')}
-                            </Boton>
-
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.idiomas.formulario.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}
@@ -283,56 +265,31 @@ export function AdminIdiomas() {
                             acciones={(fila) => (
                                 <div className="flex justify-end gap-2">
                                     {puedeModificar && (
-                                        <button
-                                            type="button"
-                                            onClick={() => editar(fila)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => editar(fila)}>
                                             {t('comun.boton.editar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeModificar && !esIdiomaBase(fila) && (
-                                        <button
-                                            type="button"
+                                        <BotonAccion
+                                            variante="primario"
                                             onClick={() => void cambiarEstado(fila)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-primario hover:bg-info-fondo"
                                         >
                                             {fila.activo
                                                 ? t('comun.boton.desactivar')
                                                 : t('comun.boton.activar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeDarDeBaja &&
                                         fila.activo &&
                                         !esIdiomaBase(fila) &&
-                                        (confirmandoBaja === fila.idiomaId ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void darDeBaja(fila)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                                >
-                                                    {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
-                                                    {t('comun.boton.no')}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => setConfirmandoBaja(fila.idiomaId)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                            >
-                                                {t('comun.boton.darDeBaja')}
-                                            </button>
-                                        ))}
+                                        (<ConfirmarBaja
+                                            confirmando={confirmandoBaja === fila.idiomaId}
+                                            onPedir={() => setConfirmandoBaja(fila.idiomaId)}
+                                            onConfirmar={() => void darDeBaja(fila)}
+                                            onCancelar={() => setConfirmandoBaja(null)}
+                                        />)}
                                 </div>
                             )}
                         />

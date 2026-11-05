@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
+using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
@@ -10,18 +10,10 @@ namespace worklingua.Server.BLL
         public const int PuntajeMinimo = 1;
         public const int PuntajeMaximo = 5;
 
-        MPPComentario oMPPCom;
-        BLLPlan oBLLPlan;
-        BLLBitacora oBLLBit;
-        BLLSeguridad oBLLSeg;
-
-        public BLLComentario()
-        {
-            oMPPCom = new MPPComentario();
-            oBLLPlan = new BLLPlan();
-            oBLLBit = new BLLBitacora();
-            oBLLSeg = new BLLSeguridad();
-        }
+        MPPComentario oMPPCom = new MPPComentario();
+        BLLPlan oBLLPlan = new BLLPlan();
+        BLLBitacora oBLLBit = new BLLBitacora();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
 
         public List<BEComentarioConAutor> ListarTodo(int planId)
         {
@@ -49,7 +41,7 @@ namespace worklingua.Server.BLL
         {
             BEFiltroComentario oFiltro = new BEFiltroComentario(
                 Objeto.PlanId.HasValue && Objeto.PlanId.Value > 0 ? Objeto.PlanId : null,
-                Normalizar(Objeto.Texto),
+                ServicioTexto.Normalizar(Objeto.Texto),
                 Objeto.Desde,
                 Objeto.Hasta);
 
@@ -61,6 +53,7 @@ namespace worklingua.Server.BLL
         public BEComentarioConAutor Guardar(BEComentario Objeto)
         {
             BEPlanSuscripcion oPlanBE = ObtenerPlanVigente(Objeto.PlanId);
+
             string limpio = Objeto.Texto == null ? string.Empty : Objeto.Texto.Trim();
 
             if (!Objeto.Puntaje.HasValue ||
@@ -72,12 +65,8 @@ namespace worklingua.Server.BLL
                     "La valoración debe ser de " + PuntajeMinimo + " a " + PuntajeMaximo + " estrellas.");
             }
 
-            if (limpio.Length > LongitudMaximaTexto)
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "El comentario no puede superar los " + LongitudMaximaTexto + " caracteres.");
-            }
+            ReglasNegocio.ExigirLargoMaximo(limpio, LongitudMaximaTexto,
+                "El comentario no puede superar los " + LongitudMaximaTexto + " caracteres.");
 
             BEComentarioConAutor oExistente = oMPPCom.ListarValoracion(Objeto);
             bool esModificacion = oExistente != null;
@@ -93,13 +82,9 @@ namespace worklingua.Server.BLL
             oComentarioBE.ComentarioId = oMPPCom.Guardar(oComentarioBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oComentarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloComentario,
+                0, oComentarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloComentario,
                 esModificacion ? "Modificacion" : "Alta",
-                "Valoración " + oComentarioBE.ComentarioId + " de " + oComentarioBE.Puntaje +
-                " estrellas sobre el plan " + oPlanBE.Nombre + ".",
+                "Valoración " + oComentarioBE.ComentarioId + " de " + oComentarioBE.Puntaje + " estrellas sobre el plan " + oPlanBE.Nombre + ".",
                 BLLBitacora.NivelInformativo));
 
             BEComentarioConAutor oGuardado = oMPPCom.ListarObjeto(oComentarioBE);
@@ -181,9 +166,21 @@ namespace worklingua.Server.BLL
                 TipoErrorNegocio.NoEncontrado, "El plan indicado no existe o ya no está vigente.");
         }
 
-        private string Normalizar(string criterio)
+        public void Validar(BEFiltroComentario Objeto)
         {
-            return string.IsNullOrWhiteSpace(criterio) ? null : criterio.Trim();
+            ReglasNegocio.ExigirRango(Objeto.PlanId, 1, int.MaxValue, "El plan seleccionado no es válido.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Texto, 200,
+                "El término de búsqueda no puede superar los 200 caracteres.");
+        }
+
+        public void Validar(BECrearComentario Objeto)
+        {
+            ReglasNegocio.ExigirRango(Objeto.PlanId, 1, int.MaxValue, "El plan seleccionado no es válido.");
+
+            ReglasNegocio.ExigirRango(Objeto.Puntaje, 1, 5, "Elegí entre 1 y 5 estrellas.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Texto, 1000, "El comentario no puede superar los 1000 caracteres.");
         }
     }
 }

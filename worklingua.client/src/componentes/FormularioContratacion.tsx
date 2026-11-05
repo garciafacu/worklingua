@@ -1,16 +1,13 @@
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../api/clienteHttp';
 import { contratacionesApi } from '../api/contratacionesApi';
 import { useLocalizacion } from '../contexto/useLocalizacion';
-import type {
-    ContratacionResponse,
-    CotizacionContratacionResponse,
-} from '../tipos/contrataciones';
+import type { ContratacionResponse, CotizacionContratacionResponse } from '../tipos/contrataciones';
 import type { PlanResponse } from '../tipos/planes';
 import { Alerta } from './Alerta';
-import { Boton } from './Boton';
-import { CampoTexto } from './CampoTexto';
+import { Boton, BotonAccion } from './Boton';
+import { CampoTexto } from './Campos';
 
 interface FormularioContratacionProps {
     plan: PlanResponse;
@@ -351,13 +348,9 @@ export function FormularioContratacion({ plan, alContratado, alCancelar }: Formu
                 <Boton type="submit" cargando={enviando}>
                     {t('privado.contratacion.confirmar', { importe: formatearMoneda(cotizacion.importe) })}
                 </Boton>
-                <button
-                    type="button"
-                    onClick={alCancelar}
-                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                >
+                <BotonAccion grande onClick={alCancelar}>
                     {t('comun.boton.cancelar')}
-                </button>
+                </BotonAccion>
             </div>
         </form>
     );

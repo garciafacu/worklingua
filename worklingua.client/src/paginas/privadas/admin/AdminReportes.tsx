@@ -1,18 +1,17 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../../../api/clienteHttp';
 import { reportesApi } from '../../../api/reportesApi';
 import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { GraficoBarras, type DatoGrafico } from '../../../componentes/GraficoBarras';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { Boton, BotonAccion } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type DatoGrafico, GraficoBarras } from '../../../componentes/GraficoBarras';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { descargarCsv, generarCsv } from '../../../servicios/csv';
 import {
-    AGRUPACIONES,
     type Agrupacion,
+    AGRUPACIONES,
     type GananciaPeriodoResponse,
     type GananciaZonaResponse,
 } from '../../../tipos/reportes';
@@ -261,13 +260,9 @@ export function AdminReportes() {
                     <Boton type="submit" cargando={cargando}>
                         {t('admin.reportes.buscar')}
                     </Boton>
-                    <button
-                        type="button"
-                        onClick={limpiar}
-                        className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                    >
+                    <BotonAccion grande onClick={limpiar}>
                         {t('admin.reportes.limpiar')}
-                    </button>
+                    </BotonAccion>
                 </div>
             </form>
 

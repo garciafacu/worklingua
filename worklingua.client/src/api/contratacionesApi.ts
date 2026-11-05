@@ -1,9 +1,10 @@
-import { clienteHttp } from './clienteHttp';
 import type {
     ContratacionResponse,
     ContratarPlanRequest,
     CotizacionContratacionResponse,
+    EstadoCuentaCorrienteResponse,
 } from '../tipos/contrataciones';
+import { clienteHttp } from './clienteHttp';
 
 export const contratacionesApi = {
     cotizar: (planId: number, codigoCultura: string) =>
@@ -18,4 +19,8 @@ export const contratacionesApi = {
         clienteHttp.post<ContratacionResponse>(`/contrataciones/${suscripcionId}/cancelar`, {
             codigoCultura,
         }),
+};
+
+export const cuentaCorrienteApi = {
+    obtener: () => clienteHttp.get<EstadoCuentaCorrienteResponse>('/cuenta-corriente'),
 };

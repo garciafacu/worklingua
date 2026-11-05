@@ -4,20 +4,12 @@ import { useSearchParams } from 'react-router-dom';
 import { ErrorApi } from '../../../api/clienteHttp';
 import { ticketsApi } from '../../../api/ticketsApi';
 import { Alerta } from '../../../componentes/Alerta';
-import { CampoSelect } from '../../../componentes/CampoSelect';
+import { CampoSelect } from '../../../componentes/Campos';
 import { EstadoTicketEtiqueta, HiloTicket } from '../../../componentes/HiloTicket';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { ESTADOS_TICKET, type EstadoTicket, type TicketResponse } from '../../../tipos/tickets';
 
-/**
- * Bandeja del HelpDesk en el Backoffice (punto 16): las consultas de todas las
- * empresas, con su historial.
- *
- * El operador toma una consulta (En proceso), la responde (Respondido, con aviso
- * por correo al cliente) y la cierra. Una respuesta del cliente la devuelve a
- * Pendiente. Requiere `Ticket.Atender`.
- */
 export function AdminSoporte() {
     const { t } = useTranslation();
     const { formatearFecha } = useLocalizacion();

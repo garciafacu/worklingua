@@ -1,11 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { autenticacionApi } from '../api/autenticacionApi';
 import { ErrorApi } from '../api/clienteHttp';
+import { autenticacionApi } from '../api/usuariosApi';
 import { Alerta } from '../componentes/Alerta';
 import { Boton } from '../componentes/Boton';
-import { CampoTexto } from '../componentes/CampoTexto';
+import { CampoTexto } from '../componentes/Campos';
 import { TarjetaAuth } from '../componentes/TarjetaAuth';
 
 export function CambiarClave() {

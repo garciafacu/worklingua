@@ -1,6 +1,5 @@
 import { createContext } from 'react';
-import type { CulturaResponse } from '../tipos/culturas';
-import type { IdiomaResponse } from '../tipos/idiomas';
+import type { CulturaResponse, IdiomaResponse } from '../tipos/idiomas';
 
 export interface EstadoLocalizacion {
     idiomas: IdiomaResponse[];

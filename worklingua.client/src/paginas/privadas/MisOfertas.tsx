@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ErrorApi } from '../../api/clienteHttp';
-import { ofertasApi } from '../../api/ofertasApi';
+import { ofertasApi } from '../../api/ticketsApi';
 import { Alerta } from '../../componentes/Alerta';
 import { useLocalizacion } from '../../contexto/useLocalizacion';
 import { rutaContratacion } from '../../rutas/contratacionPendiente';
-import type { OfertaResponse } from '../../tipos/ofertas';
+import type { OfertaResponse } from '../../tipos/tickets';
 
 export function MisOfertas() {
     const { t } = useTranslation();

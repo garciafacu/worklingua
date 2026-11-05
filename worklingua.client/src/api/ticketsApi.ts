@@ -1,10 +1,12 @@
-import { clienteHttp } from './clienteHttp';
 import type {
     CrearTicketRequest,
     EstadoTicket,
+    GuardarOfertaRequest,
+    OfertaResponse,
     OpcionesTicketResponse,
     TicketResponse,
 } from '../tipos/tickets';
+import { clienteHttp } from './clienteHttp';
 
 function conEstado(ruta: string, estado?: EstadoTicket | ''): string {
     return estado ? `${ruta}?estado=${estado}` : ruta;
@@ -35,4 +37,18 @@ export const ticketsApi = {
 
     cambiarEstado: (ticketId: number, estado: EstadoTicket) =>
         clienteHttp.put<TicketResponse>(`/tickets/administracion/${ticketId}/estado`, { estado }),
+};
+
+export const ofertasApi = {
+    listarMias: () => clienteHttp.get<OfertaResponse[]>('/ofertas/mias'),
+
+    listarAdministracion: () => clienteHttp.get<OfertaResponse[]>('/ofertas/administracion'),
+
+    crear: (cuerpo: GuardarOfertaRequest) =>
+        clienteHttp.post<OfertaResponse>('/ofertas/administracion', cuerpo),
+
+    modificar: (ofertaId: number, cuerpo: GuardarOfertaRequest) =>
+        clienteHttp.put<OfertaResponse>(`/ofertas/administracion/${ofertaId}`, cuerpo),
+
+    baja: (ofertaId: number) => clienteHttp.borrar<void>(`/ofertas/administracion/${ofertaId}`),
 };

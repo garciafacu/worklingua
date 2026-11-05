@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { Marca } from '../Basicos';
 import { FormularioNewsletter } from '../FormularioNewsletter';
-import { Marca } from '../Marca';
 
 const ENLACES_LEGALES = [
     { etiqueta: 'layout.publico.novedades', ruta: '/novedades' },

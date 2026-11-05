@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
 using worklingua.Server.Services;
@@ -9,22 +8,11 @@ namespace worklingua.Server.BLL
     {
         private const int LongitudMaximaObservaciones = 500;
 
-        MPPVersionContenido oMPPVer;
-        MPPModulo oMPPMod;
-        MPPActivoPedagogico oMPPAct;
-        MPPCurso oMPPCur;
-        BLLCurso oBLLCur;
-        BLLEtiqueta oBLLEti;
-
-        public BLLVersionCurso()
-        {
-            oMPPVer = new MPPVersionContenido();
-            oMPPMod = new MPPModulo();
-            oMPPAct = new MPPActivoPedagogico();
-            oMPPCur = new MPPCurso();
-            oBLLCur = new BLLCurso();
-            oBLLEti = new BLLEtiqueta();
-        }
+        MPPVersionContenido oMPPVer = new MPPVersionContenido();
+        MPPModulo oMPPMod = new MPPModulo();
+        MPPActivoPedagogico oMPPAct = new MPPActivoPedagogico();
+        BLLCurso oBLLCur = new BLLCurso();
+        BLLEtiqueta oBLLEti = new BLLEtiqueta();
 
         public List<BEVersionContenido> ListarPorCurso(int cursoId, BESesion oSesionBE)
         {
@@ -485,14 +473,16 @@ namespace worklingua.Server.BLL
 
             string limpio = valor.Trim();
 
-            if (limpio.Length > LongitudMaximaObservaciones)
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "Las observaciones no pueden superar los " + LongitudMaximaObservaciones + " caracteres.");
-            }
+            ReglasNegocio.ExigirLargoMaximo(limpio, LongitudMaximaObservaciones,
+                "Las observaciones no pueden superar los " + LongitudMaximaObservaciones + " caracteres.");
 
             return limpio.Length == 0 ? null : limpio;
+        }
+
+        public void Validar(BECurso Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.Nombre, "El nombre de la copia es obligatorio.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Nombre, 150, "El nombre no puede superar los 150 caracteres.");
         }
     }
 }

@@ -1,7 +1,7 @@
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using worklingua.Server.BE;
+using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
@@ -45,7 +45,7 @@ namespace worklingua.Server.BLL
             Privada("/inicio/cambiar-clave", "layout.menu.miCuenta", "cambiarClave", SeccionCuenta, null, 220),
 
             Privada("/inicio/admin/cursos", "layout.menu.cursos", "cursos", SeccionMiWorklingua, Permisos.CursoListar, 310),
-            Privada("/inicio/opiniones", "layout.menu.opiniones", "opiniones", SeccionMiWorklingua, null, 320),
+            Privada("/inicio/opiniones", "layout.menu.opiniones", "opiniones", SeccionMiWorklingua, Permisos.ComentarioParticipar, 320),
 
             Privada("/inicio/admin/usuarios", "layout.menu.usuarios", "usuarios", SeccionAdministracion, Permisos.UsuarioListar, 410),
             Privada("/inicio/admin/empresas", "layout.menu.empresas", "empresas", SeccionAdministracion, Permisos.EmpresaListar, 420),
@@ -63,19 +63,13 @@ namespace worklingua.Server.BLL
             Privada("/inicio/admin/bitacora", "layout.menu.bitacora", "bitacora", SeccionSeguridad, Permisos.BitacoraListar, 640)
         };
 
-        BLLTraduccion oBLLTra;
-        BLLSeguridad oBLLSeg;
-
-        public BLLBusqueda()
-        {
-            oBLLTra = new BLLTraduccion();
-            oBLLSeg = new BLLSeguridad();
-        }
+        BLLTraduccion oBLLTra = new BLLTraduccion();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
 
         public List<BEPaginaBuscable> Buscar(BEFiltroBusqueda Objeto, BESesion oSesionBE)
         {
             string area = ValidarArea(Objeto.Area);
-            string seccion = Normalizar(Objeto.Seccion);
+            string seccion = ServicioTexto.Normalizar(Objeto.Seccion);
             string ordenarPor = ValidarOrdenarPor(Objeto.OrdenarPor);
             string frase = NormalizarTexto(Acotar(Objeto.Texto));
             List<string> palabras = ObtenerPalabras(frase);
@@ -259,14 +253,14 @@ namespace worklingua.Server.BLL
 
         private string ResolverIdioma(string idioma)
         {
-            string codigo = Normalizar(idioma);
+            string codigo = ServicioTexto.Normalizar(idioma);
 
             return codigo == null ? BLLTraduccion.CodigoIdiomaBase : codigo;
         }
 
         private string ValidarArea(string area)
         {
-            string valor = Normalizar(area);
+            string valor = ServicioTexto.Normalizar(area);
 
             if (valor == null || valor == AreaPublica || valor == AreaPrivada)
             {
@@ -278,7 +272,7 @@ namespace worklingua.Server.BLL
 
         private string ValidarOrdenarPor(string ordenarPor)
         {
-            string valor = Normalizar(ordenarPor);
+            string valor = ServicioTexto.Normalizar(ordenarPor);
 
             if (valor == null)
             {
@@ -334,19 +328,9 @@ namespace worklingua.Server.BLL
             return resultado.ToString().Trim();
         }
 
-        private string Normalizar(string texto)
-        {
-            if (string.IsNullOrWhiteSpace(texto))
-            {
-                return null;
-            }
-
-            return texto.Trim();
-        }
-
         private string Acotar(string texto)
         {
-            string limpio = Normalizar(texto);
+            string limpio = ServicioTexto.Normalizar(texto);
 
             if (limpio == null)
             {
@@ -388,6 +372,21 @@ namespace worklingua.Server.BLL
                 true,
                 permiso,
                 orden);
+        }
+
+        public void Validar(BEFiltroBusqueda Objeto)
+        {
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Texto, 200,
+                "El término de búsqueda no puede superar los 200 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Idioma, 5, "El código de idioma no puede superar los 5 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Area, 10, "El área no puede superar los 10 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Seccion, 150, "La sección no puede superar los 150 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.OrdenarPor, 15,
+                "El criterio de orden no puede superar los 15 caracteres.");
         }
     }
 }

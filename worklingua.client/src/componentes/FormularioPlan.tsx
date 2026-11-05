@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { caracteristicasApi } from '../api/caracteristicasApi';
 import { ErrorApi } from '../api/clienteHttp';
-import { planesApi } from '../api/planesApi';
-import { Alerta } from './Alerta';
-import { Boton } from './Boton';
-import { CampoTexto } from './CampoTexto';
-import {
-    SelectorCaracteristicasPlan,
-    type FilaCaracteristicaPlan,
-} from './SelectorCaracteristicasPlan';
+import { caracteristicasApi, planesApi } from '../api/planesApi';
+import { useMensajeDeError } from '../hooks/useMensajeDeError';
 import type {
     GuardarPlanRequest,
     ItemPlanCaracteristica,
     PlanAdminResponse,
 } from '../tipos/planes';
+import { Alerta } from './Alerta';
+import { Boton, BotonAccion } from './Boton';
+import { CampoTexto } from './Campos';
+import {
+    type FilaCaracteristicaPlan,
+    SelectorCaracteristicasPlan,
+} from './SelectorCaracteristicasPlan';
 
 const FORMULARIO_VACIO = {
     nombre: '',
@@ -29,20 +29,12 @@ type Formulario = typeof FORMULARIO_VACIO;
 type Pestana = 'datos' | 'caracteristicas';
 
 interface FormularioPlanProps {
-    /** `null` es un alta. */
     plan: PlanAdminResponse | null;
     puedeCrear: boolean;
     puedeModificar: boolean;
-    /**
-     * Cambia cada vez que el catálogo se modifica desde el modal. Al cambiar, el
-     * formulario vuelve a pedirlo conservando lo que ya se marcó.
-     */
     versionCatalogo: number;
-    /** Ausente cuando la sesión no puede ver el catálogo. */
     alAdministrarCatalogo?: () => void;
-    /** Relee el listado de planes sin perder lo que se está editando. */
     alRecargarListado: () => void;
-    /** Vuelve el formulario al modo alta, sin guardar. */
     alCancelar: () => void;
     alGuardado: (mensaje: string) => void;
 }
@@ -61,18 +53,6 @@ function aFormulario(plan: PlanAdminResponse | null): Formulario {
     };
 }
 
-/**
- * Alta y edición de un plan, con sus características, en una sola operación.
- *
- * Antes eran dos pantallas: el formulario guardaba el plan y un panel aparte
- * guardaba las características. Acá el botón es uno solo, así que un plan nuevo
- * ya nace con lo que ofrece en vez de nacer vacío.
- *
- * Son dos requests igual, porque `PUT /planes/{id}/caracteristicas` necesita el
- * id que devuelve el alta. Si el segundo falla, el plan ya quedó creado: el
- * formulario avisa, se para en la pestaña Características y pasa a modo edición
- * sobre ese id, para que reintentar no cree un duplicado.
- */
 export function FormularioPlan({
     plan,
     puedeCrear,
@@ -87,8 +67,6 @@ export function FormularioPlan({
     const idFormulario = useId();
     const versionAlMontar = useRef(versionCatalogo);
 
-    // El id inicial no cambia mientras el formulario vive: el componente se
-    // vuelve a montar por cada plan. `planId` sí cambia, cuando un alta termina.
     const planIdInicial = plan === null ? null : plan.planId;
 
     const [formulario, setFormulario] = useState<Formulario>(() => aFormulario(plan));
@@ -99,21 +77,10 @@ export function FormularioPlan({
     const [cargando, setCargando] = useState(true);
     const [guardando, setGuardando] = useState(false);
 
-    /** Sin el permiso que corresponde al modo, el formulario queda de solo lectura. */
     const puedeEditarCampos = planId === null ? puedeCrear : puedeModificar;
 
-    // En useCallback para poder ir en las dependencias de los efectos que lo
-    // usan: sin eso el linter avisa, y el mensaje de error quedaría en el idioma
-    // anterior después de cambiar de idioma.
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
-    // El pedido vive dentro del efecto y no en una función que el efecto llame,
-    // para no disparar setState de forma sincrónica en su cuerpo
-    // (react-hooks/set-state-in-effect).
     useEffect(() => {
         Promise.all([
             caracteristicasApi.listar(),
@@ -143,11 +110,6 @@ export function FormularioPlan({
             .finally(() => setCargando(false));
     }, [planIdInicial, mensajeDeError]);
 
-    // Relectura del catálogo después de tocarlo en el modal. Conserva lo que ya
-    // estaba marcado: solo agrega las nuevas y actualiza nombre y orden.
-    //
-    // La versión del montaje se guarda en un ref para saltear la primera
-    // ejecución: el catálogo ya lo trajo el efecto de arriba.
     useEffect(() => {
         if (versionCatalogo === versionAlMontar.current) {
             return;
@@ -229,8 +191,6 @@ export function FormularioPlan({
             return;
         }
 
-        // En edición se manda siempre, incluso vacío: es la única forma de
-        // desasociar lo que se desmarcó, porque el PUT reemplaza el conjunto.
         if (puedeModificar) {
             try {
                 await planesApi.guardarCaracteristicas(idGuardado, { caracteristicas });
@@ -285,9 +245,6 @@ export function FormularioPlan({
             <Alerta tipo="error" mensaje={error} />
 
             <form id={idFormulario} onSubmit={guardar} noValidate>
-                {/* El contenedor con `hidden` no lleva clases de display: una
-                    utilidad como `flex` le ganaría al `[hidden]` del navegador y
-                    la pestaña oculta se seguiría viendo. */}
                 <div
                     role="tabpanel"
                     id={`${idFormulario}-panel-datos`}
@@ -351,8 +308,6 @@ export function FormularioPlan({
                             />
                         </div>
 
-                        {/* La banda "Recomendado" del catálogo público sale de acá:
-                            antes era una constante con el nombre del plan. */}
                         <label className="flex items-center gap-2.5 text-sm text-texto">
                             <input
                                 type="checkbox"
@@ -398,13 +353,9 @@ export function FormularioPlan({
                 )}
 
                 {planId !== null && (
-                    <button
-                        type="button"
-                        onClick={alCancelar}
-                        className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                    >
+                    <BotonAccion grande onClick={alCancelar}>
                         {t('comun.boton.cancelar')}
-                    </button>
+                    </BotonAccion>
                 )}
             </div>
         </div>

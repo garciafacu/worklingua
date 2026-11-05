@@ -26,16 +26,10 @@ namespace worklingua.Server.Services
         public static string SuperAdminRol { get; private set; }
         public static string SuperAdminEmpresaCuit { get; private set; }
 
-        /// <summary>
-        /// Rol cuyos usuarios necesitan una licencia para entrar a sus cursos
-        /// (CU-001-005). Quien administra la empresa no consume cupo.
-        /// </summary>
         public static string LicenciasRolAlcanzado { get; private set; }
 
-        /// <summary>Fallos consecutivos que bloquean la cuenta (CU-003-004).</summary>
         public static int IntentosMaximos { get; private set; }
 
-        /// <summary>Cuánto dura el bloqueo antes de liberarse solo.</summary>
         public static int MinutosBloqueo { get; private set; }
 
         public static string EmailRemitente { get; private set; }

@@ -1,9 +1,15 @@
-import { clienteHttp } from './clienteHttp';
 import type {
+    EnviarNewsletterRequest,
+    EnvioNewsletterResponse,
     GuardarNoticiaRequest,
     NoticiaAdminResponse,
     NoticiaResponse,
+    SuscribirNewsletterRequest,
+    SuscriptorNewsletterResponse,
+    VistaPreviaNewsletterResponse,
 } from '../tipos/noticias';
+import type { MensajeResponse } from '../tipos/usuarios';
+import { clienteHttp } from './clienteHttp';
 
 export const noticiasApi = {
     listarPublicadas: (idioma: string) =>
@@ -24,4 +30,26 @@ export const noticiasApi = {
         clienteHttp.put<NoticiaAdminResponse>(`/noticias/${noticiaId}`, cuerpo),
 
     baja: (noticiaId: number) => clienteHttp.borrar<void>(`/noticias/${noticiaId}`),
+};
+
+export const newsletterApi = {
+    suscribir: (datos: SuscribirNewsletterRequest) =>
+        clienteHttp.post<MensajeResponse>('/newsletter/suscripciones', datos),
+
+    confirmar: (token: string) =>
+        clienteHttp.post<MensajeResponse>('/newsletter/suscripciones/confirmar', { token }),
+
+    darDeBaja: (token: string) =>
+        clienteHttp.post<MensajeResponse>('/newsletter/suscripciones/baja', { token }),
+
+    listarSuscriptores: () =>
+        clienteHttp.get<SuscriptorNewsletterResponse[]>('/newsletter/suscriptores'),
+
+    listarEnvios: () => clienteHttp.get<EnvioNewsletterResponse[]>('/newsletter/envios'),
+
+    previsualizar: (cuerpo: EnviarNewsletterRequest) =>
+        clienteHttp.post<VistaPreviaNewsletterResponse>('/newsletter/envios/previsualizar', cuerpo),
+
+    enviar: (cuerpo: EnviarNewsletterRequest) =>
+        clienteHttp.post<EnvioNewsletterResponse>('/newsletter/envios', cuerpo),
 };

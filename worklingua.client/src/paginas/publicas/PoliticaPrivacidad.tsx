@@ -14,11 +14,6 @@ export function PoliticaPrivacidad() {
 
             <h2>{t('legal.privacidad.datos.titulo')}</h2>
             <ul>
-                {/*
-                    Cada ítem abre con un rótulo en negrita. Va con <Trans> y una
-                    sola clave para que la traducción decida dónde termina el
-                    rótulo: en inglés el corte no cae en el mismo lugar.
-                */}
                 <li>
                     <Trans i18nKey="legal.privacidad.datos.li1">
                         <strong>De la cuenta:</strong> nombre, apellido, documento, correo

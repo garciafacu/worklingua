@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Marca } from './Marca';
+import { Marca } from './Basicos';
 
 interface TarjetaAuthProps {
     titulo: string;

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
 using worklingua.Server.Services;
@@ -10,20 +9,11 @@ namespace worklingua.Server.BLL
         public const string EstadoActiva = "ACTIVA";
         public const string EstadoRevocada = "REVOCADA";
 
-        MPPLicencia oMPPLic;
-        MPPUsuario oMPPUsu;
-        BLLSeguridad oBLLSeg;
-        BLLSuscripcion oBLLSus;
-        BLLEmpresa oBLLEmp;
-
-        public BLLLicencia()
-        {
-            oMPPLic = new MPPLicencia();
-            oMPPUsu = new MPPUsuario();
-            oBLLSeg = new BLLSeguridad();
-            oBLLSus = new BLLSuscripcion();
-            oBLLEmp = new BLLEmpresa();
-        }
+        MPPLicencia oMPPLic = new MPPLicencia();
+        MPPUsuario oMPPUsu = new MPPUsuario();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
+        BLLSuscripcion oBLLSus = new BLLSuscripcion();
+        BLLEmpresa oBLLEmp = new BLLEmpresa();
 
         public BEInventarioRespuesta ObtenerInventario(int empresaId, BESesion oSesionBE)
         {
@@ -65,9 +55,9 @@ namespace worklingua.Server.BLL
             return respuesta;
         }
 
-        public BELicencia Asignar(BEAsignarLicencia Objeto, BESesion oSesionBE)
+        public BELicencia Asignar(BELicencia Objeto, BESesion oSesionBE)
         {
-            BEUsuario oUsuarioBE = ObtenerUsuarioObligatorio(Objeto.UsuarioId);
+            BEUsuario oUsuarioBE = ObtenerUsuarioObligatorio(Objeto.UsuarioId ?? 0);
 
             ExigirAlcanceSobre(oUsuarioBE.EmpresaId, oSesionBE);
 
@@ -123,7 +113,7 @@ namespace worklingua.Server.BLL
             return oUsuarioBE;
         }
 
-        public bool TieneLicenciaVigente(int usuarioId)
+        private bool TieneLicenciaVigente(int usuarioId)
         {
             BELicencia oFiltroBE = new BELicencia();
             oFiltroBE.UsuarioId = usuarioId;
@@ -283,14 +273,7 @@ namespace worklingua.Server.BLL
             BEEmpresa oFiltroBE = new BEEmpresa();
             oFiltroBE.EmpresaId = empresaId;
 
-            BEEmpresa oEmpresaBE = oBLLEmp.ListarObjeto(oFiltroBE);
-
-            if (oEmpresaBE == null)
-            {
-                throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "La empresa no existe.");
-            }
-
-            return oEmpresaBE;
+            return oBLLEmp.ListarObjeto(oFiltroBE);
         }
 
         private void ExigirAlcanceSobre(int empresaId, BESesion oSesionBE)
@@ -305,22 +288,13 @@ namespace worklingua.Server.BLL
 
         private int? EmpresaQueLimita(BESesion oSesionBE)
         {
-            if (oBLLSeg.Tiene(oSesionBE.UsuarioId, Permisos.LicenciaVerTodasLasEmpresas))
-            {
-                return null;
-            }
+            return oBLLSeg.EmpresaQueLimita(oSesionBE, Permisos.LicenciaVerTodasLasEmpresas);
+        }
 
-            BEUsuario oFiltroBE = new BEUsuario();
-            oFiltroBE.UsuarioId = oSesionBE.UsuarioId;
-
-            BEUsuario oUsuarioBE = oMPPUsu.ListarObjeto(oFiltroBE);
-
-            if (oUsuarioBE == null)
-            {
-                throw new ExcepcionNegocio(TipoErrorNegocio.SesionInvalida, "El usuario de la sesión no existe.");
-            }
-
-            return oUsuarioBE.EmpresaId;
+        public void Validar(BELicencia Objeto)
+        {
+            ReglasNegocio.ExigirRango(Objeto.UsuarioId ?? 0, 1, int.MaxValue,
+                "Elegí el empleado al que asignarle la licencia.");
         }
     }
 }

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { caracteristicasApi } from '../../api/caracteristicasApi';
 import { ErrorApi } from '../../api/clienteHttp';
-import { planesApi } from '../../api/planesApi';
+import { caracteristicasApi, planesApi } from '../../api/planesApi';
 import { Alerta } from '../../componentes/Alerta';
+import { CampoSelect } from '../../componentes/Campos';
 import { FiltrosPlanes } from '../../componentes/FiltrosPlanes';
 import { TarjetaPlan } from '../../componentes/TarjetaPlan';
 import { useSesion } from '../../contexto/useSesion';
@@ -14,20 +14,12 @@ import {
     rutaContratacion,
 } from '../../rutas/contratacionPendiente';
 import { PERMISOS } from '../../rutas/itemsMenu';
-import type { CaracteristicaResponse } from '../../tipos/caracteristicas';
-import type { PlanResponse } from '../../tipos/planes';
+import type { CaracteristicaResponse, PlanResponse } from '../../tipos/planes';
 
-/**
- * Sección pública de planes (Free, Premium y Enterprise). La contratación ocurre
- * en la plataforma (`/inicio/plan`): con sesión y permiso, "Contratar" enlaza
- * ahí; sin sesión, lleva al login con el plan elegido para retomarla después.
- *
- * La comparación (punto 14) ocurre sobre las mismas tarjetas: se filtran los
- * planes y las características a mostrar, y la grilla se rearma al instante. No
- * hay pantalla, tabla ni botón de comparación aparte.
- */
 const CLASE_BOTON_CONTRATAR =
     'rounded-lg bg-primario px-3 py-1.5 text-sm font-semibold text-white no-underline hover:bg-primario-hover';
+
+type OrdenPlanes = 'precio' | 'valoracion';
 
 export function Planes() {
     const { t } = useTranslation();
@@ -35,26 +27,18 @@ export function Planes() {
     const [planes, setPlanes] = useState<PlanResponse[]>([]);
     const [caracteristicas, setCaracteristicas] = useState<CaracteristicaResponse[]>([]);
     const [planesVisibles, setPlanesVisibles] = useState<number[]>([]);
+    const [orden, setOrden] = useState<OrdenPlanes>('precio');
     const [idsVisibles, setIdsVisibles] = useState<number[]>([]);
-    /**
-     * Característica señalada. Vive en la sección y no en cada tarjeta para que
-     * al apuntar una fila se resalte la misma en todos los planes: es lo que
-     * permite leer la comparación de lado a lado.
-     */
     const [idActivo, setIdActivo] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
     const { autenticado, tienePermiso } = useSesion();
 
-    // Los planes traen qué ofrecen en cada característica; el catálogo trae el
-    // nombre y el orden, que son uno solo y no se repiten por plan.
     useEffect(() => {
         Promise.all([planesApi.listar(), caracteristicasApi.listar()])
             .then(([listaPlanes, listaCaracteristicas]) => {
                 setPlanes(listaPlanes);
                 setCaracteristicas(listaCaracteristicas);
-                // Arrancan todos marcados: por defecto la sección muestra las
-                // tarjetas completas, sin nada filtrado.
                 setPlanesVisibles(listaPlanes.map((plan) => plan.planId));
                 setIdsVisibles(listaCaracteristicas.map((fila) => fila.caracteristicaId));
             })
@@ -66,9 +50,6 @@ export function Planes() {
                 ),
             )
             .finally(() => setCargando(false));
-        // `t` entra en las dependencias porque cambia de identidad al cambiar
-        // de idioma; volver a pedir los planes es inocuo y evita que el mensaje
-        // de error quede en el idioma anterior.
     }, [t]);
 
     function alternarPlan(planId: number) {
@@ -92,11 +73,19 @@ export function Planes() {
         setIdsVisibles(caracteristicas.map((fila) => fila.caracteristicaId));
     }
 
-    // Se filtra sobre `planes` y no sobre `planesVisibles` para que las tarjetas
-    // salgan siempre ordenadas por precio, sin importar en qué orden se marcaron.
-    // La grilla no lleva `items-start`: estirar las tarjetas a la misma altura es
-    // lo que mantiene alineados los pies y las filas de características.
-    const planesAMostrar = planes.filter((plan) => planesVisibles.includes(plan.planId));
+    const planesAMostrar = ordenar(planes.filter((plan) => planesVisibles.includes(plan.planId)));
+
+    function ordenar(lista: PlanResponse[]) {
+        if (orden !== 'valoracion') {
+            return lista;
+        }
+
+        return [...lista].sort(
+            (uno, otro) =>
+                otro.promedioValoracion - uno.promedioValoracion ||
+                otro.cantidadValoraciones - uno.cantidadValoraciones,
+        );
+    }
 
     return (
         <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
@@ -133,6 +122,18 @@ export function Planes() {
                         alSenalarCaracteristica={setIdActivo}
                     />
 
+                    <div className="mt-6 sm:w-64">
+                        <CampoSelect
+                            etiqueta={t('publico.planes.orden')}
+                            identificador="ordenPlanes"
+                            value={orden}
+                            onChange={(evento) => setOrden(evento.target.value as OrdenPlanes)}
+                        >
+                            <option value="precio">{t('publico.planes.orden.precio')}</option>
+                            <option value="valoracion">{t('publico.planes.orden.valoracion')}</option>
+                        </CampoSelect>
+                    </div>
+
                     {planesAMostrar.length === 0 ? (
                         <p className="mt-6 rounded-2xl border border-dashed border-borde bg-superficie px-6 py-10 text-center text-sm text-texto-suave">
                             {t('publico.planes.sinSeleccion')}
@@ -148,12 +149,6 @@ export function Planes() {
                                     idActivo={idActivo}
                                     alSenalarCaracteristica={setIdActivo}
                                     pie={
-                                        /* Las opiniones son visibles solo para
-                                           personas registradas, así que sin sesión el
-                                           enlace lleva al login en lugar de a una
-                                           pantalla que devolvería 403. Con sesión pero
-                                           sin Comentario.Participar, el enlace no se
-                                           ofrece: llevaría a un rebote silencioso. */
                                         autenticado ? (
                                             <div className="flex flex-wrap items-center justify-between gap-3">
                                                 {tienePermiso(PERMISOS.comentarioParticipar) && (
@@ -181,10 +176,6 @@ export function Planes() {
                                                 >
                                                     {t('publico.planes.loginOpiniones')}
                                                 </Link>
-                                                {/* Sin sesión, contratar empieza por
-                                                    ingresar: el plan viaja al login y se
-                                                    recuerda por si la cuenta se crea y
-                                                    confirma en otra pestaña. */}
                                                 <Link
                                                     to={conPlanPendiente('/login', plan.planId)}
                                                     onClick={() => recordarPlanAContratar(plan.planId)}

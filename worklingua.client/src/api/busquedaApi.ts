@@ -1,4 +1,4 @@
-import { clienteHttp } from './clienteHttp';
+import { aConsulta, clienteHttp } from './clienteHttp';
 import type {
     CriteriosBusqueda,
     PaginaBuscableResponse,
@@ -6,31 +6,14 @@ import type {
 } from '../tipos/busqueda';
 
 function armarConsulta(criterios: CriteriosBusqueda, idioma: string): string {
-    const parametros = new URLSearchParams();
-
-    if (criterios.texto?.trim()) {
-        parametros.set('texto', criterios.texto.trim());
-    }
-
-    if (criterios.area) {
-        parametros.set('area', criterios.area);
-    }
-
-    if (criterios.seccion) {
-        parametros.set('seccion', criterios.seccion);
-    }
-
-    if (criterios.ordenarPor) {
-        parametros.set('ordenarPor', criterios.ordenarPor);
-    }
-
-    if (criterios.soloTitulo) {
-        parametros.set('soloTitulo', 'true');
-    }
-
-    parametros.set('idioma', idioma);
-
-    return `?${parametros.toString()}`;
+    return aConsulta({
+        texto: criterios.texto,
+        area: criterios.area,
+        seccion: criterios.seccion,
+        ordenarPor: criterios.ordenarPor,
+        soloTitulo: criterios.soloTitulo,
+        idioma,
+    });
 }
 
 export const busquedaApi = {

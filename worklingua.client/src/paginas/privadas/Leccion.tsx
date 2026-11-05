@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ErrorApi } from '../../api/clienteHttp';
-import { progresoApi } from '../../api/progresoApi';
+import { progresoApi } from '../../api/cursosApi';
 import { Alerta } from '../../componentes/Alerta';
-import { EtiquetaEstado, type TonoEstado } from '../../componentes/EtiquetaEstado';
+import { EtiquetaEstado, type TonoEstado } from '../../componentes/Basicos';
 import { ListaActivos } from '../../componentes/ListaActivos';
-import type { CursoConProgresoResponse, EstadoProgreso } from '../../tipos/progreso';
+import type { CursoConProgresoResponse, EstadoProgreso } from '../../tipos/cursos';
 
 const TONO_POR_ESTADO: Record<EstadoProgreso, TonoEstado> = {
     NO_INICIADO: 'neutro',
@@ -14,18 +14,6 @@ const TONO_POR_ESTADO: Record<EstadoProgreso, TonoEstado> = {
     COMPLETADO: 'exito',
 };
 
-/**
- * La lección de un módulo: el lugar donde el empleado efectivamente recorre el
- * contenido en lugar de administrar su progreso.
- *
- * No tiene endpoint propio. Usa `GET /api/progreso/mio`, que ya resuelve qué
- * cursos alcanza el usuario —licencia, empresa y ventana de publicación—, así
- * que un módulo que no está en esa respuesta simplemente no está disponible.
- *
- * El progreso se deriva de la navegación: entrar inicia el módulo y terminar
- * la lección lo completa. `BLLProgreso.Guardar` ya es idempotente en INICIAR,
- * así que volver a entrar no reescribe nada.
- */
 export function Leccion() {
     const { t } = useTranslation();
     const navegar = useNavigate();
@@ -46,10 +34,6 @@ export function Leccion() {
     useEffect(() => {
         let vigente = true;
 
-        /**
-         * Entrar es iniciar: si el módulo todavía no tiene progreso se registra
-         * y se usa la lista que devuelve la propia acción, sin una consulta más.
-         */
         progresoApi
             .listarMio()
             .then((lista) => {
@@ -162,8 +146,6 @@ export function Leccion() {
                 </p>
             </section>
 
-            {/* La lección en sí. Un módulo se sostiene con este texto aunque no
-                tenga un solo archivo adjunto. */}
             <section>
                 <h2 className="m-0 mb-3 text-sm font-semibold text-texto">
                     {t('privado.leccion.contenido')}
@@ -190,8 +172,6 @@ export function Leccion() {
                 )}
             </section>
 
-            {/* El material general del curso acompaña a todas sus lecciones:
-                un glosario no deja de servir porque el módulo sea otro. */}
             {materialCurso.length > 0 && (
                 <section>
                     <h2 className="m-0 mb-3 text-sm font-semibold text-texto">

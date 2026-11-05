@@ -1,58 +1,21 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ResumenValoracion } from './ResumenValoracion';
 import { useLocalizacion } from '../contexto/useLocalizacion';
-import type { CaracteristicaResponse } from '../tipos/caracteristicas';
-import type { PlanResponse } from '../tipos/planes';
+import type { CaracteristicaResponse, PlanResponse } from '../tipos/planes';
+import { ResumenValoracion } from './Estrellas';
 
 interface TarjetaPlanProps {
     plan: PlanResponse;
-    /**
-     * Eje común de comparación, ya ordenado, tal como viene de la API. Las tres
-     * tarjetas reciben el mismo, que es lo que permite leerlas de lado a lado.
-     */
     caracteristicas: CaracteristicaResponse[];
-    /**
-     * Ids de las características a mostrar. Es el filtro de la sección: al
-     * desmarcar una, desaparece de todas las tarjetas a la vez.
-     */
     idsVisibles: number[];
-    /**
-     * Característica señalada en este momento. Viene de la sección para que la
-     * misma fila se resalte en las tres tarjetas y se pueda leer de lado a lado.
-     */
     idActivo: number | null;
     alSenalarCaracteristica: (caracteristicaId: number | null) => void;
-    /**
-     * Marca la tarjeta como la elegida. SOLO cambia el aspecto: quién está elegida
-     * y de qué manera se elige lo resuelve quien usa el componente. La página
-     * pública no la pasa y se sigue dibujando igual que antes.
-     */
     seleccionada?: boolean;
-    /** Contenido opcional del pie, por ejemplo el enlace a las opiniones. */
     pie?: ReactNode;
 }
 
-/** Altura mínima de cada fila: es lo que alinea las características entre tarjetas. */
 const ALTO_FILA = 'min-h-[2.375rem]';
 
-/**
- * Un plan del catálogo: precio, alcance y qué incluye.
- *
- * Las características salen del catálogo que administra el Backoffice, común a
- * todos los planes, y no de viñetas sueltas de cada uno: es lo que permite que
- * las tarjetas se lean como una comparación. Una característica que el plan no
- * incluye se muestra atenuada con un —, en lugar de faltar, para que se note la
- * diferencia frente a los otros planes.
- *
- * Un plan sin fila para una característica se dibuja igual que uno con
- * `incluido: false`: no ofrecerla y no tenerla cargada son lo mismo de cara al
- * visitante.
- *
- * Las alturas fijas del encabezado, el precio y cada fila no son decorativas:
- * mantienen las filas de las tarjetas a la misma altura, que es lo que hace
- * legible el barrido horizontal.
- */
 export function TarjetaPlan({
     plan,
     caracteristicas,
@@ -63,14 +26,10 @@ export function TarjetaPlan({
     pie,
 }: TarjetaPlanProps) {
     const { t } = useTranslation();
-    // El precio se formatea con la cultura activa: locale, simbolo de moneda y
-    // tasa de conversion salen de la tabla Cultura, no de un Intl hardcodeado.
     const { formatearMoneda, formatearNumero } = useLocalizacion();
 
     const esGratuito = plan.precioMensual === 0;
 
-    // Se filtra sobre el catálogo y no sobre idsVisibles para que el orden de las
-    // características sea siempre el mismo en todas las tarjetas.
     const visibles = caracteristicas.filter((fila) => idsVisibles.includes(fila.caracteristicaId));
 
     return (
@@ -81,9 +40,6 @@ export function TarjetaPlan({
                     : 'border-borde'
             } ${seleccionada ? 'ring-2 ring-primario ring-offset-2 ring-offset-fondo' : ''}`}
         >
-            {/* Banda de encabezado: el navy de marca es lo único que separa al
-                plan recomendado, y las bandas miden igual para no desalinear
-                lo que viene abajo. */}
             <header
                 className={`flex min-h-[3.5rem] items-center justify-between gap-2 px-6 py-3 ${
                     plan.destacado ? 'bg-marca' : 'border-b border-borde bg-fondo'
@@ -124,8 +80,6 @@ export function TarjetaPlan({
                           })}
                 </p>
 
-                {/* Siempre presente, con o sin valoraciones, para que las filas
-                    de abajo sigan alineadas entre tarjetas. */}
                 <div className="mt-2">
                     <ResumenValoracion
                         promedio={plan.promedioValoracion}
@@ -160,8 +114,6 @@ export function TarjetaPlan({
                                         senalada ? 'bg-info-fondo' : ''
                                     }`}
                                 >
-                                    {/* El — tiene que verse: mostrar la ausencia
-                                        es la mitad de la comparación. */}
                                     <span
                                         aria-hidden="true"
                                         className={`w-3 shrink-0 text-center ${
@@ -196,8 +148,6 @@ export function TarjetaPlan({
                     </ul>
                 )}
 
-                {/* `mt-auto` empuja el pie al fondo para que todas las tarjetas de
-                    la grilla alineen el enlace a la misma altura. */}
                 {pie && <div className="mt-auto border-t border-borde pt-5">{pie}</div>}
             </div>
         </article>

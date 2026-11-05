@@ -1,23 +1,21 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
-import { newsletterApi } from '../../../api/newsletterApi';
-import { noticiasApi } from '../../../api/noticiasApi';
-import { Alerta } from '../../../componentes/Alerta';
+import { newsletterApi, noticiasApi } from '../../../api/noticiasApi';
+import { AlertasResultado } from '../../../componentes/Alerta';
 import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { PERMISOS } from '../../../rutas/itemsMenu';
 import type {
     EnviarNewsletterRequest,
     EnvioNewsletterResponse,
+    NoticiaAdminResponse,
     SuscriptorNewsletterResponse,
     VistaPreviaNewsletterResponse,
-} from '../../../tipos/newsletter';
-import type { NoticiaAdminResponse } from '../../../tipos/noticias';
+} from '../../../tipos/noticias';
 
 const CLASE_BOTON_SECUNDARIO =
     'rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo disabled:cursor-not-allowed disabled:opacity-60';
@@ -35,13 +33,6 @@ function estadoSuscriptor(suscriptor: SuscriptorNewsletterResponse): string {
     return suscriptor.confirmado ? 'confirmado' : 'pendiente';
 }
 
-/**
- * Backoffice del newsletter: nuevo envío, suscriptores e historial.
- *
- * Un envío es de UN idioma: se eligen noticias publicadas en ese idioma y llega
- * a los suscriptores confirmados que se anotaron navegando en él. Los textos
- * fijos del correo salen de las traducciones `email.newsletter.*`.
- */
 export function AdminNewsletter() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -69,11 +60,7 @@ export function AdminNewsletter() {
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         newsletterApi
@@ -241,10 +228,7 @@ export function AdminNewsletter() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.newsletter.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeEnviar && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">

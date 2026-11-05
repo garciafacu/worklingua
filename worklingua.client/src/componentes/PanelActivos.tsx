@@ -1,22 +1,20 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { activosApi } from '../api/activosApi';
 import { ErrorApi } from '../api/clienteHttp';
-import { progresoApi } from '../api/progresoApi';
-import type { ModuloResponse } from '../tipos/progreso';
+import { activosApi, progresoApi } from '../api/cursosApi';
+import { useMensajeDeError } from '../hooks/useMensajeDeError';
 import {
+    type ActivoResponse,
     EXTENSIONES_POR_TIPO,
     MEGABYTES_MAXIMOS,
-    TIPOS_ACTIVO,
-    type ActivoResponse,
     type TipoActivo,
-} from '../tipos/activos';
+    TIPOS_ACTIVO,
+} from '../tipos/cursos';
+import type { ModuloResponse } from '../tipos/cursos';
 import { Alerta } from './Alerta';
-import { Boton } from './Boton';
-import { CampoArchivo } from './CampoArchivo';
-import { CampoSelect } from './CampoSelect';
-import { CampoTexto } from './CampoTexto';
-import { EtiquetaEstado } from './EtiquetaEstado';
+import { EtiquetaEstado } from './Basicos';
+import { Boton, BotonAccion } from './Boton';
+import { CampoArchivo, CampoSelect, CampoTexto } from './Campos';
 
 const ESTADO_BORRADOR = 'BORRADOR';
 const ESTADO_PUBLICADO = 'PUBLICADO';
@@ -26,21 +24,6 @@ interface PanelActivosProps {
     puedeModificar: boolean;
 }
 
-/**
- * Activos pedagógicos de un curso (CU-004-001): imágenes, audios de
- * pronunciación y vocabularios.
- *
- * Vive dentro del ABM de Cursos, como los módulos, porque un activo pertenece
- * siempre a un curso. Un activo no se edita: se da de baja y se vuelve a
- * cargar, igual que un módulo.
- *
- * Con el nombre ocupado el backend responde 409 con una nomenclatura sugerida;
- * acá solo se ofrece y, si el usuario acepta, se reenvía el mismo formulario
- * confirmando. La regla de cómo se arma el nombre vive en la BLL.
- *
- * Un activo puede pertenecer a un módulo —y entonces es el contenido de esa
- * lección— o a nadie, y entonces es material general del curso.
- */
 export function PanelActivos({ cursoId, puedeModificar }: PanelActivosProps) {
     const { t } = useTranslation();
 
@@ -48,7 +31,6 @@ export function PanelActivos({ cursoId, puedeModificar }: PanelActivosProps) {
     const [modulos, setModulos] = useState<ModuloResponse[]>([]);
     const [nombre, setNombre] = useState('');
     const [descripcion, setDescripcion] = useState('');
-    /** Vacío es "material general del curso". */
     const [moduloId, setModuloId] = useState('');
     const [tipo, setTipo] = useState<TipoActivo>('IMAGEN');
     const [archivo, setArchivo] = useState<File | null>(null);
@@ -60,11 +42,7 @@ export function PanelActivos({ cursoId, puedeModificar }: PanelActivosProps) {
     const [recarga, setRecarga] = useState(0);
     const campoArchivo = useRef<HTMLInputElement>(null);
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         Promise.all([activosApi.listar(cursoId), progresoApi.listarModulos(cursoId)])
@@ -123,7 +101,6 @@ export function PanelActivos({ cursoId, puedeModificar }: PanelActivosProps) {
             limpiarFormulario();
             recargar();
         } catch (excepcion: unknown) {
-            // Nombre duplicado: el backend ya propuso cómo llamarlo.
             if (excepcion instanceof ErrorApi && excepcion.sugerencia) {
                 setSugerencia(excepcion.sugerencia);
                 setError(null);
@@ -226,35 +203,26 @@ export function PanelActivos({ cursoId, puedeModificar }: PanelActivosProps) {
                                 )}
 
                                 {puedeModificar && activo.activo && (
-                                    <button
-                                        type="button"
-                                        onClick={() => void cambiarPublicacion(activo)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion onClick={() => void cambiarPublicacion(activo)}>
                                         {activo.estado === ESTADO_PUBLICADO
                                             ? t('admin.cursos.activos.volverABorrador')
                                             : t('admin.cursos.activos.publicar')}
-                                    </button>
+                                    </BotonAccion>
                                 )}
 
                                 {puedeModificar && activo.activo && (
-                                    <button
-                                        type="button"
+                                    <BotonAccion
+                                        variante="peligro"
                                         onClick={() => void cambiarEstado(activo, false)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
                                     >
                                         {t('admin.cursos.activos.darDeBaja')}
-                                    </button>
+                                    </BotonAccion>
                                 )}
 
                                 {puedeModificar && !activo.activo && (
-                                    <button
-                                        type="button"
-                                        onClick={() => void cambiarEstado(activo, true)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion onClick={() => void cambiarEstado(activo, true)}>
                                         {t('admin.cursos.activos.reactivar')}
-                                    </button>
+                                    </BotonAccion>
                                 )}
                             </div>
                         </li>
@@ -306,9 +274,6 @@ export function PanelActivos({ cursoId, puedeModificar }: PanelActivosProps) {
                         />
                     </div>
 
-                    {/* Sin módulo el activo es material general del curso y se
-                        ve en Mis cursos; con módulo es el contenido de esa
-                        lección. */}
                     {modulos.length > 0 && (
                         <CampoSelect
                             etiqueta={t('admin.cursos.activos.modulo')}
@@ -344,8 +309,6 @@ export function PanelActivos({ cursoId, puedeModificar }: PanelActivosProps) {
                         })}
                     </p>
 
-                    {/* Camino alternativo 1: el nombre ya existe y el backend
-                        propuso cómo llamarlo. */}
                     {sugerencia && (
                         <div className="rounded-lg border border-alerta bg-alerta-fondo p-3">
                             <p className="m-0 text-sm text-texto">
@@ -360,13 +323,9 @@ export function PanelActivos({ cursoId, puedeModificar }: PanelActivosProps) {
                                 >
                                     {t('admin.cursos.activos.sugerencia.aceptar')}
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setSugerencia(null)}
-                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
+                                <BotonAccion onClick={() => setSugerencia(null)}>
                                     {t('admin.cursos.activos.cancelarSugerencia')}
-                                </button>
+                                </BotonAccion>
                             </div>
                         </div>
                     )}

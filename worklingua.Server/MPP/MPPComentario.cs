@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using worklingua.Server.BE;
 using worklingua.Server.DAL;
@@ -9,35 +8,15 @@ namespace worklingua.Server.MPP
 {
     public class MPPComentario
     {
-        Acceso oDatos;
+        Acceso oDatos = new Acceso();
         Hashtable Hdatos;
-
-        public MPPComentario()
-        {
-            oDatos = new Acceso();
-        }
 
         public List<BEComentarioConAutor> ListarTodo(BEComentario Objeto)
         {
             Hdatos = new Hashtable();
             Hdatos.Add("@PlanId", Objeto.PlanId);
 
-            List<BEComentarioConAutor> ListaComentarioBE = new List<BEComentarioConAutor>();
-            DataTable Dt = oDatos.Leer("sp_Comentario_Listar", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                foreach (DataRow Item in Dt.Rows)
-                {
-                    ListaComentarioBE.Add(Mapear(Item));
-                }
-
-                return ListaComentarioBE;
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.ALista<BEComentarioConAutor>(oDatos.Leer("sp_Comentario_Listar", Hdatos), Mapear);
         }
 
         public List<BEComentarioConAutor> Buscar(BEFiltroComentario Objeto)
@@ -48,22 +27,7 @@ namespace worklingua.Server.MPP
             Hdatos.Add("@FechaDesde", Objeto.Desde);
             Hdatos.Add("@FechaHasta", Objeto.Hasta);
 
-            List<BEComentarioConAutor> ListaComentarioBE = new List<BEComentarioConAutor>();
-            DataTable Dt = oDatos.Leer("sp_Comentario_Buscar", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                foreach (DataRow Item in Dt.Rows)
-                {
-                    ListaComentarioBE.Add(Mapear(Item));
-                }
-
-                return ListaComentarioBE;
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.ALista<BEComentarioConAutor>(oDatos.Leer("sp_Comentario_Buscar", Hdatos), Mapear);
         }
 
         public BEComentarioConAutor ListarObjeto(BEComentario Objeto)
@@ -71,16 +35,7 @@ namespace worklingua.Server.MPP
             Hdatos = new Hashtable();
             Hdatos.Add("@ComentarioId", Objeto.ComentarioId);
 
-            DataTable Dt = oDatos.Leer("sp_Comentario_ObtenerPorId", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                return Mapear(Dt.Rows[0]);
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.AObjeto(oDatos.Leer("sp_Comentario_ObtenerPorId", Hdatos), Mapear);
         }
 
         public bool Baja(BEComentario Objeto)
@@ -99,16 +54,7 @@ namespace worklingua.Server.MPP
             Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
             Hdatos.Add("@PlanId", Objeto.PlanId);
 
-            DataTable Dt = oDatos.Leer("sp_Comentario_ObtenerValoracion", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                return Mapear(Dt.Rows[0]);
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.AObjeto(oDatos.Leer("sp_Comentario_ObtenerValoracion", Hdatos), Mapear);
         }
 
         public List<BEResumenValoracion> ListarResumen()

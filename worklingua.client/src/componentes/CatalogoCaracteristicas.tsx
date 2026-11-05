@@ -1,16 +1,13 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { caracteristicasApi } from '../api/caracteristicasApi';
-import { ErrorApi } from '../api/clienteHttp';
-import { Alerta } from './Alerta';
-import { Boton } from './Boton';
-import { CampoTexto } from './CampoTexto';
-import { TablaAbm, type ColumnaAbm } from './TablaAbm';
+import { caracteristicasApi } from '../api/planesApi';
 import { useSesion } from '../contexto/useSesion';
-import type {
-    CaracteristicaAdminResponse,
-    GuardarCaracteristicaRequest,
-} from '../tipos/caracteristicas';
+import { useMensajeDeError } from '../hooks/useMensajeDeError';
+import type { CaracteristicaAdminResponse, GuardarCaracteristicaRequest } from '../tipos/planes';
+import { Alerta } from './Alerta';
+import { BotonAccion, BotonesFormulario, ConfirmarBaja } from './Boton';
+import { CampoTexto } from './Campos';
+import { type ColumnaAbm, TablaAbm } from './TablaAbm';
 
 const FORMULARIO_VACIO = {
     nombre: '',
@@ -25,15 +22,10 @@ interface CatalogoCaracteristicasProps {
     alCambiar: () => void;
 }
 
-
 export function CatalogoCaracteristicas({ alCambiar }: CatalogoCaracteristicasProps) {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     const [caracteristicas, setCaracteristicas] = useState<CaracteristicaAdminResponse[]>([]);
     const [formulario, setFormulario] = useState<Formulario>(FORMULARIO_VACIO);
@@ -193,23 +185,12 @@ export function CatalogoCaracteristicas({ alCambiar }: CatalogoCaracteristicasPr
 
                     <p className="ayuda">{t('admin.caracteristicas.formulario.ayudaOrden')}</p>
 
-                    <div className="flex flex-wrap gap-3">
-                        <Boton type="submit" cargando={guardando}>
-                            {editandoId === null
-                                ? t('admin.caracteristicas.formulario.crear')
-                                : t('comun.boton.guardarCambios')}
-                        </Boton>
-
-                        {editandoId !== null && (
-                            <button
-                                type="button"
-                                onClick={limpiar}
-                                className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                            >
-                                {t('comun.boton.cancelar')}
-                            </button>
-                        )}
-                    </div>
+                    <BotonesFormulario
+                        editando={editandoId !== null}
+                        guardando={guardando}
+                        textoCrear={t('admin.caracteristicas.formulario.crear')}
+                        onCancelar={limpiar}
+                    />
                 </form>
             )}
 
@@ -233,45 +214,20 @@ export function CatalogoCaracteristicas({ alCambiar }: CatalogoCaracteristicasPr
                             acciones={(fila) => (
                                 <div className="flex justify-end gap-2">
                                     {puedeModificar && (
-                                        <button
-                                            type="button"
-                                            onClick={() => editar(fila)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => editar(fila)}>
                                             {t('comun.boton.editar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeDarDeBaja &&
                                         fila.activo &&
-                                        (confirmandoBaja === fila.caracteristicaId ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void darDeBaja(fila)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                                >
-                                                    {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
-                                                    {t('comun.boton.no')}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setConfirmandoBaja(fila.caracteristicaId)
-                                                }
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                            >
-                                                {t('comun.boton.darDeBaja')}
-                                            </button>
-                                        ))}
+                                        (<ConfirmarBaja
+                                            confirmando={confirmandoBaja === fila.caracteristicaId}
+                                            onPedir={() =>
+                                                    setConfirmandoBaja(fila.caracteristicaId)}
+                                            onConfirmar={() => void darDeBaja(fila)}
+                                            onCancelar={() => setConfirmandoBaja(null)}
+                                        />)}
                                 </div>
                             )}
                         />

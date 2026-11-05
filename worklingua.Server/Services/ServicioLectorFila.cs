@@ -41,6 +41,11 @@ namespace worklingua.Server.Services
             return TieneValor(fila, columna) ? Convert.ToDecimal(fila[columna]) : 0m;
         }
 
+        public static decimal? LeerDecimalNulo(DataRow fila, string columna)
+        {
+            return TieneValor(fila, columna) ? Convert.ToDecimal(fila[columna]) : (decimal?)null;
+        }
+
         public static bool LeerBooleano(DataRow fila, string columna)
         {
             return TieneValor(fila, columna) && Convert.ToBoolean(fila[columna]);
@@ -74,6 +79,21 @@ namespace worklingua.Server.Services
         public static Guid LeerGuid(DataRow fila, string columna)
         {
             return TieneValor(fila, columna) ? (Guid)fila[columna] : Guid.Empty;
+        }
+
+        public static Guid? LeerGuidNulo(DataRow fila, string columna)
+        {
+            return TieneValor(fila, columna) ? (Guid)fila[columna] : (Guid?)null;
+        }
+
+        public static List<T> ALista<T>(DataTable tabla, Func<DataRow, T> mapear)
+        {
+            return tabla.Rows.Count > 0 ? tabla.Rows.Cast<DataRow>().Select(mapear).ToList() : null;
+        }
+
+        public static T AObjeto<T>(DataTable tabla, Func<DataRow, T> mapear) where T : class
+        {
+            return tabla.Rows.Count > 0 ? mapear(tabla.Rows[0]) : null;
         }
 
         public static int ATotalFilas(object escalar)

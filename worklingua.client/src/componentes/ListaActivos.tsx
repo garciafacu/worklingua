@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { ActivoResponse } from '../tipos/activos';
+import type { ActivoResponse } from '../tipos/cursos';
 
 interface ListaActivosProps {
     activos: ActivoResponse[];

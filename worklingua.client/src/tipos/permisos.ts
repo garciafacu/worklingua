@@ -27,3 +27,8 @@ export function aplanarPermisos(nodos: PermisoResponse[]): PermisoResponse[] {
 
     return [...porId.values()].sort((a, b) => a.nombre.localeCompare(b.nombre));
 }
+
+export interface GuardarRolRequest {
+    nombre: string;
+    descripcion: string | null;
+}

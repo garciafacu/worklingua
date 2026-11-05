@@ -1,23 +1,24 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
-import { cursosApi } from '../../../api/cursosApi';
-import { etiquetasApi } from '../../../api/etiquetasApi';
-import { versionesApi } from '../../../api/versionesApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
+import { cursosApi, etiquetasApi, versionesApi } from '../../../api/cursosApi';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { Boton, BotonAccion, BotonesFormulario, ConfirmarBaja } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
 import { Modal } from '../../../componentes/Modal';
 import { PanelActivos } from '../../../componentes/PanelActivos';
 import { PanelModulos } from '../../../componentes/PanelModulos';
 import { PanelVersiones } from '../../../componentes/PanelVersiones';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
-import type { CursoAdminResponse, GuardarCursoRequest, SectorCurso } from '../../../tipos/cursos';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
+import type {
+    CursoAdminResponse,
+    EtiquetaResponse,
+    GuardarCursoRequest,
+    SectorCurso,
+} from '../../../tipos/cursos';
 import { NIVELES_CURSO, SECTORES_CURSO } from '../../../tipos/cursos';
-import type { EtiquetaResponse } from '../../../tipos/etiquetas';
 
 const FORMULARIO_VACIO = {
     idioma: '',
@@ -32,24 +33,10 @@ const FORMULARIO_VACIO = {
 
 type Formulario = typeof FORMULARIO_VACIO;
 
-/** Id del `<datalist>` que sugiere los idiomas ya usados por otros cursos. */
 const ID_SUGERENCIAS_IDIOMA = 'sugerenciasIdiomaCurso';
 
-/** Id del `<datalist>` que sugiere las etiquetas del diccionario. */
 const ID_SUGERENCIAS_ETIQUETA = 'sugerenciasEtiquetaCurso';
 
-/**
- * ABM del catálogo de cursos.
- *
- * **El idioma es texto libre.** No sale del catálogo `Idioma`, que está
- * reservado a los idiomas de la plataforma (los de la interfaz). Un curso puede
- * enseñar japonés sin que WorkLingua esté traducido al japonés, y al revés. Ver
- * `docs/modelo-datos.md` (Curso).
- *
- * El `<datalist>` sugiere los idiomas que ya dictan otros cursos, para que la
- * carga sea consistente sin imponer un catálogo. No lo impide: escribir un
- * idioma nuevo es válido y es justamente el caso que la separación habilita.
- */
 export function AdminCursos() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -63,50 +50,32 @@ export function AdminCursos() {
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
-    /** Fuerza releer el listado despues de guardar o dar de baja. */
     const [recarga, setRecarga] = useState(0);
     const [guardando, setGuardando] = useState(false);
     const [cursoModulos, setCursoModulos] = useState<CursoAdminResponse | null>(null);
     const [cursoActivos, setCursoActivos] = useState<CursoAdminResponse | null>(null);
     const [cursoVersiones, setCursoVersiones] = useState<CursoAdminResponse | null>(null);
-    /** Curso que se está clonando y el nombre elegido para la copia (CU-004-002). */
     const [cursoAClonar, setCursoAClonar] = useState<CursoAdminResponse | null>(null);
     const [nombreCopia, setNombreCopia] = useState('');
     const [clonando, setClonando] = useState(false);
-    /** Diccionario global de etiquetas (CU-004-005). */
     const [diccionario, setDiccionario] = useState<EtiquetaResponse[]>([]);
-    /** Etiquetas del curso que se está editando. */
     const [etiquetas, setEtiquetas] = useState<EtiquetaResponse[]>([]);
     const [etiquetaEscrita, setEtiquetaEscrita] = useState('');
-    /** Camino alternativo 1: la etiqueta no está en el diccionario. */
     const [etiquetaPorCrear, setEtiquetaPorCrear] = useState<string | null>(null);
 
     const puedeCrear = tienePermiso('Curso.Alta');
     const puedeModificar = tienePermiso('Curso.Modificar');
     const puedeDarDeBaja = tienePermiso('Curso.Baja');
-    // Sin alcance total, los cursos globales del catálogo son de solo lectura.
     const alcanceTotal = tienePermiso('Curso.VerTodasLasEmpresas');
     const esGestionable = (curso: CursoAdminResponse) => alcanceTotal || curso.empresaId !== null;
 
-    // En useCallback para poder ir en las dependencias de los efectos que lo
-    // usan: sin eso el linter avisa, y el mensaje de error quedaría en el idioma
-    // anterior después de cambiar de idioma.
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
-    // Las sugerencias se releen junto con el listado: un curso con un idioma
-    // nuevo tiene que aparecer en el datalist enseguida.
     useEffect(() => {
         cursosApi.listarIdiomas().then(setIdiomas).catch(() => setIdiomas([]));
         etiquetasApi.listar().then(setDiccionario).catch(() => setDiccionario([]));
     }, [recarga]);
 
-    // El listado se relee cambiando este contador. El pedido vive dentro del
-    // efecto y no en una función que el efecto llame, para no disparar setState
-    // de forma sincrónica en el cuerpo del efecto (react-hooks/set-state-in-effect).
     useEffect(() => {
         cursosApi
             .listarAdministracion()
@@ -205,7 +174,6 @@ export function AdminCursos() {
         }
     }
 
-    /** Sin acentos ni mayúsculas, el mismo criterio que usa la BLL. */
     function claveDeEtiqueta(nombre: string) {
         return nombre
             .trim()
@@ -214,10 +182,6 @@ export function AdminCursos() {
             .replace(/[̀-ͯ]/g, '');
     }
 
-    /**
-     * Agrega la etiqueta escrita. Si no está en el diccionario no la crea por
-     * su cuenta: ofrece hacerlo, que es el camino alternativo 1.
-     */
     function agregarEtiqueta() {
         const nombre = etiquetaEscrita.trim();
 
@@ -273,7 +237,6 @@ export function AdminCursos() {
         setEtiquetas(etiquetas.filter((etiqueta) => etiqueta.etiquetaId !== etiquetaId));
     }
 
-    /** CU-004-002: el cuadro de diálogo del paso 7 pide solo el nombre. */
     function abrirClonado(curso: CursoAdminResponse) {
         setError(null);
         setExito(null);
@@ -310,7 +273,6 @@ export function AdminCursos() {
         }
     }
 
-    /** Cómo se lee la ventana de despliegue en la grilla (CU-004-006). */
     function ventanaDe(curso: CursoAdminResponse) {
         if (curso.fechaPublicacion === null && curso.fechaFin === null) {
             return t('admin.cursos.ventana.siempre');
@@ -378,10 +340,7 @@ export function AdminCursos() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.cursos.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -414,8 +373,6 @@ export function AdminCursos() {
                         />
 
                         <div className="fila">
-                            {/* Texto con sugerencias, no un desplegable cerrado:
-                                el idioma de un curso ya no sale de un catálogo. */}
                             <CampoTexto
                                 etiqueta={t('admin.cursos.formulario.idioma')}
                                 identificador="idioma"
@@ -468,7 +425,6 @@ export function AdminCursos() {
                             />
                         </div>
 
-                        {/* Clasificación (CU-004-005). */}
                         <div className="fila mt-4">
                             <CampoSelect
                                 etiqueta={t('admin.cursos.sector')}
@@ -525,8 +481,6 @@ export function AdminCursos() {
                                         setEtiquetaPorCrear(null);
                                     }}
                                     onKeyDown={(evento) => {
-                                        // Enter agrega la etiqueta, no envía el
-                                        // formulario entero.
                                         if (evento.key === 'Enter') {
                                             evento.preventDefault();
                                             agregarEtiqueta();
@@ -551,34 +505,23 @@ export function AdminCursos() {
 
                             <p className="ayuda">{t('admin.cursos.etiquetas.ayuda')}</p>
 
-                            {/* Camino alternativo 1: la etiqueta no está en el
-                                diccionario y hay que confirmar el alta. */}
                             {etiquetaPorCrear !== null && (
                                 <div className="mt-2 rounded-lg border border-alerta bg-alerta-fondo p-3">
                                     <p className="m-0 text-sm text-texto">
                                         {t('admin.cursos.etiquetas.crear', { nombre: etiquetaPorCrear })}
                                     </p>
                                     <div className="mt-3 flex flex-wrap gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => void crearEtiqueta()}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => void crearEtiqueta()}>
                                             {t('admin.cursos.etiquetas.crear.aceptar')}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setEtiquetaPorCrear(null)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        </BotonAccion>
+                                        <BotonAccion onClick={() => setEtiquetaPorCrear(null)}>
                                             {t('admin.cursos.etiquetas.crear.cancelar')}
-                                        </button>
+                                        </BotonAccion>
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Ventana de despliegue (CU-004-006). */}
                         <div className="fila mt-4">
                             <CampoTexto
                                 etiqueta={t('admin.cursos.fechaPublicacion')}
@@ -607,8 +550,7 @@ export function AdminCursos() {
 
                         {(formulario.fechaPublicacion !== '' || formulario.fechaFin !== '') && (
                             <div className="mt-2">
-                                <button
-                                    type="button"
+                                <BotonAccion
                                     onClick={() =>
                                         setFormulario({
                                             ...formulario,
@@ -616,32 +558,20 @@ export function AdminCursos() {
                                             fechaFin: '',
                                         })
                                     }
-                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
                                 >
                                     {t('admin.cursos.ventana.cancelar')}
-                                </button>
+                                </BotonAccion>
                             </div>
                         )}
 
                         <p className="ayuda">{t('admin.cursos.formulario.ayudaIdioma')}</p>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null
-                                    ? t('admin.cursos.formulario.crear')
-                                    : t('comun.boton.guardarCambios')}
-                            </Boton>
-
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.cursos.formulario.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}
@@ -661,79 +591,39 @@ export function AdminCursos() {
                             mensajeVacio={t('admin.cursos.vacio')}
                             acciones={(curso) => (
                                 <div className="flex justify-end gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setCursoModulos(curso)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion onClick={() => setCursoModulos(curso)}>
                                         {t('admin.cursos.modulos.boton')}
-                                    </button>
+                                    </BotonAccion>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setCursoActivos(curso)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion onClick={() => setCursoActivos(curso)}>
                                         {t('admin.cursos.activos.boton')}
-                                    </button>
+                                    </BotonAccion>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setCursoVersiones(curso)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion onClick={() => setCursoVersiones(curso)}>
                                         {t('admin.cursos.versiones')}
-                                    </button>
+                                    </BotonAccion>
 
                                     {puedeCrear && esGestionable(curso) && (
-                                        <button
-                                            type="button"
-                                            onClick={() => abrirClonado(curso)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => abrirClonado(curso)}>
                                             {t('admin.cursos.clonar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeModificar && esGestionable(curso) && (
-                                        <button
-                                            type="button"
-                                            onClick={() => editar(curso)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => editar(curso)}>
                                             {t('comun.boton.editar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeDarDeBaja &&
                                         esGestionable(curso) &&
                                         curso.activo &&
-                                        (confirmandoBaja === curso.cursoId ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void darDeBaja(curso)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                                >
-                                                    {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
-                                                    {t('comun.boton.no')}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => setConfirmandoBaja(curso.cursoId)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                            >
-                                                {t('comun.boton.darDeBaja')}
-                                            </button>
-                                        ))}
+                                        (<ConfirmarBaja
+                                            confirmando={confirmandoBaja === curso.cursoId}
+                                            onPedir={() => setConfirmandoBaja(curso.cursoId)}
+                                            onConfirmar={() => void darDeBaja(curso)}
+                                            onCancelar={() => setConfirmandoBaja(null)}
+                                        />)}
                                 </div>
                             )}
                         />
@@ -791,7 +681,6 @@ export function AdminCursos() {
                 )}
             </Modal>
 
-            {/* CU-004-002, paso 7: el cuadro de diálogo pide el nombre de la copia. */}
             <Modal
                 titulo={t('admin.cursos.clonar.titulo', { curso: cursoAClonar?.nombre ?? '' })}
                 abierto={cursoAClonar !== null}
@@ -814,13 +703,9 @@ export function AdminCursos() {
                         >
                             {t('admin.cursos.clonar.confirmar')}
                         </Boton>
-                        <button
-                            type="button"
-                            onClick={() => setCursoAClonar(null)}
-                            className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                        >
+                        <BotonAccion grande onClick={() => setCursoAClonar(null)}>
                             {t('admin.cursos.clonar.cancelar')}
-                        </button>
+                        </BotonAccion>
                     </div>
                 </div>
             </Modal>

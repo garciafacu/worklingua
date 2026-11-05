@@ -1,5 +1,3 @@
-import { descargarTexto } from './descarga';
-
 export interface FilaCsv {
     numero: number;
     celdas: string[];
@@ -124,4 +122,16 @@ export function generarCsv(encabezados: string[], filas: (string | number)[][]):
 
 export function descargarCsv(nombreArchivo: string, contenido: string): void {
     descargarTexto(nombreArchivo, BOM + contenido, 'text/csv;charset=utf-8');
+}
+
+export function descargarTexto(nombreArchivo: string, contenido: string, tipo: string): void {
+    const blob = new Blob([contenido], { type: tipo });
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+
+    enlace.href = url;
+    enlace.download = nombreArchivo;
+    enlace.click();
+
+    URL.revokeObjectURL(url);
 }

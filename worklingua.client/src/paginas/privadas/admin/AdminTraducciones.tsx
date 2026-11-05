@@ -1,17 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
-import { idiomasApi } from '../../../api/idiomasApi';
-import { traduccionesApi } from '../../../api/traduccionesApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
+import { idiomasApi, traduccionesApi } from '../../../api/idiomasApi';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { Boton, BotonAccion } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { IDIOMA_BASE } from '../../../i18n/configuracion';
-import type { IdiomaAdminResponse } from '../../../tipos/idiomas';
-import type { TraduccionAdminResponse } from '../../../tipos/traducciones';
+import type { IdiomaAdminResponse, TraduccionAdminResponse } from '../../../tipos/idiomas';
 
 export function AdminTraducciones() {
     const { t } = useTranslation();
@@ -32,11 +29,7 @@ export function AdminTraducciones() {
 
     const puedeModificar = tienePermiso('Traduccion.Modificar');
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         idiomasApi
@@ -150,10 +143,7 @@ export function AdminTraducciones() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.traducciones.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -308,13 +298,9 @@ export function AdminTraducciones() {
                         </Boton>
 
                         {sucias.length > 0 && (
-                            <button
-                                type="button"
-                                onClick={() => setEditadas({})}
-                                className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                            >
+                            <BotonAccion grande onClick={() => setEditadas({})}>
                                 {t('admin.traducciones.descartar')}
-                            </button>
+                            </BotonAccion>
                         )}
                     </div>
                 )}

@@ -8,16 +8,9 @@ namespace worklingua.Server.Controllers
     [Route("api/autenticacion")]
     public class AutenticacionController : ControladorBase
     {
-        BLLUsuario oBLLUsu;
-        BLLSesion oBLLSes;
-        ServicioHash oServicioHash;
-
-        public AutenticacionController()
-        {
-            oBLLUsu = new BLLUsuario();
-            oBLLSes = new BLLSesion();
-            oServicioHash = new ServicioHash();
-        }
+        BLLUsuario oBLLUsu = new BLLUsuario();
+        BLLSesion oBLLSes = new BLLSesion();
+        ServicioHash oServicioHash = new ServicioHash();
 
         [HttpPost("login")]
         [ProducesResponseType(typeof(BEResultadoLogin), StatusCodes.Status200OK)]
@@ -25,6 +18,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public ActionResult<BEResultadoLogin> Login([FromBody] BELogin oLoginBE)
         {
+            oBLLUsu.Validar(oLoginBE);
+
             oLoginBE.Email = oLoginBE.Email.Trim().ToLowerInvariant();
 
             BEUsuario oFiltroBE = new BEUsuario();
@@ -67,6 +62,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult RecuperarClave([FromBody] BERecuperarClave oRecuperarClaveBE)
         {
+            oBLLUsu.Validar(oRecuperarClaveBE);
+
             oRecuperarClaveBE.Email = oRecuperarClaveBE.Email.Trim().ToLowerInvariant();
 
             oBLLUsu.SolicitarRecuperoClave(oRecuperarClaveBE);
@@ -82,6 +79,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult RestablecerClave([FromBody] BERestablecerClave oRestablecerClaveBE)
         {
+            oBLLUsu.Validar(oRestablecerClaveBE);
+
             oBLLUsu.ValidarClave(oRestablecerClaveBE.ClaveNueva);
 
             oRestablecerClaveBE.ClaveNueva = oServicioHash.Hashear(oRestablecerClaveBE.ClaveNueva);
@@ -100,6 +99,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public IActionResult CambiarClave([FromBody] BECambiarClave oCambiarClaveBE)
         {
+            oBLLUsu.Validar(oCambiarClaveBE);
+
             BESesion oSesionBE = oBLLSes.ObtenerActiva(ObtenerTokenSesion());
 
             oBLLUsu.ValidarClave(oCambiarClaveBE.ClaveNueva);

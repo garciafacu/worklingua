@@ -1,10 +1,10 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { type FormEvent, type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocalizacion } from '../contexto/useLocalizacion';
 import type { EstadoTicket, TicketResponse } from '../tipos/tickets';
 import { Alerta } from './Alerta';
+import { EtiquetaEstado, type TonoEstado } from './Basicos';
 import { Boton } from './Boton';
-import { EtiquetaEstado, type TonoEstado } from './EtiquetaEstado';
 
 const TONO_POR_ESTADO: Record<EstadoTicket, TonoEstado> = {
     PENDIENTE: 'alerta',
@@ -13,7 +13,6 @@ const TONO_POR_ESTADO: Record<EstadoTicket, TonoEstado> = {
     CERRADO: 'neutro',
 };
 
-/** Pastilla con el estado traducido de una consulta. */
 export function EstadoTicketEtiqueta({ estado }: { estado: EstadoTicket }) {
     const { t } = useTranslation();
 
@@ -22,19 +21,11 @@ export function EstadoTicketEtiqueta({ estado }: { estado: EstadoTicket }) {
 
 interface HiloTicketProps {
     ticket: TicketResponse;
-    /** Desde qué lado se mira: define de qué lado se alinean los mensajes propios. */
     vista: 'cliente' | 'operador';
-    /** Envía el mensaje y devuelve la consulta actualizada, o lanza el error de la API. */
     alEnviar: (texto: string) => Promise<void>;
-    /** Acciones extra del encabezado (cerrar, tomar). */
     acciones?: ReactNode;
 }
 
-/**
- * Detalle de una consulta de soporte: datos, historial de mensajes y cuadro para
- * responder. Lo comparten la pantalla del cliente y la bandeja del Backoffice;
- * cada una resuelve qué endpoint llama al enviar.
- */
 export function HiloTicket({ ticket, vista, alEnviar, acciones }: HiloTicketProps) {
     const { t } = useTranslation();
     const { formatearFecha } = useLocalizacion();
@@ -44,7 +35,6 @@ export function HiloTicket({ ticket, vista, alEnviar, acciones }: HiloTicketProp
     const [enviando, setEnviando] = useState(false);
 
     const cerrado = ticket.ticket.estado === 'CERRADO';
-
     async function enviar(evento: FormEvent) {
         evento.preventDefault();
 

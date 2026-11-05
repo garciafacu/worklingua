@@ -1,24 +1,21 @@
-import { useCallback, useEffect, useState, type ChangeEvent, type ReactNode } from 'react';
+import { type ChangeEvent, type ReactNode, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../api/clienteHttp';
-import { empresasApi } from '../api/empresasApi';
-import { padronApi } from '../api/padronApi';
-import { Alerta } from './Alerta';
-import { Boton } from './Boton';
-import { CampoArchivo } from './CampoArchivo';
-import { CampoSelect } from './CampoSelect';
-import { TablaAbm, type ColumnaAbm } from './TablaAbm';
+import { empresasApi, padronApi } from '../api/empresasApi';
 import { useSesion } from '../contexto/useSesion';
+import { useMensajeDeError } from '../hooks/useMensajeDeError';
 import { PERMISOS } from '../rutas/itemsMenu';
 import { indiceDeColumnas, parsearCsv } from '../servicios/csv';
-import type { EmpresaResponse } from '../tipos/autenticacion';
 import type {
     FilaPadronRequest,
     ResultadoFilaPadronResponse,
     ResultadoPadronResponse,
-} from '../tipos/padron';
+} from '../tipos/empresas';
+import type { EmpresaResponse } from '../tipos/usuarios';
+import { Alerta } from './Alerta';
+import { Boton } from './Boton';
+import { CampoArchivo, CampoSelect } from './Campos';
+import { type ColumnaAbm, TablaAbm } from './TablaAbm';
 
-/** Tope de filas; espejo de `BLLPadron.FilasMaximas`. */
 const FILAS_MAXIMAS = 25;
 
 interface CifraProps {
@@ -40,26 +37,9 @@ function Cifra({ titulo, valor, tono = 'normal' }: CifraProps) {
 }
 
 interface ImportadorPadronProps {
-    /** Avisa que entraron altas, para que la pantalla relea el listado. */
     alImportar: () => void;
 }
 
-/**
- * Importación del padrón de empleados (CU-001-002).
- *
- * Vive dentro del ABM de Usuarios, como la segunda forma de dar de alta: la
- * individual invita de a uno y esta hace el alta masiva. Es autónoma —tiene su
- * propio archivo, su propia empresa y sus propios avisos— así que cambiar de
- * una a otra no arrastra estado.
- *
- * Son dos pasos: primero se valida el archivo y se muestra qué entra y qué se
- * rechaza, y recién al confirmar se mandan las invitaciones. El archivo se
- * manda las dos veces y el backend revalida: acá no se decide nada.
- *
- * El CSV se lee en el navegador y viaja como JSON porque el cliente HTTP del
- * proyecto es JSON-only. Partir el texto en filas no es una regla de negocio:
- * todas las validaciones las hace la BLL.
- */
 export function ImportadorPadron({ alImportar }: ImportadorPadronProps) {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -75,11 +55,7 @@ export function ImportadorPadron({ alImportar }: ImportadorPadronProps) {
 
     const alcanceTotal = tienePermiso(PERMISOS.usuarioVerTodasLasEmpresas);
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         if (!alcanceTotal) {
@@ -208,8 +184,6 @@ export function ImportadorPadron({ alImportar }: ImportadorPadronProps) {
                 <Alerta tipo="exito" mensaje={exito} />
             </div>
 
-            {/* Sin alcance global la empresa no se elige: el backend impone la
-                propia, así que el campo solo confundiría. */}
             {alcanceTotal && (
                 <div className="w-full sm:w-96">
                     <CampoSelect

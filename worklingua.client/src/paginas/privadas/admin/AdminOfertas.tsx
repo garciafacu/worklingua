@@ -1,20 +1,19 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../../../api/clienteHttp';
 import { empresasApi } from '../../../api/empresasApi';
-import { ofertasApi } from '../../../api/ofertasApi';
 import { planesApi } from '../../../api/planesApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { ofertasApi } from '../../../api/ticketsApi';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { BotonAccion, BotonesFormulario, ConfirmarBaja } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
 import { PERMISOS } from '../../../rutas/itemsMenu';
 import type { EmpresaAdminResponse } from '../../../tipos/empresas';
-import type { GuardarOfertaRequest, OfertaResponse } from '../../../tipos/ofertas';
 import type { PlanAdminResponse } from '../../../tipos/planes';
+import type { GuardarOfertaRequest, OfertaResponse } from '../../../tipos/tickets';
 
 function hoy(): string {
     const fecha = new Date();
@@ -189,10 +188,7 @@ export function AdminOfertas() {
             <h1 className="text-2xl font-semibold tracking-tight text-texto sm:text-3xl">{t('admin.ofertas.titulo')}</h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.ofertas.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -284,20 +280,12 @@ export function AdminOfertas() {
                             {t('admin.ofertas.activa')}
                         </label>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null ? t('admin.ofertas.crear') : t('comun.boton.guardarCambios')}
-                            </Boton>
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.ofertas.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}
@@ -318,43 +306,19 @@ export function AdminOfertas() {
                             acciones={(item) => (
                                 <div className="flex justify-end gap-2">
                                     {puedeModificar && (
-                                        <button
-                                            type="button"
-                                            onClick={() => editar(item)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => editar(item)}>
                                             {t('comun.boton.editar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeDarDeBaja &&
                                         item.oferta.activo &&
-                                        (confirmandoBaja === item.oferta.ofertaId ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void darDeBaja(item)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                                >
-                                                    {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
-                                                    {t('comun.boton.no')}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => setConfirmandoBaja(item.oferta.ofertaId)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                            >
-                                                {t('comun.boton.darDeBaja')}
-                                            </button>
-                                        ))}
+                                        (<ConfirmarBaja
+                                            confirmando={confirmandoBaja === item.oferta.ofertaId}
+                                            onPedir={() => setConfirmandoBaja(item.oferta.ofertaId)}
+                                            onConfirmar={() => void darDeBaja(item)}
+                                            onCancelar={() => setConfirmandoBaja(null)}
+                                        />)}
                                 </div>
                             )}
                         />

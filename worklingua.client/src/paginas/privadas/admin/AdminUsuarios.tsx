@@ -1,22 +1,20 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
-import { departamentosApi } from '../../../api/departamentosApi';
-import { empresasApi } from '../../../api/empresasApi';
+import { departamentosApi, empresasApi } from '../../../api/empresasApi';
 import { usuariosApi } from '../../../api/usuariosApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { BotonAccion, BotonesFormulario } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
 import { ImportadorPadron } from '../../../componentes/ImportadorPadron';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { PERMISOS } from '../../../rutas/itemsMenu';
 import { estaBloqueada } from '../../../servicios/cuenta';
-import type { EmpresaResponse } from '../../../tipos/autenticacion';
-import type { DepartamentoResponse } from '../../../tipos/departamentos';
+import type { DepartamentoResponse } from '../../../tipos/empresas';
 import type {
+    EmpresaResponse,
     InvitarUsuarioRequest,
     RolResponse,
     UsuarioAdminResponse,
@@ -38,8 +36,6 @@ function opcional(valor: string): string | null {
     return valor.trim() || null;
 }
 
-/** Una cuenta sin último acceso todavía no entró: la invitación sigue pendiente. */
-/** Estilo del selector de forma de alta: la activa se ve hundida. */
 function claseModo(activo: boolean): string {
     const base = 'rounded-lg border px-4 py-2 text-sm font-semibold';
 
@@ -52,34 +48,12 @@ function estaPendiente(usuario: UsuarioAdminResponse): boolean {
     return usuario.ultimoAcceso === null;
 }
 
-/**
- * ABM de usuarios.
- *
- * Solo empresas clientes: el personal de la plataforma se administra en
- * Operadores y el rol de plataforma no se ofrece acá.
- *
- * El Super Admin ve los de todas las empresas; un Administrador Empresa, solo los
- * de la suya. Quien acota de verdad es el backend, contra el permiso
- * Usuario.VerTodasLasEmpresas.
- *
- * El alta no crea una clave: manda una invitación por correo y la persona
- * define la suya desde el enlace. Hasta que lo haga, la cuenta queda inactiva y
- * el listado la muestra como pendiente, con la opción de reenviar el correo.
- */
 export function AdminUsuarios() {
     const { t } = useTranslation();
     const { usuario: usuarioEnSesion, tienePermiso } = useSesion();
-    // La fecha se formatea con la cultura activa, no con un locale fijo.
     const { formatearFecha } = useLocalizacion();
 
-    // En useCallback para poder ir en las dependencias de los efectos que lo
-    // usan: sin eso el linter avisa, y el mensaje de error quedaría en el idioma
-    // anterior después de cambiar de idioma.
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     const [usuarios, setUsuarios] = useState<UsuarioAdminResponse[]>([]);
     const [empresas, setEmpresas] = useState<EmpresaResponse[]>([]);
@@ -91,18 +65,11 @@ export function AdminUsuarios() {
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
-    /** Fuerza releer el listado despues de invitar, modificar o desactivar. */
     const [recarga, setRecarga] = useState(0);
     const [guardando, setGuardando] = useState(false);
-    /** Cómo se da de alta: de a uno o importando un padrón. */
     const [modoAlta, setModoAlta] = useState<'individual' | 'padron'>('individual');
 
     const puedeInvitar = tienePermiso('Usuario.Invitar');
-    /**
-     * Un Administrador Empresa solo alcanza a su propia empresa: el backend acota
-     * el listado y fuerza la empresa al invitar o modificar. Acá se ocultan los
-     * controles que en ese caso no deciden nada.
-     */
     const alcanceGlobal = tienePermiso(PERMISOS.usuarioVerTodasLasEmpresas);
     const puedeModificar = tienePermiso('Usuario.Modificar');
     const puedeDarDeBaja = tienePermiso('Usuario.Baja');
@@ -118,9 +85,6 @@ export function AdminUsuarios() {
             );
     }, [mensajeDeError]);
 
-    // El organigrama depende de la empresa elegida, así que se recarga cada vez
-    // que cambia. Sin alcance global el backend ignora el id y devuelve los de
-    // la empresa propia, que es la única posible.
     const empresaElegida = formulario.empresaId;
 
     useEffect(() => {
@@ -258,7 +222,6 @@ export function AdminUsuarios() {
             celda: (fila) => `${fila.apellido}, ${fila.nombre}`,
         },
         { encabezado: t('comun.campo.email'), celda: (fila) => fila.email },
-        // Con alcance acotado la columna sería la misma empresa en todas las filas.
         ...(alcanceGlobal
             ? [
                   {
@@ -295,7 +258,6 @@ export function AdminUsuarios() {
     ];
 
     const puedeUsarFormulario = editandoId === null ? puedeInvitar : puedeModificar;
-    // Editar es siempre individual: el padrón solo da de alta.
     const mostrarPadron = modoAlta === 'padron' && editandoId === null;
 
     return (
@@ -308,10 +270,7 @@ export function AdminUsuarios() {
                 {!alcanceGlobal && ` ${t('admin.usuarios.deTuEmpresa')}`}
             </p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -321,8 +280,6 @@ export function AdminUsuarios() {
                             : t('admin.usuarios.formulario.editar')}
                     </h2>
 
-                    {/* Dar de alta tiene dos formas: de a uno o por padrón. Al
-                        editar no hay elección, así que el selector no aparece. */}
                     {editandoId === null && (
                         <div className="mt-4 flex flex-wrap gap-2">
                             <button
@@ -385,8 +342,6 @@ export function AdminUsuarios() {
                         />
 
                         <div className="fila">
-                            {/* Sin alcance global la empresa no se elige: el backend
-                                fuerza la propia, así que el campo solo confundiría. */}
                             {alcanceGlobal && (
                                 <CampoSelect
                                     etiqueta={t('comun.campo.empresa')}
@@ -394,8 +349,6 @@ export function AdminUsuarios() {
                                     required
                                     value={formulario.empresaId}
                                     onChange={(evento) =>
-                                        // Cambiar de empresa invalida el departamento
-                                        // elegido: pertenece al organigrama anterior.
                                         setFormulario({
                                             ...formulario,
                                             empresaId: evento.target.value,
@@ -429,8 +382,6 @@ export function AdminUsuarios() {
                                 ))}
                             </CampoSelect>
 
-                            {/* El departamento es opcional y sale del organigrama de
-                                la empresa elegida (CU-001-009). */}
                             <CampoSelect
                                 etiqueta={t('admin.usuarios.formulario.departamento')}
                                 identificador="departamentoId"
@@ -468,23 +419,12 @@ export function AdminUsuarios() {
                             />
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null
-                                    ? t('admin.usuarios.formulario.enviar')
-                                    : t('comun.boton.guardarCambios')}
-                            </Boton>
-
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.usuarios.formulario.enviar')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                     )}
                 </section>
@@ -506,35 +446,24 @@ export function AdminUsuarios() {
                             acciones={(fila) => (
                                 <div className="flex justify-end gap-2">
                                     {puedeInvitar && estaPendiente(fila) && (
-                                        <button
-                                            type="button"
-                                            onClick={() => void reinvitar(fila)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-primario hover:bg-info-fondo"
-                                        >
+                                        <BotonAccion variante="primario" onClick={() => void reinvitar(fila)}>
                                             {t('admin.usuarios.reenviar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
-                                    {/* Desbloquear no es destructivo, así que no
-                                        pide confirmación (CU-003-004, CA4). */}
                                     {puedeModificar && estaBloqueada(fila) && (
-                                        <button
-                                            type="button"
+                                        <BotonAccion
+                                            variante="primario"
                                             onClick={() => void desbloquear(fila)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-primario hover:bg-info-fondo"
                                         >
                                             {t('admin.usuarios.desbloquear')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeModificar && (
-                                        <button
-                                            type="button"
-                                            onClick={() => editar(fila)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => editar(fila)}>
                                             {t('comun.boton.editar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {fila.usuarioId === usuarioEnSesion?.usuarioId ? (
@@ -545,29 +474,23 @@ export function AdminUsuarios() {
                                         puedeDarDeBaja &&
                                         (confirmandoBaja === fila.usuarioId ? (
                                             <>
-                                                <button
-                                                    type="button"
+                                                <BotonAccion
+                                                    variante="confirmar"
                                                     onClick={() => void darDeBaja(fila)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
                                                 >
                                                     {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
+                                                </BotonAccion>
+                                                <BotonAccion onClick={() => setConfirmandoBaja(null)}>
                                                     {t('comun.boton.no')}
-                                                </button>
+                                                </BotonAccion>
                                             </>
                                         ) : (
-                                            <button
-                                                type="button"
+                                            <BotonAccion
+                                                variante="peligro"
                                                 onClick={() => setConfirmandoBaja(fila.usuarioId)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
                                             >
                                                 {t('comun.boton.desactivar')}
-                                            </button>
+                                            </BotonAccion>
                                         ))
                                     )}
                                 </div>

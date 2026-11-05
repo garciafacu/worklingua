@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
+import { useId, useState } from 'react';
 import { useLocalizacion } from '../contexto/useLocalizacion';
-import { PUNTAJE_MAXIMO } from '../tipos/opiniones';
+import { type OpinionResponse, PUNTAJE_MAXIMO } from '../tipos/opiniones';
 
 type TamanoEstrellas = 'sm' | 'md' | 'lg';
 
@@ -61,5 +62,191 @@ export function Estrellas({ valor, tamano = 'sm' }: EstrellasProps) {
                 ))}
             </span>
         </span>
+    );
+}
+
+interface SelectorEstrellasProps {
+    valor: number;
+    deshabilitado?: boolean;
+    alCambiar: (puntaje: number) => void;
+}
+
+const PUNTAJES = Array.from({ length: PUNTAJE_MAXIMO }, (_, indice) => indice + 1);
+
+export function SelectorEstrellas({ valor, deshabilitado = false, alCambiar }: SelectorEstrellasProps) {
+    const { t } = useTranslation();
+    const nombre = useId();
+    const [vistaPrevia, setVistaPrevia] = useState<number | null>(null);
+
+    const mostrado = vistaPrevia ?? valor;
+
+    return (
+        <fieldset disabled={deshabilitado} className="m-0 min-w-0 border-0 p-0">
+            <legend className="p-0 text-sm font-semibold text-texto">
+                {t('privado.opiniones.formulario.puntaje')}
+            </legend>
+
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <div className="flex items-center" onMouseLeave={() => setVistaPrevia(null)}>
+                    {PUNTAJES.map((puntaje) => (
+                        <label
+                            key={puntaje}
+                            onMouseEnter={() => setVistaPrevia(puntaje)}
+                            className="group m-0 cursor-pointer rounded-lg p-1 focus-within:ring-2 focus-within:ring-borde-foco"
+                        >
+                            <input
+                                type="radio"
+                                name={nombre}
+                                value={puntaje}
+                                checked={valor === puntaje}
+                                onChange={() => alCambiar(puntaje)}
+                                className="sr-only"
+                            />
+                            <span className="sr-only">
+                                {t('comun.valoracion.estrellas', { valor: puntaje })}:{' '}
+                                {t(`comun.valoracion.puntaje.${puntaje}`)}
+                            </span>
+                            <IconoEstrella
+                                className={`size-8 transition duration-150 group-hover:scale-110 ${
+                                    puntaje <= mostrado ? 'text-estrella' : 'text-borde'
+                                }`}
+                            />
+                        </label>
+                    ))}
+                </div>
+
+                <span
+                    aria-live="polite"
+                    className={`text-sm ${
+                        mostrado > 0 ? 'font-semibold text-texto' : 'text-texto-suave'
+                    }`}
+                >
+                    {mostrado > 0
+                        ? t(`comun.valoracion.puntaje.${mostrado}`)
+                        : t('privado.opiniones.formulario.elegiPuntaje')}
+                </span>
+            </div>
+        </fieldset>
+    );
+}
+
+interface ResumenValoracionProps {
+    promedio: number;
+    cantidad: number;
+}
+
+export function ResumenValoracion({ promedio, cantidad }: ResumenValoracionProps) {
+    const { t } = useTranslation();
+    const { formatearNumero } = useLocalizacion();
+
+    if (cantidad === 0) {
+        return (
+            <p className="m-0 flex min-h-6 items-center gap-2 text-sm text-texto-suave">
+                <Estrellas valor={0} />
+                {t('comun.valoracion.sinValoraciones')}
+            </p>
+        );
+    }
+
+    return (
+        <p className="m-0 flex min-h-6 items-center gap-2 text-sm">
+            <span className="font-semibold text-texto">{formatearNumero(promedio, 1)}</span>
+            <Estrellas valor={promedio} />
+            <span className="text-texto-suave">
+                (
+                {cantidad === 1
+                    ? t('comun.valoracion.cantidadUna')
+                    : t('comun.valoracion.cantidad', { cantidad: formatearNumero(cantidad) })}
+                )
+            </span>
+        </p>
+    );
+}
+
+interface DistribucionValoracionesProps {
+    promedio: number;
+    cantidad: number;
+    opiniones: OpinionResponse[];
+}
+
+const PUNTAJES_DESCENDENTES = Array.from(
+    { length: PUNTAJE_MAXIMO },
+    (_, indice) => PUNTAJE_MAXIMO - indice,
+);
+
+export function DistribucionValoraciones({ promedio, cantidad, opiniones }: DistribucionValoracionesProps) {
+    const { t } = useTranslation();
+    const { formatearNumero } = useLocalizacion();
+
+    const valoradas = opiniones.filter((opinion) => opinion.puntaje !== null);
+    const maximo = Math.max(valoradas.length, 1);
+
+    return (
+        <section className="rounded-2xl border border-borde bg-superficie p-6">
+            <h3 className="m-0 text-sm font-semibold tracking-wide text-texto-suave uppercase">
+                {t('privado.opiniones.distribucion.titulo')}
+            </h3>
+
+            <div className="mt-4 grid items-center gap-6 sm:grid-cols-[auto_1fr] sm:gap-10">
+                <div className="flex flex-col items-start gap-2 sm:items-center">
+                    <p className="m-0 text-5xl leading-none font-bold tracking-tight text-texto">
+                        {cantidad > 0 ? formatearNumero(promedio, 1) : '—'}
+                    </p>
+                    <Estrellas valor={promedio} tamano="md" />
+                    <p className="m-0 text-sm text-texto-suave">
+                        {cantidad === 0
+                            ? t('comun.valoracion.sinValoraciones')
+                            : cantidad === 1
+                              ? t('comun.valoracion.cantidadUna')
+                              : t('comun.valoracion.cantidad', {
+                                    cantidad: formatearNumero(cantidad),
+                                })}
+                    </p>
+                </div>
+
+                <ul className="m-0 list-none space-y-2 p-0">
+                    {PUNTAJES_DESCENDENTES.map((puntaje) => {
+                        const cantidadPuntaje = valoradas.filter(
+                            (opinion) => opinion.puntaje === puntaje,
+                        ).length;
+                        const ancho = (cantidadPuntaje / maximo) * 100;
+
+                        return (
+                            <li
+                                key={puntaje}
+                                className="flex items-center gap-3 text-sm"
+                                aria-label={t('privado.opiniones.distribucion.fila', {
+                                    cantidad: cantidadPuntaje,
+                                    puntaje,
+                                })}
+                            >
+                                <span
+                                    aria-hidden="true"
+                                    className="flex w-8 shrink-0 items-center gap-1 font-medium text-texto"
+                                >
+                                    {puntaje}
+                                    <IconoEstrella className="size-3.5 text-estrella" />
+                                </span>
+                                <span
+                                    aria-hidden="true"
+                                    className="h-2 flex-1 overflow-hidden rounded-full bg-fondo"
+                                >
+                                    <span
+                                        className="block h-full rounded-full bg-estrella transition-[width] duration-500"
+                                        style={{ width: `${ancho}%` }}
+                                    />
+                                </span>
+                                <span
+                                    aria-hidden="true"
+                                    className="w-8 shrink-0 text-right text-texto-suave tabular-nums"
+                                >
+                                    {formatearNumero(cantidadPuntaje)}
+                                </span>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
+        </section>
     );
 }

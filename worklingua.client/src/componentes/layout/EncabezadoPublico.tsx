@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { ITEMS_PUBLICOS } from '../../rutas/itemsMenu';
+import { Marca } from '../Basicos';
 import { BuscadorBarra } from '../BuscadorBarra';
-import { Marca } from '../Marca';
 import { SelectorIdioma } from './SelectorIdioma';
 
 const CLASE_ENLACE = 'whitespace-nowrap rounded-lg px-2 py-2 text-sm font-medium no-underline transition-colors';

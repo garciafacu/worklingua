@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSesion } from '../../contexto/useSesion';
+import { Marca } from '../Basicos';
 import { BuscadorBarra } from '../BuscadorBarra';
-import { Marca } from '../Marca';
 import { CampanaNotificaciones } from './CampanaNotificaciones';
 import { SelectorIdioma } from './SelectorIdioma';
 

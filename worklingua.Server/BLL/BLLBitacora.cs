@@ -42,12 +42,7 @@ namespace worklingua.Server.BLL
         private const int TamanioPaginaMaximo = 100;
         private const int LargoMaximoTexto = 200;
 
-        MPPBitacora oMPPBit;
-
-        public BLLBitacora()
-        {
-            oMPPBit = new MPPBitacora();
-        }
+        MPPBitacora oMPPBit = new MPPBitacora();
 
         public void Guardar(BEBitacoraEvento Objeto)
         {
@@ -66,7 +61,12 @@ namespace worklingua.Server.BLL
         {
             Normalizar(Objeto);
 
-            return oMPPBit.Buscar(Objeto);
+            BEPaginaBitacora oPaginaBE = oMPPBit.Buscar(Objeto);
+
+            oPaginaBE.TotalPaginas =
+                (oPaginaBE.TotalRegistros + oPaginaBE.TamanioPagina - 1) / oPaginaBE.TamanioPagina;
+
+            return oPaginaBE;
         }
 
         private void Normalizar(BEFiltroBitacora Objeto)
@@ -141,6 +141,26 @@ namespace worklingua.Server.BLL
                     TipoErrorNegocio.Validacion,
                     "La fecha desde no puede ser posterior a la fecha hasta.");
             }
+        }
+
+        public void Validar(BEFiltroBitacora Objeto)
+        {
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Texto, 200,
+                "El término de búsqueda no puede superar los 200 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Usuario, 200,
+                "El usuario buscado no puede superar los 200 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Modulo, 80, "El módulo no puede superar los 80 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Accion, 120, "La acción no puede superar los 120 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Nivel, 20, "El nivel no puede superar los 20 caracteres.");
+
+            ReglasNegocio.ExigirRango(Objeto.Pagina, 1, int.MaxValue, "La página tiene que ser mayor o igual a 1.");
+
+            ReglasNegocio.ExigirRango(Objeto.TamanioPagina, 1, 100,
+                "El tamaño de página tiene que estar entre 1 y 100.");
         }
     }
 }

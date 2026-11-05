@@ -1,24 +1,23 @@
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { type FormEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../../../api/clienteHttp';
 import { empresasApi } from '../../../api/empresasApi';
-import { rendimientoApi } from '../../../api/rendimientoApi';
+import { rendimientoApi } from '../../../api/reportesApi';
 import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { GraficoBarras, type DatoGrafico } from '../../../componentes/GraficoBarras';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { Boton, BotonAccion } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type DatoGrafico, GraficoBarras } from '../../../componentes/GraficoBarras';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
 import { PERMISOS } from '../../../rutas/itemsMenu';
 import { descargarCsv, generarCsv } from '../../../servicios/csv';
-import type { EmpresaResponse } from '../../../tipos/autenticacion';
 import type {
     RendimientoDepartamentoResponse,
     RendimientoEmpleadoResponse,
     RendimientoResponse,
-} from '../../../tipos/rendimiento';
+} from '../../../tipos/reportes';
+import type { EmpresaResponse } from '../../../tipos/usuarios';
 
 interface CifraProps {
     titulo: string;
@@ -54,19 +53,6 @@ function formularioInicial() {
 
 type Formulario = ReturnType<typeof formularioInicial>;
 
-/**
- * Panel de rendimiento formativo (CU-001-004).
- *
- * Tres miradas del mismo período: las cifras de toda la empresa, la comparación
- * entre departamentos y el detalle por empleado. El backend hace las tres
- * cuentas; acá solo se eligen los criterios y se dibuja.
- *
- * Es la misma pantalla para los dos alcances: con Curso.VerTodasLasEmpresas se
- * elige la empresa, y sin ese permiso el backend acota todo a la propia.
- *
- * El CSV se arma con lo que ya está en pantalla: son los mismos datos que
- * muestra la tabla, así que no hace falta un endpoint de exportación.
- */
 export function AdminRendimiento() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -96,9 +82,6 @@ export function AdminRendimiento() {
     }, [alcanceTotal]);
 
     useEffect(() => {
-        // Con alcance total la empresa es obligatoria y el backend la exige. Se
-        // evita el viaje para que la pantalla no reciba al operador con un
-        // error en rojo: todavía no eligió nada.
         const sinEmpresa = alcanceTotal && criterios.empresaId === '';
 
         const consulta = sinEmpresa
@@ -123,13 +106,6 @@ export function AdminRendimiento() {
             .finally(() => setCargando(false));
     }, [alcanceTotal, criterios, mensajeDeError]);
 
-    /**
-     * Las opciones del selector salen del propio panel: la comparación entre
-     * departamentos trae todos los de la empresa, incluso los que no tuvieron
-     * actividad, y no la recorta el filtro. Pedirlos aparte sería una consulta
-     * de más y, sin alcance total, acá no se sabe de antemano qué empresa
-     * impuso el backend.
-     */
     const opcionesDepartamento =
         panel === null ? [] : panel.departamentos.filter((fila) => fila.departamentoId !== null);
 
@@ -266,8 +242,6 @@ export function AdminRendimiento() {
                 role="search"
                 className="mt-6 rounded-2xl border border-borde bg-superficie p-6"
             >
-                {/* Sin alcance global la empresa no se elige: el backend impone
-                    la propia, así que el campo solo confundiría. */}
                 {alcanceTotal && (
                     <div className="fila">
                         <CampoSelect
@@ -331,13 +305,9 @@ export function AdminRendimiento() {
                     <Boton type="submit" cargando={cargando}>
                         {t('admin.rendimiento.buscar')}
                     </Boton>
-                    <button
-                        type="button"
-                        onClick={limpiar}
-                        className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                    >
+                    <BotonAccion grande onClick={limpiar}>
                         {t('admin.rendimiento.limpiar')}
-                    </button>
+                    </BotonAccion>
                 </div>
             </form>
 

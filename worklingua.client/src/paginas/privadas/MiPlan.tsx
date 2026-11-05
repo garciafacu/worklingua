@@ -1,23 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
-import { caracteristicasApi } from '../../api/caracteristicasApi';
 import { ErrorApi } from '../../api/clienteHttp';
 import { contratacionesApi } from '../../api/contratacionesApi';
-import { planesApi } from '../../api/planesApi';
-import { suscripcionesApi } from '../../api/suscripcionesApi';
-import { Alerta } from '../../componentes/Alerta';
-import { Boton } from '../../componentes/Boton';
+import { caracteristicasApi, planesApi, suscripcionesApi } from '../../api/planesApi';
+import { Alerta, AlertasResultado } from '../../componentes/Alerta';
+import { Boton, BotonAccion } from '../../componentes/Boton';
 import { FormularioContratacion } from '../../componentes/FormularioContratacion';
 import { Modal } from '../../componentes/Modal';
 import { TarjetaPlan } from '../../componentes/TarjetaPlan';
 import { useLocalizacion } from '../../contexto/useLocalizacion';
 import { useSesion } from '../../contexto/useSesion';
 import { PERMISOS } from '../../rutas/itemsMenu';
-import type { CaracteristicaResponse } from '../../tipos/caracteristicas';
 import type { ContratacionResponse } from '../../tipos/contrataciones';
-import type { PlanResponse } from '../../tipos/planes';
-import type { SuscripcionResponse } from '../../tipos/suscripciones';
+import type { CaracteristicaResponse, PlanResponse, SuscripcionResponse } from '../../tipos/planes';
 
 export function MiPlan() {
     const { t } = useTranslation();
@@ -141,10 +137,7 @@ export function MiPlan() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('privado.miPlan.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {cargando && (
                 <p className="mt-6 text-sm text-texto-suave">{t('privado.miPlan.cargando')}</p>
@@ -179,16 +172,15 @@ export function MiPlan() {
                                 </div>
 
                                 {puedeContratar && suscripcion.cancelable && (
-                                    <button
-                                        type="button"
+                                    <BotonAccion
+                                        grande
                                         onClick={() => {
                                             setErrorCancelacion(null);
                                             setConfirmandoCancelacion(true);
                                         }}
-                                        className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
                                     >
                                         {t('privado.miPlan.cancelar')}
-                                    </button>
+                                    </BotonAccion>
                                 )}
                             </div>
                         ) : (
@@ -283,13 +275,9 @@ export function MiPlan() {
                         <Boton cargando={cancelando} onClick={() => void cancelarContratacion()}>
                             {t('privado.miPlan.confirmarCancelacion.confirmar')}
                         </Boton>
-                        <button
-                            type="button"
-                            onClick={() => setConfirmandoCancelacion(false)}
-                            className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                        >
+                        <BotonAccion grande onClick={() => setConfirmandoCancelacion(false)}>
                             {t('privado.miPlan.confirmarCancelacion.volver')}
-                        </button>
+                        </BotonAccion>
                     </div>
                 </div>
             </Modal>

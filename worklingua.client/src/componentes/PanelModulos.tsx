@@ -1,30 +1,23 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../api/clienteHttp';
-import { progresoApi } from '../api/progresoApi';
-import type { ModuloResponse } from '../tipos/progreso';
+import { progresoApi } from '../api/cursosApi';
+import type { ModuloResponse } from '../tipos/cursos';
 import { Alerta } from './Alerta';
-import { Boton } from './Boton';
-import { CampoTexto } from './CampoTexto';
+import { Boton, BotonAccion } from './Boton';
+import { CampoTexto } from './Campos';
 
 interface PanelModulosProps {
     cursoId: number;
     puedeModificar: boolean;
 }
 
-/**
- * Módulos de un curso, para el ABM de Cursos. Son las unidades sobre las que
- * cada usuario registra su avance (Mis cursos). Un módulo no se edita: se da de
- * baja y se vuelve a cargar, así el avance ya registrado no cambia de sentido.
- */
 export function PanelModulos({ cursoId, puedeModificar }: PanelModulosProps) {
     const { t } = useTranslation();
 
     const [modulos, setModulos] = useState<ModuloResponse[]>([]);
     const [nombre, setNombre] = useState('');
-    /** El objetivo del módulo. */
     const [descripcion, setDescripcion] = useState('');
-    /** El texto de la lección. */
     const [contenido, setContenido] = useState('');
     const [orden, setOrden] = useState('');
     const [error, setError] = useState<string | null>(null);
@@ -105,13 +98,9 @@ export function PanelModulos({ cursoId, puedeModificar }: PanelModulosProps) {
                                 )}
                             </div>
                             {puedeModificar && (
-                                <button
-                                    type="button"
-                                    onClick={() => void quitar(modulo.moduloId)}
-                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                >
+                                <BotonAccion variante="peligro" onClick={() => void quitar(modulo.moduloId)}>
                                     {t('comun.boton.quitar')}
-                                </button>
+                                </BotonAccion>
                             )}
                         </li>
                     ))}
@@ -148,8 +137,6 @@ export function PanelModulos({ cursoId, puedeModificar }: PanelModulosProps) {
                         />
                     </div>
 
-                    {/* El contenido es la lección: lo que el empleado lee al
-                        abrir el módulo, con o sin archivos adjuntos. */}
                     <div>
                         <label
                             htmlFor="modulo-contenido"

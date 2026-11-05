@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using worklingua.Server.BE;
 using worklingua.Server.DAL;
@@ -9,13 +8,8 @@ namespace worklingua.Server.MPP
 {
     public class MPPEncuesta
     {
-        Acceso oDatos;
+        Acceso oDatos = new Acceso();
         Hashtable Hdatos;
-
-        public MPPEncuesta()
-        {
-            oDatos = new Acceso();
-        }
 
         public int Guardar(BEEncuesta Objeto)
         {
@@ -163,10 +157,6 @@ namespace worklingua.Server.MPP
             return Convert.ToInt32(resultado);
         }
 
-        /// <summary>
-        /// Respuestas del usuario: la clave es la encuesta y el valor, la opción
-        /// que eligió. Con @EncuestaId en null devuelve las de todas.
-        /// </summary>
         public Dictionary<int, int> ListarRespuestasDeUsuario(BEFiltroEncuesta Objeto, BESesion oSesionBE)
         {
             Hdatos = new Hashtable();

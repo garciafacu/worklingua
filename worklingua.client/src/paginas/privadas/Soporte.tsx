@@ -1,16 +1,20 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { ErrorApi } from '../../api/clienteHttp';
 import { ticketsApi } from '../../api/ticketsApi';
-import { Alerta } from '../../componentes/Alerta';
-import { Boton } from '../../componentes/Boton';
-import { CampoSelect } from '../../componentes/CampoSelect';
-import { CampoTexto } from '../../componentes/CampoTexto';
+import { Alerta, AlertasResultado } from '../../componentes/Alerta';
+import { Boton, BotonAccion } from '../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../componentes/Campos';
 import { EstadoTicketEtiqueta, HiloTicket } from '../../componentes/HiloTicket';
 import { Modal } from '../../componentes/Modal';
 import { useLocalizacion } from '../../contexto/useLocalizacion';
-import { ESTADOS_TICKET, type EstadoTicket, type OpcionesTicketResponse, type TicketResponse } from '../../tipos/tickets';
+import {
+    ESTADOS_TICKET,
+    type EstadoTicket,
+    type OpcionesTicketResponse,
+    type TicketResponse,
+} from '../../tipos/tickets';
 
 const FORMULARIO_VACIO = { suscripcionId: '', cursoId: '', asunto: '', texto: '' };
 
@@ -142,10 +146,7 @@ export function Soporte() {
                 <Boton onClick={abrirNueva}>{t('soporte.nueva.boton')}</Boton>
             </div>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
                 <section className="flex flex-col gap-3">
@@ -219,13 +220,9 @@ export function Soporte() {
                             }
                             acciones={
                                 detalleVisible.ticket.estado !== 'CERRADO' && (
-                                    <button
-                                        type="button"
-                                        onClick={() => void cerrar(detalleVisible.ticket.ticketId)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion onClick={() => void cerrar(detalleVisible.ticket.ticketId)}>
                                         {t('soporte.cerrar')}
-                                    </button>
+                                    </BotonAccion>
                                 )
                             }
                         />
@@ -305,13 +302,9 @@ export function Soporte() {
                         <Boton type="submit" cargando={guardando}>
                             {t('soporte.nueva.enviar')}
                         </Boton>
-                        <button
-                            type="button"
-                            onClick={() => setCreando(false)}
-                            className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                        >
+                        <BotonAccion grande onClick={() => setCreando(false)}>
                             {t('comun.boton.cancelar')}
-                        </button>
+                        </BotonAccion>
                     </div>
                 </form>
             </Modal>

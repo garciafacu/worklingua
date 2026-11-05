@@ -1,13 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import hero from '../../assets/hero.png';
-import { Seccion } from '../../componentes/Seccion';
+import { Seccion } from '../../componentes/Basicos';
 
-/**
- * Las tres propuestas de valor. Se guardan las CLAVES, no los textos: el
- * componente las resuelve con `t()` en cada render, así que la tarjeta cambia
- * de idioma sin que haya que rearmar el arreglo.
- */
 const PROPUESTA = ['sector', 'practica', 'apps'];
 
 export function InicioPublico() {

@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using worklingua.Server.BE;
 using worklingua.Server.DAL;
@@ -9,37 +8,12 @@ namespace worklingua.Server.MPP
 {
     public class MPPUsuario
     {
-        Acceso oDatos;
+        Acceso oDatos = new Acceso();
         Hashtable Hdatos;
-        ServicioCifrado oServicioCifrado;
-
-        public MPPUsuario()
-        {
-            oDatos = new Acceso();
-            oServicioCifrado = new ServicioCifrado();
-        }
+        ServicioCifrado oServicioCifrado = new ServicioCifrado();
 
         public int Guardar(BEUsuario Objeto)
         {
-            if (Objeto.UsuarioId != 0)
-            {
-                Hdatos = new Hashtable();
-                Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
-                Hdatos.Add("@EmpresaId", Objeto.EmpresaId);
-                Hdatos.Add("@DepartamentoId", Objeto.DepartamentoId);
-                Hdatos.Add("@Idioma", Objeto.Idioma);
-                Hdatos.Add("@Nombre", Objeto.Nombre);
-                Hdatos.Add("@Apellido", Objeto.Apellido);
-                AgregarDocumento(Hdatos, Objeto.Documento);
-                Hdatos.Add("@Email", Objeto.Email);
-                Hdatos.Add("@NivelIdioma", Objeto.NivelIdioma);
-                Hdatos.Add("@FechaNacimiento", Objeto.FechaNacimiento);
-
-                oDatos.LeerEscalar("sp_Usuario_Modificar", Hdatos);
-
-                return Objeto.UsuarioId;
-            }
-
             Hdatos = new Hashtable();
             Hdatos.Add("@EmpresaId", Objeto.EmpresaId);
             Hdatos.Add("@DepartamentoId", Objeto.DepartamentoId);
@@ -48,9 +22,19 @@ namespace worklingua.Server.MPP
             Hdatos.Add("@Apellido", Objeto.Apellido);
             AgregarDocumento(Hdatos, Objeto.Documento);
             Hdatos.Add("@Email", Objeto.Email);
-            Hdatos.Add("@PasswordHash", Objeto.PasswordHash);
             Hdatos.Add("@NivelIdioma", Objeto.NivelIdioma);
             Hdatos.Add("@FechaNacimiento", Objeto.FechaNacimiento);
+
+            if (Objeto.UsuarioId != 0)
+            {
+                Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
+
+                oDatos.LeerEscalar("sp_Usuario_Modificar", Hdatos);
+
+                return Objeto.UsuarioId;
+            }
+
+            Hdatos.Add("@PasswordHash", Objeto.PasswordHash);
             Hdatos.Add("@Activo", Objeto.Activo.HasValue && Objeto.Activo.Value);
 
             object identidad = oDatos.LeerEscalar("sp_Usuario_Alta", Hdatos);
@@ -82,16 +66,7 @@ namespace worklingua.Server.MPP
             Hdatos = new Hashtable();
             Hdatos.Add("@DocumentoHash", huella);
 
-            DataTable Dt = oDatos.Leer("sp_Usuario_ObtenerPorDocumentoHash", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                return Mapear(Dt.Rows[0]);
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.AObjeto(oDatos.Leer("sp_Usuario_ObtenerPorDocumentoHash", Hdatos), Mapear);
         }
 
         public BEUsuario ObtenerPorEmail(BEUsuario Objeto)
@@ -99,16 +74,7 @@ namespace worklingua.Server.MPP
             Hdatos = new Hashtable();
             Hdatos.Add("@Email", Objeto.Email);
 
-            DataTable Dt = oDatos.Leer("sp_Usuario_ObtenerPorEmail", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                return Mapear(Dt.Rows[0]);
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.AObjeto(oDatos.Leer("sp_Usuario_ObtenerPorEmail", Hdatos), Mapear);
         }
 
         public BEUsuario ListarObjeto(BEUsuario Objeto)
@@ -116,16 +82,7 @@ namespace worklingua.Server.MPP
             Hdatos = new Hashtable();
             Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
 
-            DataTable Dt = oDatos.Leer("sp_Usuario_ObtenerPorId", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                return Mapear(Dt.Rows[0]);
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.AObjeto(oDatos.Leer("sp_Usuario_ObtenerPorId", Hdatos), Mapear);
         }
 
         public bool AsignarRol(BEUsuarioRol Objeto)
@@ -142,29 +99,19 @@ namespace worklingua.Server.MPP
             Hdatos = new Hashtable();
             Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
 
-            List<BERol> ListaRolBE = new List<BERol>();
-            DataTable Dt = oDatos.Leer("sp_Usuario_ObtenerRoles", Hdatos);
+            return ServicioLectorFila.ALista(oDatos.Leer("sp_Usuario_ObtenerRoles", Hdatos), MapearRol);
+        }
 
-            if (Dt.Rows.Count > 0)
-            {
-                foreach (DataRow Item in Dt.Rows)
-                {
-                    BERol oRolBE = new BERol();
+        private BERol MapearRol(DataRow Item)
+        {
+            BERol oRolBE = new BERol();
 
-                    oRolBE.RolId = ServicioLectorFila.LeerEntero(Item, "RolId");
-                    oRolBE.Nombre = ServicioLectorFila.LeerTexto(Item, "Nombre");
-                    oRolBE.Descripcion = ServicioLectorFila.LeerTextoNulo(Item, "Descripcion");
-                    oRolBE.Activo = true;
+            oRolBE.RolId = ServicioLectorFila.LeerEntero(Item, "RolId");
+            oRolBE.Nombre = ServicioLectorFila.LeerTexto(Item, "Nombre");
+            oRolBE.Descripcion = ServicioLectorFila.LeerTextoNulo(Item, "Descripcion");
+            oRolBE.Activo = true;
 
-                    ListaRolBE.Add(oRolBE);
-                }
-
-                return ListaRolBE;
-            }
-            else
-            {
-                return null;
-            }
+            return oRolBE;
         }
 
         public List<BEUsuarioAdministracion> ListarAdministracion(BEUsuario Objeto)
@@ -172,22 +119,7 @@ namespace worklingua.Server.MPP
             Hdatos = new Hashtable();
             Hdatos.Add("@EmpresaId", Objeto.EmpresaId == 0 ? null : (object)Objeto.EmpresaId);
 
-            List<BEUsuarioAdministracion> ListaUsuarioBE = new List<BEUsuarioAdministracion>();
-            DataTable Dt = oDatos.Leer("sp_Usuario_ListarAdministracion", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                foreach (DataRow Item in Dt.Rows)
-                {
-                    ListaUsuarioBE.Add(MapearAdministracion(Item));
-                }
-
-                return ListaUsuarioBE;
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.ALista<BEUsuarioAdministracion>(oDatos.Leer("sp_Usuario_ListarAdministracion", Hdatos), MapearAdministracion);
         }
 
         public List<BEUsuarioAdministracion> ListarOperadores(BEUsuario Objeto)
@@ -195,22 +127,7 @@ namespace worklingua.Server.MPP
             Hdatos = new Hashtable();
             Hdatos.Add("@EmpresaId", Objeto.EmpresaId);
 
-            List<BEUsuarioAdministracion> ListaUsuarioBE = new List<BEUsuarioAdministracion>();
-            DataTable Dt = oDatos.Leer("sp_Usuario_ListarOperadores", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                foreach (DataRow Item in Dt.Rows)
-                {
-                    ListaUsuarioBE.Add(MapearAdministracion(Item));
-                }
-
-                return ListaUsuarioBE;
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.ALista<BEUsuarioAdministracion>(oDatos.Leer("sp_Usuario_ListarOperadores", Hdatos), MapearAdministracion);
         }
 
         public bool QuitarRol(BEUsuarioRol Objeto)
@@ -250,28 +167,15 @@ namespace worklingua.Server.MPP
             Hdatos = new Hashtable();
             Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
 
-            List<BERolPermiso> ListaRolPermisoBE = new List<BERolPermiso>();
-            DataTable Dt = oDatos.Leer("sp_Usuario_ObtenerPermisos", Hdatos);
+            return ServicioLectorFila.ALista(oDatos.Leer("sp_Usuario_ObtenerPermisos", Hdatos), MapearRolPermiso);
+        }
 
-            if (Dt.Rows.Count > 0)
-            {
-                foreach (DataRow Item in Dt.Rows)
-                {
-                    BERolPermiso oRolPermisoBE = new BERolPermiso();
-
-                    oRolPermisoBE.RolPermisoId = ServicioLectorFila.LeerEntero(Item, "RolPermisoId");
-                    oRolPermisoBE.RolId = ServicioLectorFila.LeerEntero(Item, "RolId");
-                    oRolPermisoBE.PermisoId = ServicioLectorFila.LeerEntero(Item, "PermisoId");
-
-                    ListaRolPermisoBE.Add(oRolPermisoBE);
-                }
-
-                return ListaRolPermisoBE;
-            }
-            else
-            {
-                return null;
-            }
+        private BERolPermiso MapearRolPermiso(DataRow Item)
+        {
+            return new BERolPermiso(
+                ServicioLectorFila.LeerEntero(Item, "RolPermisoId"),
+                ServicioLectorFila.LeerEntero(Item, "RolId"),
+                ServicioLectorFila.LeerEntero(Item, "PermisoId"));
         }
 
         public bool ActivarCuenta(BEUsuario Objeto)
@@ -337,19 +241,7 @@ namespace worklingua.Server.MPP
 
         private BEUsuarioAdministracion MapearAdministracion(DataRow Item)
         {
-            BEUsuario oUsuarioBE = new BEUsuario();
-
-            oUsuarioBE.UsuarioId = ServicioLectorFila.LeerEntero(Item, "UsuarioId");
-            oUsuarioBE.EmpresaId = ServicioLectorFila.LeerEntero(Item, "EmpresaId");
-            oUsuarioBE.DepartamentoId = ServicioLectorFila.LeerEnteroNulo(Item, "DepartamentoId");
-            oUsuarioBE.Nombre = ServicioLectorFila.LeerTexto(Item, "Nombre");
-            oUsuarioBE.Apellido = ServicioLectorFila.LeerTexto(Item, "Apellido");
-            oUsuarioBE.Documento = oServicioCifrado.Descifrar(ServicioLectorFila.LeerTextoNulo(Item, "Documento"));
-            oUsuarioBE.Email = ServicioLectorFila.LeerTexto(Item, "Email");
-            oUsuarioBE.FechaAlta = ServicioLectorFila.LeerFechaHoraNula(Item, "FechaAlta");
-            oUsuarioBE.UltimoAcceso = ServicioLectorFila.LeerFechaHoraNula(Item, "UltimoAcceso");
-            oUsuarioBE.Activo = ServicioLectorFila.LeerBooleanoNulo(Item, "Activo");
-            oUsuarioBE.BloqueadoHasta = ServicioLectorFila.LeerFechaHoraNula(Item, "BloqueadoHasta");
+            BEUsuario oUsuarioBE = Mapear(Item);
 
             List<string> roles = new List<string>();
             string concatenados = ServicioLectorFila.LeerTexto(Item, "Roles");
@@ -395,6 +287,150 @@ namespace worklingua.Server.MPP
             oUsuarioBE.BloqueadoHasta = ServicioLectorFila.LeerFechaHoraNula(Item, "BloqueadoHasta");
 
             return oUsuarioBE;
+        }
+    }
+
+    public class MPPSesion
+    {
+        Acceso oDatos = new Acceso();
+        Hashtable Hdatos;
+
+        public BESesion Guardar(BESesion Objeto)
+        {
+            if (Objeto.SesionId != 0)
+            {
+                throw new NotImplementedException("No existe sp_Sesion_Modificar: una sesión se abre o se cierra, no se modifica.");
+            }
+
+            Hdatos = new Hashtable();
+            Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
+
+            DataTable Dt = oDatos.Leer("sp_Sesion_Alta", Hdatos);
+
+            if (Dt.Rows.Count == 0)
+            {
+                throw new InvalidOperationException("sp_Sesion_Alta no devolvió la sesión creada.");
+            }
+
+            return Mapear(Dt.Rows[0]);
+        }
+
+        public BESesion ListarObjeto(BESesion Objeto)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@Token", Objeto.Token);
+
+            return ServicioLectorFila.AObjeto(oDatos.Leer("sp_Sesion_ObtenerPorToken", Hdatos), Mapear);
+        }
+
+        public bool Baja(BESesion Objeto)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@Token", Objeto.Token);
+
+            object filas = oDatos.LeerEscalar("sp_Sesion_Cerrar", Hdatos);
+
+            return ServicioLectorFila.ATotalFilas(filas) > 0;
+        }
+
+        public int CerrarPorUsuario(BESesion Objeto)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
+            Hdatos.Add("@TokenExcluido", Objeto.Token == Guid.Empty ? null : (object)Objeto.Token);
+
+            object filas = oDatos.LeerEscalar("sp_Sesion_CerrarPorUsuario", Hdatos);
+
+            return ServicioLectorFila.ATotalFilas(filas);
+        }
+
+        private BESesion Mapear(DataRow Item)
+        {
+            BESesion oSesionBE = new BESesion();
+
+            oSesionBE.SesionId = ServicioLectorFila.LeerEntero(Item, "SesionId");
+            oSesionBE.UsuarioId = ServicioLectorFila.LeerEntero(Item, "UsuarioId");
+            oSesionBE.Token = ServicioLectorFila.LeerGuid(Item, "Token");
+            oSesionBE.FechaInicio = ServicioLectorFila.LeerFechaHora(Item, "FechaInicio");
+            oSesionBE.FechaFin = ServicioLectorFila.LeerFechaHoraNula(Item, "FechaFin");
+            oSesionBE.Activa = ServicioLectorFila.LeerBooleanoNulo(Item, "Activa");
+
+            return oSesionBE;
+        }
+    }
+
+    public class MPPTokenSeguridad
+    {
+        Acceso oDatos = new Acceso();
+        Hashtable Hdatos;
+
+        public BETokenSeguridad Guardar(BETokenSeguridad Objeto)
+        {
+            if (Objeto.TokenId != 0)
+            {
+                throw new NotImplementedException("No existe sp_TokenSeguridad_Modificar: un token se genera, se usa o se invalida.");
+            }
+
+            int MinutosVigencia = (int)(Objeto.FechaExpiracion - Objeto.FechaGeneracion).TotalMinutes;
+
+            Hdatos = new Hashtable();
+            Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
+            Hdatos.Add("@Tipo", Objeto.Tipo);
+            Hdatos.Add("@MinutosVigencia", MinutosVigencia);
+
+            DataTable Dt = oDatos.Leer("sp_TokenSeguridad_Alta", Hdatos);
+
+            if (Dt.Rows.Count == 0)
+            {
+                throw new InvalidOperationException("sp_TokenSeguridad_Alta no devolvió el token creado.");
+            }
+
+            return Mapear(Dt.Rows[0]);
+        }
+
+        public BETokenSeguridad ListarObjeto(BETokenSeguridad Objeto)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@Token", Objeto.Token);
+
+            return ServicioLectorFila.AObjeto(oDatos.Leer("sp_TokenSeguridad_ObtenerPorToken", Hdatos), Mapear);
+        }
+
+        public bool MarcarUsado(BETokenSeguridad Objeto)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@Token", Objeto.Token);
+
+            object filas = oDatos.LeerEscalar("sp_TokenSeguridad_MarcarUsado", Hdatos);
+
+            return ServicioLectorFila.ATotalFilas(filas) > 0;
+        }
+
+        public int InvalidarPorUsuarioYTipo(BETokenSeguridad Objeto)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
+            Hdatos.Add("@Tipo", Objeto.Tipo);
+
+            object filas = oDatos.LeerEscalar("sp_TokenSeguridad_InvalidarPorUsuarioYTipo", Hdatos);
+
+            return ServicioLectorFila.ATotalFilas(filas);
+        }
+
+        private BETokenSeguridad Mapear(DataRow Item)
+        {
+            BETokenSeguridad oTokenBE = new BETokenSeguridad();
+
+            oTokenBE.TokenId = ServicioLectorFila.LeerEntero(Item, "TokenId");
+            oTokenBE.UsuarioId = ServicioLectorFila.LeerEntero(Item, "UsuarioId");
+            oTokenBE.Token = ServicioLectorFila.LeerGuid(Item, "Token");
+            oTokenBE.Tipo = ServicioLectorFila.LeerTexto(Item, "Tipo");
+            oTokenBE.FechaGeneracion = ServicioLectorFila.LeerFechaHora(Item, "FechaGeneracion");
+            oTokenBE.FechaExpiracion = ServicioLectorFila.LeerFechaHora(Item, "FechaExpiracion");
+            oTokenBE.FechaUso = ServicioLectorFila.LeerFechaHoraNula(Item, "FechaUso");
+            oTokenBE.Activo = ServicioLectorFila.LeerBooleano(Item, "Activo");
+
+            return oTokenBE;
         }
     }
 }

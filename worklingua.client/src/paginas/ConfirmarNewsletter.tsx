@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ErrorApi } from '../api/clienteHttp';
-import { newsletterApi } from '../api/newsletterApi';
+import { newsletterApi } from '../api/noticiasApi';
 import { Alerta } from '../componentes/Alerta';
 import { TarjetaAuth } from '../componentes/TarjetaAuth';
 

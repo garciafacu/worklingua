@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using worklingua.Server.BE;
 using worklingua.Server.BLL;
@@ -8,14 +7,8 @@ namespace worklingua.Server.Controllers
     [Route("api/busqueda")]
     public class BusquedaController : ControladorBase
     {
-        BLLBusqueda oBLLBus;
-        BLLSesion oBLLSes;
-
-        public BusquedaController()
-        {
-            oBLLBus = new BLLBusqueda();
-            oBLLSes = new BLLSesion();
-        }
+        BLLBusqueda oBLLBus = new BLLBusqueda();
+        BLLSesion oBLLSes = new BLLSesion();
 
         [HttpGet]
         [ProducesResponseType(typeof(List<BEPaginaBuscableRespuesta>), StatusCodes.Status200OK)]
@@ -23,6 +16,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<List<BEPaginaBuscableRespuesta>> Buscar([FromQuery] BEFiltroBusqueda oFiltroBE)
         {
+            oBLLBus.Validar(oFiltroBE);
+
             List<BEPaginaBuscable> ListaPaginaBE = oBLLBus.Buscar(oFiltroBE, ObtenerSesionOpcional());
             List<BEPaginaBuscableRespuesta> respuesta = new List<BEPaginaBuscableRespuesta>();
 

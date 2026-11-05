@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { notificacionesApi } from '../../api/notificacionesApi';
+import { notificacionesApi } from '../../api/alertasApi';
 import { useLocalizacion } from '../../contexto/useLocalizacion';
-import type { BandejaResponse } from '../../tipos/notificaciones';
+import type { BandejaResponse } from '../../tipos/alertas';
 
 export function CampanaNotificaciones() {
     const { t } = useTranslation();

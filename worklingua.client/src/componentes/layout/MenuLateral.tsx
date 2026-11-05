@@ -12,24 +12,9 @@ function clasesItem({ isActive }: { isActive: boolean }) {
 }
 
 interface MenuLateralProps {
-    /** Cierra el menú al navegar cuando está en modo panel lateral. */
     alNavegar?: () => void;
 }
 
-/**
- * Menú vertical del área privada, separado en bloques.
- *
- * Cada ítem se filtra por dos cosas: el permiso que declara —los que no declaran
- * ninguno se muestran siempre— y la marca `oculto`, que saca del menú una
- * pantalla terminada que todavía no se quiere ofrecer.
- *
- * Un bloque sin ítems visibles no se dibuja: Administración desaparece sola para
- * quien no administra nada, en lugar de dejar un título suelto.
- *
- * Nada de esto es seguridad, es presentación. Entrar a la ruta a mano igual
- * termina en un 403 del backend, que resuelve los permisos contra la base en
- * cada pedido.
- */
 export function MenuLateral({ alNavegar }: MenuLateralProps) {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -45,9 +30,6 @@ export function MenuLateral({ alNavegar }: MenuLateralProps) {
     })).filter((grupo) => grupo.items.length > 0);
 
     return (
-        // `grow` para que el nav llene el alto del sidebar y `mt-auto` del último
-        // bloque tenga espacio libre que absorber. Si el menú no entra, el
-        // `mt-auto` colapsa y `overflow-y-auto` del <aside> lo hace scrollear.
         <nav
             aria-label={t('layout.menu.titulo')}
             className="flex grow flex-col gap-7 p-3 pb-6"
@@ -67,8 +49,6 @@ export function MenuLateral({ alNavegar }: MenuLateralProps) {
                         <NavLink
                             key={item.ruta}
                             to={item.ruta}
-                            // Sin `end`, /inicio quedaría activo en todas las
-                            // pantallas del área privada, porque todas cuelgan de él.
                             end={item.ruta === '/inicio'}
                             className={clasesItem}
                             onClick={alNavegar}

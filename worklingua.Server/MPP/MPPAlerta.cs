@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using worklingua.Server.BE;
 using worklingua.Server.DAL;
@@ -9,13 +8,8 @@ namespace worklingua.Server.MPP
 {
     public class MPPAlerta
     {
-        Acceso oDatos;
+        Acceso oDatos = new Acceso();
         Hashtable Hdatos;
-
-        public MPPAlerta()
-        {
-            oDatos = new Acceso();
-        }
 
         public List<BEAlerta> Listar(BEAlerta Objeto)
         {
@@ -39,16 +33,7 @@ namespace worklingua.Server.MPP
             Hdatos = new Hashtable();
             Hdatos.Add("@AlertaId", Objeto.AlertaId);
 
-            DataTable Dt = oDatos.Leer("sp_Alerta_ObtenerPorId", Hdatos);
-
-            if (Dt.Rows.Count > 0)
-            {
-                return Mapear(Dt.Rows[0]);
-            }
-            else
-            {
-                return null;
-            }
+            return ServicioLectorFila.AObjeto(oDatos.Leer("sp_Alerta_ObtenerPorId", Hdatos), Mapear);
         }
 
         public int Alta(BEAlerta Objeto)
@@ -142,6 +127,64 @@ namespace worklingua.Server.MPP
             oAlertaBE.Destinatarios = ServicioLectorFila.LeerEntero(Item, "Destinatarios");
 
             return oAlertaBE;
+        }
+    }
+
+    public class MPPNotificacion
+    {
+        Acceso oDatos = new Acceso();
+        Hashtable Hdatos;
+
+        public List<BENotificacion> ListarPorUsuario(int usuarioId, int tope)
+        {
+            List<BENotificacion> ListaBE = new List<BENotificacion>();
+
+            Hdatos = new Hashtable();
+            Hdatos.Add("@UsuarioId", usuarioId);
+            Hdatos.Add("@Tope", tope);
+
+            DataTable Dt = oDatos.Leer("sp_Notificacion_ListarPorUsuario", Hdatos);
+
+            foreach (DataRow Item in Dt.Rows)
+            {
+                BENotificacion oNotificacionBE = new BENotificacion();
+
+                oNotificacionBE.NotificacionId = ServicioLectorFila.LeerEntero(Item, "NotificacionId");
+                oNotificacionBE.UsuarioId = ServicioLectorFila.LeerEntero(Item, "UsuarioId");
+                oNotificacionBE.Titulo = ServicioLectorFila.LeerTexto(Item, "Titulo");
+                oNotificacionBE.Mensaje = ServicioLectorFila.LeerTexto(Item, "Mensaje");
+                oNotificacionBE.Leida = ServicioLectorFila.LeerBooleanoNulo(Item, "Leida");
+                oNotificacionBE.FechaEnvio = ServicioLectorFila.LeerFechaHoraNula(Item, "FechaEnvio");
+
+                ListaBE.Add(oNotificacionBE);
+            }
+
+            return ListaBE;
+        }
+
+        public int ContarNoLeidas(int usuarioId)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@UsuarioId", usuarioId);
+
+            object cantidad = oDatos.LeerEscalar("sp_Notificacion_ContarNoLeidas", Hdatos);
+
+            return ServicioLectorFila.ATotalFilas(cantidad);
+        }
+
+        public int MarcarLeidas(int usuarioId, int? notificacionId)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@UsuarioId", usuarioId);
+
+            if (notificacionId.HasValue)
+            {
+                Hdatos.Add("@NotificacionId", notificacionId.Value);
+            }
+
+            object filas = oDatos.LeerEscalar("sp_Notificacion_MarcarLeidas", Hdatos);
+
+            return ServicioLectorFila.ATotalFilas(filas);
         }
     }
 }

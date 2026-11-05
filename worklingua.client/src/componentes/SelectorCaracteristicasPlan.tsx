@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { CaracteristicaResponse } from '../tipos/caracteristicas';
+import type { CaracteristicaResponse } from '../tipos/planes';
 
 export interface FilaCaracteristicaPlan {
     caracteristica: CaracteristicaResponse;

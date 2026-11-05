@@ -1,62 +1,33 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import { caracteristicasApi } from '../../api/caracteristicasApi';
-import { ErrorApi } from '../../api/clienteHttp';
 import { opinionesApi } from '../../api/opinionesApi';
-import { planesApi } from '../../api/planesApi';
+import { caracteristicasApi, planesApi } from '../../api/planesApi';
 import { Alerta } from '../../componentes/Alerta';
 import { BuscadorOpiniones } from '../../componentes/BuscadorOpiniones';
-import { DistribucionValoraciones } from '../../componentes/DistribucionValoraciones';
+import { DistribucionValoraciones } from '../../componentes/Estrellas';
 import { FormularioOpinion } from '../../componentes/FormularioOpinion';
 import { ListaOpiniones } from '../../componentes/ListaOpiniones';
 import { SelectorPlanOpinion } from '../../componentes/SelectorPlanOpinion';
-import type { CaracteristicaResponse } from '../../tipos/caracteristicas';
+import { useMensajeDeError } from '../../hooks/useMensajeDeError';
 import type { CriteriosOpinion, OpinionResponse } from '../../tipos/opiniones';
-import type { PlanResponse } from '../../tipos/planes';
+import type { CaracteristicaResponse, PlanResponse } from '../../tipos/planes';
 
-/**
- * Qué está mostrando la lista.
- *
- * `plan` usa `GET /api/comentarios` (las opiniones del plan elegido, punto 20)
- * y `busqueda` usa `GET /api/comentarios/buscar` (punto 15).
- */
 type Consulta =
     | { tipo: 'plan' }
     | { tipo: 'busqueda'; criterios: CriteriosOpinion };
 
 const CONSULTA_INICIAL: Consulta = { tipo: 'plan' };
 
-/**
- * La valoración propia junto con el plan al que corresponde. Guardar el plan
- * evita mostrar, mientras llega la respuesta, la valoración del plan anterior.
- */
 interface ValoracionDePlan {
     planId: number;
     valoracion: OpinionResponse | null;
 }
 
-/**
- * Opiniones sobre los planes (punto 20) y búsqueda privada (punto 15).
- *
- * Vive en el área privada y requiere el permiso Comentario.Participar.
- * `RutaConPermiso` evita entrar sin ese permiso, pero quien autoriza de verdad
- * es el backend: los cuatro endpoints exigen el permiso en cada pedido.
- *
- * La sección se llama Opiniones de cara al usuario; la entidad persistida sigue
- * siendo `Comentario`, y por eso la API y los ids no cambiaron de nombre.
- */
 export function Opiniones() {
     const { t } = useTranslation();
 
-    // Declarado antes de los efectos que lo usan: si viviera mas abajo, el
-    // efecto lo capturaria antes de existir y no se actualizaria al cambiar de
-    // idioma (regla react-hooks del linter).
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     const [parametros] = useSearchParams();
     const [planes, setPlanes] = useState<PlanResponse[]>([]);
@@ -64,7 +35,6 @@ export function Opiniones() {
     const [planId, setPlanId] = useState<number | null>(null);
     const [opiniones, setOpiniones] = useState<OpinionResponse[]>([]);
     const [consulta, setConsulta] = useState<Consulta>(CONSULTA_INICIAL);
-    /** Fuerza releer la lista después de publicar o eliminar, sin cambiar la consulta. */
     const [recarga, setRecarga] = useState(0);
     const [confirmando, setConfirmando] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -78,9 +48,6 @@ export function Opiniones() {
     const valoracionCargada = valoracionPropia !== null && valoracionPropia.planId === planId;
     const valoracionActual = valoracionCargada ? valoracionPropia.valoracion : null;
 
-    // El plan puede venir del enlace del catálogo (?planId=N); si no, se toma el
-    // primero del listado, que llega ordenado por precio. Las características se
-    // piden junto con los planes porque las tarjetas del selector las necesitan.
     useEffect(() => {
         const pedido = Number.parseInt(parametros.get('planId') ?? '', 10);
 
@@ -119,8 +86,6 @@ export function Opiniones() {
             .finally(() => setBuscando(false));
     }, [consulta, planId, recarga, mensajeDeError]);
 
-    // La valoración propia se pide aparte de la lista: con una búsqueda activa la
-    // lista no tiene por qué incluirla, y el formulario la necesita igual.
     useEffect(() => {
         if (planId === null) {
             return;
@@ -146,7 +111,6 @@ export function Opiniones() {
         };
     }, [planId, recarga, mensajeDeError]);
 
-    /** Relee los planes para que las tarjetas muestren el promedio actualizado. */
     function refrescarPlanes() {
         planesApi
             .listar()
@@ -175,9 +139,6 @@ export function Opiniones() {
         setBuscando(true);
         setConfirmando(null);
         setConsulta(CONSULTA_INICIAL);
-        // Si ya se estaba viendo el plan, `consulta` no cambia y el efecto no
-        // volvería a correr, dejando el indicador de carga encendido para
-        // siempre. El contador fuerza la relectura.
         setRecarga((valor) => valor + 1);
     }
 
@@ -196,8 +157,6 @@ export function Opiniones() {
             const guardada = await opinionesApi.guardar({ planId, puntaje, texto });
 
             setValoracionPropia({ planId, valoracion: guardada });
-            // Se vuelve al listado del plan para que la valoración recién guardada
-            // quede visible aunque se estuviera viendo una búsqueda.
             setBuscando(true);
             setConsulta(CONSULTA_INICIAL);
             setRecarga((valor) => valor + 1);
@@ -230,8 +189,6 @@ export function Opiniones() {
 
             setConfirmando(null);
             setExito(t('privado.opiniones.exitoEliminar'));
-            // Se relee en vez de sacar la fila en memoria: la baja es lógica y el
-            // servidor es el que decide qué sigue visible.
             setBuscando(true);
             setRecarga((valor) => valor + 1);
             refrescarPlanes();

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
 using worklingua.Server.Services;
@@ -18,28 +17,15 @@ namespace worklingua.Server.BLL
 
         static readonly string[] Estados = { EstadoPendiente, EstadoEnProceso, EstadoRespondido, EstadoCerrado };
 
-        MPPTicket oMPPTic;
-        BLLUsuario oBLLUsu;
-        BLLSeguridad oBLLSeg;
-        BLLSuscripcion oBLLSus;
-        BLLCurso oBLLCur;
-        BLLIdioma oBLLIdi;
-        BLLTraduccion oBLLTra;
-        BLLBitacora oBLLBit;
-        ServicioEmailSoporte oServicioEmail;
-
-        public BLLTicket()
-        {
-            oMPPTic = new MPPTicket();
-            oBLLUsu = new BLLUsuario();
-            oBLLSeg = new BLLSeguridad();
-            oBLLSus = new BLLSuscripcion();
-            oBLLCur = new BLLCurso();
-            oBLLIdi = new BLLIdioma();
-            oBLLTra = new BLLTraduccion();
-            oBLLBit = new BLLBitacora();
-            oServicioEmail = new ServicioEmailSoporte();
-        }
+        MPPTicket oMPPTic = new MPPTicket();
+        BLLUsuario oBLLUsu = new BLLUsuario();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
+        BLLSuscripcion oBLLSus = new BLLSuscripcion();
+        BLLCurso oBLLCur = new BLLCurso();
+        BLLIdioma oBLLIdi = new BLLIdioma();
+        BLLTraduccion oBLLTra = new BLLTraduccion();
+        BLLBitacora oBLLBit = new BLLBitacora();
+        ServicioEmailSoporte oServicioEmail = new ServicioEmailSoporte();
 
         public BEOpcionesTicket ListarOpciones(BESesion oSesionBE)
         {
@@ -91,15 +77,8 @@ namespace worklingua.Server.BLL
 
         public BETicketConDetalle Guardar(BECrearTicket Objeto, BESesion oSesionBE)
         {
-            string asunto = Normalizar(Objeto.Asunto);
+            string asunto = ValidarAsunto(Objeto.Asunto);
             string texto = ValidarTexto(Objeto.Texto);
-
-            if (asunto == null || asunto.Length < LongitudMinimaAsunto || asunto.Length > LongitudMaximaAsunto)
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "El asunto tiene que tener entre " + LongitudMinimaAsunto + " y " + LongitudMaximaAsunto + " caracteres.");
-            }
 
             BEUsuario oUsuarioBE = oBLLUsu.ObtenerPorId(oSesionBE.UsuarioId);
 
@@ -306,7 +285,7 @@ namespace worklingua.Server.BLL
 
         private string ValidarEstado(string estado, bool opcional)
         {
-            string limpio = Normalizar(estado);
+            string limpio = ServicioTexto.Normalizar(estado);
 
             if (limpio == null && opcional)
             {
@@ -331,16 +310,26 @@ namespace worklingua.Server.BLL
                 "El estado tiene que ser " + string.Join(", ", Estados) + ".");
         }
 
-        private string ValidarTexto(string texto)
+        private string ValidarAsunto(string asunto)
         {
-            string limpio = Normalizar(texto);
+            string limpio = ServicioTexto.Normalizar(asunto);
 
-            if (limpio == null || limpio.Length > LongitudMaximaTexto)
+            if (limpio == null || limpio.Length < LongitudMinimaAsunto || limpio.Length > LongitudMaximaAsunto)
             {
                 throw new ExcepcionNegocio(
                     TipoErrorNegocio.Validacion,
-                    "El mensaje es obligatorio y no puede superar los " + LongitudMaximaTexto + " caracteres.");
+                    "El asunto tiene que tener entre " + LongitudMinimaAsunto + " y " + LongitudMaximaAsunto + " caracteres.");
             }
+
+            return limpio;
+        }
+
+        private string ValidarTexto(string texto)
+        {
+            string limpio = ServicioTexto.Normalizar(texto);
+
+            ReglasNegocio.ExigirConLargoMaximo(limpio, LongitudMaximaTexto,
+                "El mensaje es obligatorio y no puede superar los " + LongitudMaximaTexto + " caracteres.");
 
             return limpio;
         }
@@ -366,21 +355,174 @@ namespace worklingua.Server.BLL
             }
         }
 
-        private void Registrar(int usuarioId, string accion, string descripcion, string nivel)
+        private void Registrar(int? usuarioId, string accion, string descripcion, string nivel)
         {
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                usuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloSoporte,
-                accion,
-                descripcion,
-                nivel));
+                0, usuarioId, DateTime.Now, BLLBitacora.ModuloSoporte, accion, descripcion, nivel));
         }
 
-        private string Normalizar(string texto)
+        public void Validar(BECrearTicket Objeto)
         {
-            return string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();
+            ReglasNegocio.ExigirRango(Objeto.SuscripcionId, 1, int.MaxValue,
+                "Elegí la contratación sobre la que consultás.");
+
+            ReglasNegocio.ExigirTexto(Objeto.Asunto, "El asunto es obligatorio.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Asunto, 150, "El asunto no puede superar los 150 caracteres.");
+
+            ReglasNegocio.ExigirTexto(Objeto.Texto, "Escribí tu consulta.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Texto, 2000, "La consulta no puede superar los 2000 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.CodigoIdioma, 5, "El código de idioma no es válido.");
+        }
+
+        public void Validar(BEEnviarMensajeTicket Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.Texto, "Escribí el mensaje.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Texto, 2000, "El mensaje no puede superar los 2000 caracteres.");
+        }
+
+        public void Validar(BETicket Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.Estado, "Falta el estado.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Estado, 20, "El estado no es válido.");
+        }
+    }
+
+    public class BLLOferta
+    {
+        private const int LongitudMaximaTitulo = 150;
+        private const int LongitudMaximaDescripcion = 1000;
+
+        MPPOferta oMPPOfe = new MPPOferta();
+        BLLEmpresa oBLLEmp = new BLLEmpresa();
+        BLLPlan oBLLPlan = new BLLPlan();
+        BLLUsuario oBLLUsu = new BLLUsuario();
+        BLLBitacora oBLLBit = new BLLBitacora();
+
+        public List<BEOfertaConDetalle> ListarTodo()
+        {
+            List<BEOfertaConDetalle> ListaOfertaBE = oMPPOfe.Listar(new BEFiltroOferta());
+
+            return ListaOfertaBE == null ? new List<BEOfertaConDetalle>() : ListaOfertaBE;
+        }
+
+        public List<BEOfertaConDetalle> ListarVigentes(BESesion oSesionBE)
+        {
+            BEUsuario oUsuarioBE = oBLLUsu.ObtenerPorId(oSesionBE.UsuarioId);
+
+            BEFiltroOferta oFiltroBE = new BEFiltroOferta(
+                null, oUsuarioBE.EmpresaId, DateOnly.FromDateTime(DateTime.Now));
+
+            List<BEOfertaConDetalle> ListaOfertaBE = oMPPOfe.Listar(oFiltroBE);
+
+            return ListaOfertaBE == null ? new List<BEOfertaConDetalle>() : ListaOfertaBE;
+        }
+
+        private BEOfertaConDetalle ListarObjeto(BEOferta Objeto)
+        {
+            List<BEOfertaConDetalle> ListaOfertaBE = oMPPOfe.Listar(new BEFiltroOferta(Objeto.OfertaId, null, null));
+
+            if (ListaOfertaBE == null)
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "La oferta no existe.");
+            }
+
+            return ListaOfertaBE[0];
+        }
+
+        public BEOfertaConDetalle Guardar(BEOferta Objeto, BESesion oSesionBE)
+        {
+            Validar(Objeto);
+
+            bool esAlta = Objeto.OfertaId == 0;
+
+            if (!esAlta)
+            {
+                ListarObjeto(Objeto);
+            }
+
+            Objeto.UsuarioId = oSesionBE.UsuarioId;
+            Objeto.OfertaId = oMPPOfe.Guardar(Objeto);
+
+            oBLLBit.Guardar(new BEBitacoraEvento(
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloOferta, esAlta ? "Alta" : "Modificacion",
+                "Oferta " + Objeto.OfertaId + " (" + Objeto.Titulo + ") para la empresa " + Objeto.EmpresaId + ".",
+                BLLBitacora.NivelInformativo));
+
+            return ListarObjeto(Objeto);
+        }
+
+        public bool Baja(BEOferta Objeto, BESesion oSesionBE)
+        {
+            BEOfertaConDetalle oOferta = ListarObjeto(Objeto);
+
+            if (!oOferta.Oferta.Activo)
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.Conflicto, "La oferta ya está dada de baja.");
+            }
+
+            bool resultado = oMPPOfe.Baja(Objeto);
+
+            oBLLBit.Guardar(new BEBitacoraEvento(
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloOferta, "Baja",
+                "Baja de la oferta " + Objeto.OfertaId + " (" + oOferta.Oferta.Titulo + ").",
+                BLLBitacora.NivelInformativo));
+
+            return resultado;
+        }
+
+        private void Validar(BEOferta Objeto)
+        {
+            Objeto.Titulo = ServicioTexto.Normalizar(Objeto.Titulo);
+            Objeto.Descripcion = ServicioTexto.Normalizar(Objeto.Descripcion);
+
+            ReglasNegocio.ExigirConLargoMaximo(Objeto.Titulo, LongitudMaximaTitulo,
+                "El título es obligatorio y no puede superar los " + LongitudMaximaTitulo + " caracteres.");
+            ReglasNegocio.ExigirConLargoMaximo(Objeto.Descripcion, LongitudMaximaDescripcion,
+                "La descripción es obligatoria y no puede superar los " + LongitudMaximaDescripcion + " caracteres.");
+
+            if (Objeto.FechaHasta.HasValue && Objeto.FechaHasta.Value < Objeto.FechaDesde)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Validacion, "La fecha de fin no puede ser anterior a la de inicio.");
+            }
+
+            BEEmpresa oFiltroEmpresaBE = new BEEmpresa();
+            oFiltroEmpresaBE.EmpresaId = Objeto.EmpresaId;
+
+            BEEmpresa oEmpresaBE = oBLLEmp.ListarObjeto(oFiltroEmpresaBE);
+
+            if (oEmpresaBE.Protegido || !oEmpresaBE.Activo)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Validacion,
+                    "Las ofertas se dirigen a empresas clientes activas.");
+            }
+
+            if (Objeto.PlanId.HasValue)
+            {
+                BEPlanSuscripcion oFiltroPlanBE = new BEPlanSuscripcion();
+                oFiltroPlanBE.PlanId = Objeto.PlanId.Value;
+
+                if (!oBLLPlan.ListarObjeto(oFiltroPlanBE).Activo)
+                {
+                    throw new ExcepcionNegocio(TipoErrorNegocio.Validacion, "El plan sugerido está dado de baja.");
+                }
+            }
+        }
+
+        public void Validar(BEGuardarOferta Objeto)
+        {
+            ReglasNegocio.ExigirRango(Objeto.EmpresaId, 1, int.MaxValue, "Elegí la empresa destinataria.");
+
+            ReglasNegocio.ExigirTexto(Objeto.Titulo, "El título es obligatorio.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Titulo, 150, "El título no puede superar los 150 caracteres.");
+
+            ReglasNegocio.ExigirTexto(Objeto.Descripcion, "La descripción es obligatoria.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, 1000,
+                "La descripción no puede superar los 1000 caracteres.");
+
+            ReglasNegocio.ExigirValor(Objeto.FechaDesde, "La fecha de inicio es obligatoria.");
         }
     }
 }

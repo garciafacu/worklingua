@@ -2,12 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ErrorApi } from '../../api/clienteHttp';
-import { progresoApi } from '../../api/progresoApi';
+import { progresoApi } from '../../api/cursosApi';
 import { Alerta } from '../../componentes/Alerta';
-import { BarraProgreso } from '../../componentes/BarraProgreso';
-import { CampoSelect } from '../../componentes/CampoSelect';
-import { EtiquetaEstado, type TonoEstado } from '../../componentes/EtiquetaEstado';
-import { TablaAbm, type ColumnaAbm } from '../../componentes/TablaAbm';
+import { BarraProgreso, EtiquetaEstado, type TonoEstado } from '../../componentes/Basicos';
+import { CampoSelect } from '../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../componentes/TablaAbm';
 import { useLocalizacion } from '../../contexto/useLocalizacion';
 import { useSesion } from '../../contexto/useSesion';
 import { PERMISOS } from '../../rutas/itemsMenu';
@@ -15,7 +14,7 @@ import type {
     CursoConProgresoResponse,
     EstadoProgreso,
     ProgresoUsuarioResponse,
-} from '../../tipos/progreso';
+} from '../../tipos/cursos';
 
 const TONO_POR_ESTADO: Record<EstadoProgreso, TonoEstado> = {
     NO_INICIADO: 'neutro',
@@ -38,15 +37,6 @@ function EstadoCurso({ estado }: { estado: EstadoProgreso }) {
     return <EtiquetaEstado texto={t(`comun.progreso.estado.${estado}`)} tono={TONO_POR_ESTADO[estado]} />;
 }
 
-/**
- * Seguimiento de lo contratado (punto 6.a): los cursos del usuario con su avance.
- *
- * El avance es el porcentaje de módulos completados, y el estado del curso lo
- * calcula el backend a partir de sus módulos. Esta pantalla es el índice: el
- * módulo se recorre en su lección (`Leccion.tsx`), que es la que registra el
- * progreso. Con `Curso.VerProgresoEmpresa`, la pestaña "Mi equipo" muestra el
- * avance de todos los usuarios de la empresa.
- */
 export function MisCursos() {
     const { t } = useTranslation();
     const { formatearFecha } = useLocalizacion();
@@ -58,7 +48,6 @@ export function MisCursos() {
     const [equipo, setEquipo] = useState<ProgresoUsuarioResponse[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
-    /** Filtros de la clasificación (CU-004-005); vacío es "todos". */
     const [filtroSector, setFiltroSector] = useState('');
     const [filtroEtiqueta, setFiltroEtiqueta] = useState('');
 
@@ -79,11 +68,6 @@ export function MisCursos() {
             .finally(() => setCargando(false));
     }, [veEquipo, mensajeDeError]);
 
-    /**
-     * Los sectores y las etiquetas salen de los cursos que ya se trajeron: el
-     * alumno no tiene permiso para leer el catálogo ni el diccionario, y
-     * ofrecerle filtrar por algo que no tiene no serviría de nada.
-     */
     const sectores = [
         ...new Set(cursos.map((item) => item.curso.sector).filter((sector) => sector !== null)),
     ].sort();
@@ -107,11 +91,6 @@ export function MisCursos() {
 
     const hayFiltros = filtroSector !== '' || filtroEtiqueta !== '';
 
-    /**
-     * Un curso que salió de su ventana de publicación (CU-004-006). El backend
-     * lo sigue mandando porque el usuario ya registró avance; acá se avisa para
-     * que entienda por qué no lo encuentra en el catálogo.
-     */
     function fueraDePublicacion(curso: CursoConProgresoResponse['curso']) {
         const hoy = new Date().toISOString().slice(0, 10);
 
@@ -125,7 +104,6 @@ export function MisCursos() {
         return item.modulos.filter(({ progreso }) => progreso?.estado === 'COMPLETADO').length;
     }
 
-    /** Cuántos archivos acompañan a ese módulo. Los abre la lección. */
     function archivosDelModulo(item: CursoConProgresoResponse, moduloId: number) {
         return item.activos.filter((activo) => activo.moduloId === moduloId).length;
     }
@@ -207,8 +185,6 @@ export function MisCursos() {
 
             {cargando && <p className="mt-6 text-sm text-texto-suave">{t('privado.cursos.cargando')}</p>}
 
-            {/* Filtros de clasificación. Solo aparecen si hay por qué filtrar:
-                con un curso o sin etiquetas cargadas serían ruido. */}
             {!cargando && pestana === 'mios' && cursos.length > 1 &&
                 (sectores.length > 1 || etiquetas.length > 0) && (
                     <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-borde bg-superficie p-4 sm:flex-row sm:flex-wrap sm:items-end">
@@ -300,8 +276,6 @@ export function MisCursos() {
                                     <p className="m-0 text-sm text-texto">{item.curso.descripcion}</p>
                                 )}
 
-                                {/* Clasificación (CU-004-005) y aviso de ventana
-                                    de publicación (CU-004-006). */}
                                 {(item.curso.sector !== null ||
                                     item.curso.etiquetas.length > 0 ||
                                     fueraDePublicacion(item.curso)) && (
@@ -377,9 +351,6 @@ export function MisCursos() {
                                     </p>
                                 ) : (
                                     <ol className="m-0 mt-2 flex list-none flex-col divide-y divide-borde p-0">
-                                        {/* La fila es un enlace a la lección: el
-                                            progreso se registra ahí, al entrar y
-                                            al terminarla, no con botones acá. */}
                                         {item.modulos.map(({ modulo, progreso }) => {
                                             const estado: EstadoProgreso = progreso?.estado ?? 'NO_INICIADO';
                                             const archivos = archivosDelModulo(item, modulo.moduloId);

@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SelectorEstrellas } from './SelectorEstrellas';
 import { LARGO_MAXIMO_OPINION, type OpinionResponse } from '../tipos/opiniones';
+import { SelectorEstrellas } from './Estrellas';
 
 interface FormularioOpinionProps {
     nombrePlan: string;

@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../api/clienteHttp';
-import { versionesApi } from '../api/versionesApi';
+import { versionesApi } from '../api/cursosApi';
 import { useLocalizacion } from '../contexto/useLocalizacion';
-import { descargarTexto } from '../servicios/descarga';
-import type { DiferenciaVersionResponse, VersionResponse } from '../tipos/versiones';
+import { useMensajeDeError } from '../hooks/useMensajeDeError';
+import { descargarTexto } from '../servicios/csv';
+import type { DiferenciaVersionResponse, VersionResponse } from '../tipos/cursos';
 import { Alerta } from './Alerta';
-import { Boton } from './Boton';
-import { CampoTexto } from './CampoTexto';
+import { Boton, BotonAccion } from './Boton';
+import { CampoTexto } from './Campos';
 
 interface PanelVersionesProps {
     cursoId: number;
@@ -31,11 +31,7 @@ export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVe
     const [guardando, setGuardando] = useState(false);
     const [recarga, setRecarga] = useState(0);
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         versionesApi
@@ -245,59 +241,41 @@ export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVe
                                                     version: version.numeroVersion,
                                                 })}
                                             </span>
-                                            <button
-                                                type="button"
+                                            <BotonAccion
+                                                variante="confirmar"
                                                 onClick={() => void eliminar(version)}
-                                                className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
                                             >
                                                 {t('admin.cursos.versiones.eliminar')}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setConfirmandoBaja(null)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                            >
+                                            </BotonAccion>
+                                            <BotonAccion onClick={() => setConfirmandoBaja(null)}>
                                                 {t('admin.cursos.versiones.eliminar.cancelar')}
-                                            </button>
+                                            </BotonAccion>
                                         </>
                                     ) : (
                                         <>
-                                            <button
-                                                type="button"
-                                                onClick={() => void verXml(version)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                            >
+                                            <BotonAccion onClick={() => void verXml(version)}>
                                                 {t('admin.cursos.versiones.verXml')}
-                                            </button>
+                                            </BotonAccion>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => void descargarXml(version)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                            >
+                                            <BotonAccion onClick={() => void descargarXml(version)}>
                                                 {t('admin.cursos.versiones.descargar')}
-                                            </button>
+                                            </BotonAccion>
 
                                             {puedeModificar && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void restaurar(version)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
+                                                <BotonAccion onClick={() => void restaurar(version)}>
                                                     {t('admin.cursos.versiones.restaurar')}
-                                                </button>
+                                                </BotonAccion>
                                             )}
 
                                             {puedeModificar && (
-                                                <button
-                                                    type="button"
+                                                <BotonAccion
+                                                    variante="peligro"
                                                     onClick={() =>
                                                         setConfirmandoBaja(version.versionContenidoId)
                                                     }
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
                                                 >
                                                     {t('admin.cursos.versiones.eliminar')}
-                                                </button>
+                                                </BotonAccion>
                                             )}
                                         </>
                                     )}
@@ -308,13 +286,9 @@ export function PanelVersiones({ cursoId, puedeModificar, alRestaurar }: PanelVe
 
                     {seleccionadas.length === 2 && (
                         <div>
-                            <button
-                                type="button"
-                                onClick={() => void comparar()}
-                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                            >
+                            <BotonAccion onClick={() => void comparar()}>
                                 {t('admin.cursos.versiones.comparar')}
-                            </button>
+                            </BotonAccion>
                         </div>
                     )}
 

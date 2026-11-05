@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using worklingua.Server.BE;
 using worklingua.Server.BLL;
@@ -8,12 +7,7 @@ namespace worklingua.Server.Controllers
     [Route("api/encuestas")]
     public class EncuestaController : ControladorBase
     {
-        BLLEncuesta oBLLEnc;
-
-        public EncuestaController()
-        {
-            oBLLEnc = new BLLEncuesta();
-        }
+        BLLEncuesta oBLLEnc = new BLLEncuesta();
 
         [HttpGet("vigentes")]
         [ProducesResponseType(typeof(List<BEEncuestaConDetalle>), StatusCodes.Status200OK)]
@@ -36,6 +30,8 @@ namespace worklingua.Server.Controllers
         public ActionResult<BEEncuestaConDetalle> Responder(
             int encuestaId, [FromBody] BEResponderEncuesta peticion)
         {
+            oBLLEnc.Validar(peticion);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.EncuestaResponder);
 
             peticion.EncuestaId = encuestaId;
@@ -61,6 +57,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public ActionResult<BEEncuestaConDetalle> Crear([FromBody] BEGuardarEncuesta peticion)
         {
+            oBLLEnc.Validar(peticion);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.EncuestaAlta);
 
             return Ok(oBLLEnc.Guardar(Mapear(0, peticion), peticion.Opciones, oSesionBE));
@@ -75,6 +73,8 @@ namespace worklingua.Server.Controllers
         public ActionResult<BEEncuestaConDetalle> Modificar(
             int encuestaId, [FromBody] BEGuardarEncuesta peticion)
         {
+            oBLLEnc.Validar(peticion);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.EncuestaModificar);
 
             return Ok(oBLLEnc.Guardar(Mapear(encuestaId, peticion), peticion.Opciones, oSesionBE));

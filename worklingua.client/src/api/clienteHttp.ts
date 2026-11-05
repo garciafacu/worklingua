@@ -97,3 +97,19 @@ export const clienteHttp = {
 
     borrar: <T>(ruta: string) => pedir<T>(ruta, { method: 'DELETE' }),
 };
+
+export function aConsulta(valores: Record<string, string | number | boolean | null | undefined>): string {
+    const parametros = new URLSearchParams();
+
+    for (const [clave, valor] of Object.entries(valores)) {
+        const texto = typeof valor === 'string' ? valor.trim() : valor ? String(valor) : '';
+
+        if (texto) {
+            parametros.set(clave, texto);
+        }
+    }
+
+    const consulta = parametros.toString();
+
+    return consulta ? `?${consulta}` : '';
+}

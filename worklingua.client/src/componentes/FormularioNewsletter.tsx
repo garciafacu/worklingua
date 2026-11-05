@@ -1,18 +1,11 @@
-import { useState, type FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../api/clienteHttp';
-import { newsletterApi } from '../api/newsletterApi';
+import { newsletterApi } from '../api/noticiasApi';
 import { useLocalizacion } from '../contexto/useLocalizacion';
 import { Alerta } from './Alerta';
 import { Boton } from './Boton';
 
-/**
- * Suscripción al newsletter con doble opt-in.
- *
- * Manda el idioma activo de la interfaz: es el idioma en el que la persona va a
- * recibir la confirmación y los envíos. El mensaje de éxito es propio de la
- * pantalla (traducido) porque la API responde lo mismo exista o no el correo.
- */
 export function FormularioNewsletter() {
     const { t } = useTranslation();
     const { idiomaActual } = useLocalizacion();

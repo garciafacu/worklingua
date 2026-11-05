@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
+using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
@@ -25,12 +25,7 @@ namespace worklingua.Server.BLL
             Permisos.OperadorBaja
         };
 
-        MPPPermiso oMPPPer;
-
-        public BLLPermiso()
-        {
-            oMPPPer = new MPPPermiso();
-        }
+        MPPPermiso oMPPPer = new MPPPermiso();
 
         public List<BEPermiso> ListarTodo()
         {
@@ -271,19 +266,402 @@ namespace worklingua.Server.BLL
                     TipoErrorNegocio.Validacion, "El nombre de la familia es obligatorio.");
             }
 
-            if (Objeto.Nombre.Length > LongitudMaximaNombre)
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Nombre, LongitudMaximaNombre,
+                "El nombre no puede superar los " + LongitudMaximaNombre + " caracteres.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, LongitudMaximaDescripcion,
+                "La descripción no puede superar los " + LongitudMaximaDescripcion + " caracteres.");
+        }
+
+        public void Validar(BEGuardarPermiso Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.Nombre, "El nombre de la familia es obligatorio.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Nombre, 80, "El nombre no puede superar los 80 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, 300,
+                "La descripción no puede superar los 300 caracteres.");
+        }
+    }
+
+    public class BLLRol
+    {
+        private const int LongitudMaximaNombre = 60;
+        private const int LongitudMaximaDescripcion = 250;
+
+        static readonly TimeSpan DuracionCache = TimeSpan.FromMinutes(10);
+        static List<BERol> CacheRoles;
+        static DateTime VencimientoCache;
+
+        MPPRol oMPPRol = new MPPRol();
+        BLLPermiso oBLLPer = new BLLPermiso();
+
+        public List<BERol> ListarTodo()
+        {
+            if (CacheRoles != null && DateTime.Now < VencimientoCache)
             {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "El nombre no puede superar los " + LongitudMaximaNombre + " caracteres.");
+                return CacheRoles;
             }
 
-            if (Objeto.Descripcion != null && Objeto.Descripcion.Length > LongitudMaximaDescripcion)
+            List<BERol> ListaRolBE = oMPPRol.ListarTodo();
+
+            if (ListaRolBE == null)
+            {
+                ListaRolBE = new List<BERol>();
+            }
+
+            CacheRoles = ListaRolBE;
+            VencimientoCache = DateTime.Now.Add(DuracionCache);
+
+            return ListaRolBE;
+        }
+
+        public BERol ObtenerPorNombre(string nombre)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+            {
+                return null;
+            }
+
+            List<BERol> ListaRolBE = ListarTodo();
+
+            foreach (BERol oRolBE in ListaRolBE)
+            {
+                if (string.Equals(oRolBE.Nombre.Trim(), nombre.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    return oRolBE;
+                }
+            }
+
+            return null;
+        }
+
+        public BERol ListarObjeto(BERol Objeto)
+        {
+            foreach (BERol oRolBE in ListarTodo())
+            {
+                if (oRolBE.RolId == Objeto.RolId)
+                {
+                    return oRolBE;
+                }
+            }
+
+            throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "El rol no existe.");
+        }
+
+        public BERol Guardar(BERol Objeto)
+        {
+            Validar(Objeto);
+
+            if (Objeto.RolId != 0)
+            {
+                BERol oActualBE = ListarObjeto(Objeto);
+
+                ExigirEditable(oActualBE);
+
+                if (EsRolPorDefecto(oActualBE)
+                    && !string.Equals(oActualBE.Nombre.Trim(), Objeto.Nombre, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new ExcepcionNegocio(
+                        TipoErrorNegocio.Conflicto,
+                        "El rol " + oActualBE.Nombre + " es el que reciben los registros públicos: no se puede renombrar.");
+                }
+            }
+
+            if (ExisteOtroConNombre(Objeto))
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.Conflicto, "Ya existe un rol con ese nombre.");
+            }
+
+            Objeto.RolId = oMPPRol.Guardar(Objeto);
+
+            InvalidarCache();
+
+            return ListarObjeto(Objeto);
+        }
+
+        public bool Baja(BERol Objeto)
+        {
+            BERol oRolBE = ListarObjeto(Objeto);
+
+            ExigirEditable(oRolBE);
+
+            if (EsRolPorDefecto(oRolBE))
             {
                 throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "La descripción no puede superar los " + LongitudMaximaDescripcion + " caracteres.");
+                    TipoErrorNegocio.Conflicto,
+                    "El rol " + oRolBE.Nombre + " es el que reciben los registros públicos: no se puede eliminar.");
+            }
+
+            if (oMPPRol.ContarUsuarios(oRolBE) > 0)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto,
+                    "El rol " + oRolBE.Nombre + " tiene usuarios asignados. Cambiales el rol antes de eliminarlo.");
+            }
+
+            bool resultado = oMPPRol.Baja(oRolBE);
+
+            InvalidarCache();
+
+            return resultado;
+        }
+
+        public List<BEPermiso> ObtenerPermisos(BERol Objeto)
+        {
+            BERol oRolBE = ListarObjeto(Objeto);
+
+            return oBLLPer.ObtenerAsignados(oMPPRol.ObtenerPermisos(oRolBE));
+        }
+
+        public bool AsignarPermiso(BERolPermiso Objeto)
+        {
+            BERol oRolBE = ObtenerRolObligatorio(Objeto.RolId);
+
+            ExigirEditable(oRolBE);
+
+            List<BEPermiso> ListaPermisoBE = oBLLPer.ObtenerAsignados(new List<BERolPermiso> { Objeto });
+
+            if (ListaPermisoBE.Count == 0)
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "El permiso no existe.");
+            }
+
+            BEPermiso oPermisoBE = ListaPermisoBE[0];
+
+            if (TienePermisoAsignado(oRolBE, oPermisoBE.PermisoId))
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto,
+                    "El rol " + oRolBE.Nombre + " ya tiene asignado " + oPermisoBE.Nombre + ".");
+            }
+
+            if (oBLLPer.ContienePermisoReservado(oPermisoBE))
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto,
+                    "Los permisos de administración de operadores, roles y permisos son exclusivos del Administrador de Plataforma.");
+            }
+
+            return oMPPRol.AsignarPermiso(Objeto);
+        }
+
+        public bool QuitarPermiso(BERolPermiso Objeto)
+        {
+            BERol oRolBE = ObtenerRolObligatorio(Objeto.RolId);
+
+            ExigirEditable(oRolBE);
+
+            if (!TienePermisoAsignado(oRolBE, Objeto.PermisoId))
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.NoEncontrado, "El rol " + oRolBE.Nombre + " no tiene asignado ese permiso.");
+            }
+
+            return oMPPRol.QuitarPermiso(Objeto);
+        }
+
+        private BERol ObtenerRolObligatorio(int rolId)
+        {
+            BERol oFiltroBE = new BERol();
+            oFiltroBE.RolId = rolId;
+
+            return ListarObjeto(oFiltroBE);
+        }
+
+        private bool TienePermisoAsignado(BERol oRolBE, int permisoId)
+        {
+            List<BERolPermiso> ListaRolPermisoBE = oMPPRol.ObtenerPermisos(oRolBE);
+
+            if (ListaRolPermisoBE == null)
+            {
+                return false;
+            }
+
+            foreach (BERolPermiso oRolPermisoBE in ListaRolPermisoBE)
+            {
+                if (oRolPermisoBE.PermisoId == permisoId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void ExigirEditable(BERol oRolBE)
+        {
+            if (string.Equals(oRolBE.Nombre.Trim(), Configuracion.SuperAdminRol.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto,
+                    "El rol " + oRolBE.Nombre + " es el de la plataforma: recibe siempre todos los permisos y no se modifica desde el ABM.");
             }
         }
+
+        private bool EsRolPorDefecto(BERol oRolBE)
+        {
+            return string.Equals(oRolBE.Nombre.Trim(), Configuracion.RolPorDefecto.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool ExisteOtroConNombre(BERol Objeto)
+        {
+            foreach (BERol oRolBE in ListarTodo())
+            {
+                if (oRolBE.RolId != Objeto.RolId
+                    && string.Equals(oRolBE.Nombre.Trim(), Objeto.Nombre, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void InvalidarCache()
+        {
+            CacheRoles = null;
+            VencimientoCache = DateTime.MinValue;
+        }
+
+        private void Validar(BERol Objeto)
+        {
+            Objeto.Nombre = string.IsNullOrWhiteSpace(Objeto.Nombre) ? null : Objeto.Nombre.Trim();
+            Objeto.Descripcion = string.IsNullOrWhiteSpace(Objeto.Descripcion) ? null : Objeto.Descripcion.Trim();
+
+            if (Objeto.Nombre == null)
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.Validacion, "El nombre del rol es obligatorio.");
+            }
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Nombre, LongitudMaximaNombre,
+                "El nombre no puede superar los " + LongitudMaximaNombre + " caracteres.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, LongitudMaximaDescripcion,
+                "La descripción no puede superar los " + LongitudMaximaDescripcion + " caracteres.");
+        }
+
+        public void Validar(BEGuardarRol Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.Nombre, "El nombre del rol es obligatorio.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Nombre, 60, "El nombre no puede superar los 60 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, 250,
+                "La descripción no puede superar los 250 caracteres.");
+        }
+    }
+
+    public static class Permisos
+    {
+        public const string BackofficeAcceder = "Backoffice.Acceder";
+
+        public const string PlanListar = "Plan.Listar";
+        public const string PlanAlta = "Plan.Alta";
+        public const string PlanModificar = "Plan.Modificar";
+        public const string PlanBaja = "Plan.Baja";
+
+        public const string CursoListar = "Curso.Listar";
+        public const string CursoAlta = "Curso.Alta";
+        public const string CursoModificar = "Curso.Modificar";
+        public const string CursoBaja = "Curso.Baja";
+        public const string CursoVerTodasLasEmpresas = "Curso.VerTodasLasEmpresas";
+
+        public const string CaracteristicaListar = "Caracteristica.Listar";
+        public const string CaracteristicaAlta = "Caracteristica.Alta";
+        public const string CaracteristicaModificar = "Caracteristica.Modificar";
+        public const string CaracteristicaBaja = "Caracteristica.Baja";
+
+        public const string IdiomaListar = "Idioma.Listar";
+        public const string IdiomaAlta = "Idioma.Alta";
+        public const string IdiomaModificar = "Idioma.Modificar";
+        public const string IdiomaBaja = "Idioma.Baja";
+
+        public const string EmpresaListar = "Empresa.Listar";
+        public const string EmpresaAlta = "Empresa.Alta";
+        public const string EmpresaModificar = "Empresa.Modificar";
+        public const string EmpresaBaja = "Empresa.Baja";
+        public const string EmpresaVerTodasLasEmpresas = "Empresa.VerTodasLasEmpresas";
+
+        public const string DepartamentoListar = "Departamento.Listar";
+        public const string DepartamentoAlta = "Departamento.Alta";
+        public const string DepartamentoModificar = "Departamento.Modificar";
+        public const string DepartamentoBaja = "Departamento.Baja";
+        public const string DepartamentoVerTodasLasEmpresas = "Departamento.VerTodasLasEmpresas";
+
+        public const string AlertaListar = "Alerta.Listar";
+        public const string AlertaAlta = "Alerta.Alta";
+        public const string AlertaEmitir = "Alerta.Emitir";
+        public const string AlertaBaja = "Alerta.Baja";
+        public const string AlertaVerTodasLasEmpresas = "Alerta.VerTodasLasEmpresas";
+
+        public const string LicenciaListar = "Licencia.Listar";
+        public const string LicenciaAsignar = "Licencia.Asignar";
+        public const string LicenciaRevocar = "Licencia.Revocar";
+        public const string LicenciaVerTodasLasEmpresas = "Licencia.VerTodasLasEmpresas";
+
+        public const string UsuarioListar = "Usuario.Listar";
+        public const string UsuarioInvitar = "Usuario.Invitar";
+        public const string UsuarioModificar = "Usuario.Modificar";
+        public const string UsuarioBaja = "Usuario.Baja";
+
+        public const string UsuarioVerTodasLasEmpresas = "Usuario.VerTodasLasEmpresas";
+
+        public const string ComentarioParticipar = "Comentario.Participar";
+        public const string ComentarioModerar = "Comentario.Moderar";
+
+        public const string TraduccionListar = "Traduccion.Listar";
+        public const string TraduccionModificar = "Traduccion.Modificar";
+
+        public const string CulturaListar = "Cultura.Listar";
+        public const string CulturaAlta = "Cultura.Alta";
+        public const string CulturaModificar = "Cultura.Modificar";
+        public const string CulturaBaja = "Cultura.Baja";
+
+        public const string BitacoraListar = "Bitacora.Listar";
+
+        public const string RolListar = "Rol.Listar";
+        public const string RolAlta = "Rol.Alta";
+        public const string RolModificar = "Rol.Modificar";
+        public const string RolBaja = "Rol.Baja";
+
+        public const string PermisoListar = "Permiso.Listar";
+        public const string PermisoAlta = "Permiso.Alta";
+        public const string PermisoModificar = "Permiso.Modificar";
+        public const string PermisoBaja = "Permiso.Baja";
+
+        public const string OperadorListar = "Operador.Listar";
+        public const string OperadorAlta = "Operador.Alta";
+        public const string OperadorModificar = "Operador.Modificar";
+        public const string OperadorBaja = "Operador.Baja";
+
+        public const string NoticiaListar = "Noticia.Listar";
+        public const string NoticiaAlta = "Noticia.Alta";
+        public const string NoticiaModificar = "Noticia.Modificar";
+        public const string NoticiaBaja = "Noticia.Baja";
+
+        public const string NewsletterListar = "Newsletter.Listar";
+        public const string NewsletterEnviar = "Newsletter.Enviar";
+
+        public const string SuscripcionContratar = "Suscripcion.Contratar";
+
+        public const string CursoVerProgreso = "Curso.VerProgreso";
+        public const string CursoVerProgresoEmpresa = "Curso.VerProgresoEmpresa";
+
+        public const string CuentaCorrienteConsultar = "CuentaCorriente.Consultar";
+
+        public const string TicketCrear = "Ticket.Crear";
+        public const string TicketVerEmpresa = "Ticket.VerEmpresa";
+        public const string TicketAtender = "Ticket.Atender";
+
+        public const string OfertaConsultar = "Oferta.Consultar";
+        public const string OfertaListar = "Oferta.Listar";
+        public const string OfertaAlta = "Oferta.Alta";
+        public const string OfertaModificar = "Oferta.Modificar";
+        public const string OfertaBaja = "Oferta.Baja";
+
+        public const string EncuestaResponder = "Encuesta.Responder";
+        public const string EncuestaListar = "Encuesta.Listar";
+        public const string EncuestaAlta = "Encuesta.Alta";
+        public const string EncuestaModificar = "Encuesta.Modificar";
+        public const string EncuestaBaja = "Encuesta.Baja";
+
+        public const string ReporteVer = "Reporte.Ver";
     }
 }

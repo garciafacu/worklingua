@@ -1,6 +1,5 @@
 import type { EstadoContratacion } from './contrataciones';
 
-/** Estados de una consulta de soporte, espejo de `BLL/BLLTicket.cs`. */
 export const ESTADOS_TICKET = ['PENDIENTE', 'EN_PROCESO', 'RESPONDIDO', 'CERRADO'] as const;
 
 export type EstadoTicket = (typeof ESTADOS_TICKET)[number];
@@ -17,7 +16,6 @@ export interface MensajeTicketResponse {
     autor: string;
 }
 
-/** Una consulta con su historial, espejo de `BE/BETicketConDetalle.cs`. */
 export interface TicketResponse {
     ticket: {
         ticketId: number;
@@ -38,11 +36,9 @@ export interface TicketResponse {
     estadoSuscripcion: EstadoContratacion;
     curso: string | null;
     cantidadMensajes: number;
-    /** Vacío en los listados; completo en el detalle. */
     mensajes: MensajeTicketResponse[];
 }
 
-/** Lo que el cliente puede elegir al abrir una consulta, espejo de `BE/BEOpcionesTicket.cs`. */
 export interface OpcionesTicketResponse {
     contrataciones: {
         suscripcion: {
@@ -62,6 +58,33 @@ export interface CrearTicketRequest {
     cursoId: number | null;
     asunto: string;
     texto: string;
-    /** Idioma de la interfaz: define en qué idioma llegan los avisos por correo. */
     codigoIdioma: string;
+}
+
+export interface OfertaResponse {
+    oferta: {
+        ofertaId: number;
+        empresaId: number;
+        planId: number | null;
+        titulo: string;
+        descripcion: string;
+        fechaDesde: string;
+        fechaHasta: string | null;
+        activo: boolean;
+        usuarioId: number;
+        fechaAlta: string;
+    };
+    empresa: string;
+    plan: string | null;
+    planActivo: boolean;
+}
+
+export interface GuardarOfertaRequest {
+    empresaId: number;
+    planId: number | null;
+    titulo: string;
+    descripcion: string;
+    fechaDesde: string;
+    fechaHasta: string | null;
+    activo: boolean;
 }

@@ -16,13 +16,11 @@ import {
 } from '../tipos/busqueda';
 
 interface Resultado {
-    /** Consulta e idioma con los que se pidió: si no son los actuales, la carga está en curso. */
     clave: string;
     paginas: PaginaBuscableResponse[];
     error: string | null;
 }
 
-/** Los criterios viven en la URL: así funcionan la barra del encabezado, el F5 y los enlaces. */
 function leerCriterios(parametros: URLSearchParams): CriteriosBusqueda {
     const area = AREAS_BUSQUEDA.find((opcion) => opcion.valor === parametros.get('area'));
     const ordenarPor = ORDENES_BUSQUEDA.find((opcion) => opcion.valor === parametros.get('ordenarPor'));
@@ -49,18 +47,9 @@ function aParametros(criterios: CriteriosBusqueda): URLSearchParams {
 }
 
 interface BusquedaProps {
-    /** En el sitio público la página pone sus propios márgenes; el área privada ya los tiene. */
     publica?: boolean;
 }
 
-/**
- * Buscador global de páginas y secciones de WorkLingua.
- *
- * Una sola pantalla sirve a `/buscar` y a `/inicio/buscar`. Qué páginas aparecen
- * lo decide el backend según la sesión y sus permisos: esta pantalla solo pinta
- * lo que recibe. Se vuelve a buscar al cambiar los criterios, el idioma o la
- * sesión, porque los textos buscados y el alcance dependen de los tres.
- */
 export function Busqueda({ publica = false }: BusquedaProps) {
     const { t } = useTranslation();
     const { idiomaActual } = useLocalizacion();
@@ -86,7 +75,6 @@ export function Busqueda({ publica = false }: BusquedaProps) {
                 }
             })
             .catch(() => {
-                // Sin secciones el combo queda con "Todas": la búsqueda sigue funcionando.
                 if (vigente) {
                     setSecciones([]);
                 }
@@ -116,8 +104,6 @@ export function Busqueda({ publica = false }: BusquedaProps) {
                     return;
                 }
 
-                // Un token viejo en el navegador: se relee la sesión, que la cierra
-                // si ya no vale, y el cambio de `autenticado` repite la búsqueda.
                 if (excepcion instanceof ErrorApi && excepcion.estado === 401) {
                     void refrescarSesion();
                 }
@@ -132,7 +118,6 @@ export function Busqueda({ publica = false }: BusquedaProps) {
         return () => {
             vigente = false;
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [claveActual, hayCriterios]);
 
     const vigente = hayCriterios && resultado?.clave === claveActual ? resultado : null;
@@ -150,8 +135,6 @@ export function Busqueda({ publica = false }: BusquedaProps) {
             <p className="mt-2 text-sm text-texto-suave">{t('busqueda.descripcion')}</p>
 
             <section className="mt-6">
-                {/* La `key` rearma el formulario cuando la URL cambia desde afuera,
-                    por ejemplo con una búsqueda nueva desde el encabezado. */}
                 <BuscadorPlataforma
                     key={consulta}
                     criteriosIniciales={criterios}

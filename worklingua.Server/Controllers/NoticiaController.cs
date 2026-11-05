@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using worklingua.Server.BE;
 using worklingua.Server.BLL;
@@ -8,20 +7,16 @@ namespace worklingua.Server.Controllers
     [Route("api/noticias")]
     public class NoticiaController : ControladorBase
     {
-        BLLNoticia oBLLNot;
-        BLLBitacora oBLLBit;
-
-        public NoticiaController()
-        {
-            oBLLNot = new BLLNoticia();
-            oBLLBit = new BLLBitacora();
-        }
+        BLLNoticia oBLLNot = new BLLNoticia();
+        BLLBitacora oBLLBit = new BLLBitacora();
 
         [HttpGet]
         [ProducesResponseType(typeof(List<BENoticiaRespuesta>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public ActionResult<List<BENoticiaRespuesta>> ListarPublicadas([FromQuery] BEFiltroNoticia oFiltroBE)
         {
+            oBLLNot.Validar(oFiltroBE);
+
             List<BENoticia> ListaNoticiaBE = oBLLNot.ListarPublicadas(oFiltroBE);
             List<BENoticiaRespuesta> respuesta = new List<BENoticiaRespuesta>();
 
@@ -50,6 +45,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public ActionResult<List<BENoticia>> ListarParaAdministracion([FromQuery] BEFiltroNoticia oFiltroBE)
         {
+            oBLLNot.Validar(oFiltroBE);
+
             ExigirPermiso(Permisos.NoticiaListar);
 
             return Ok(oBLLNot.ListarAdministracion(oFiltroBE));
@@ -77,6 +74,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public ActionResult<BENoticia> Crear([FromBody] BEGuardarNoticia peticion)
         {
+            oBLLNot.Validar(peticion);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.NoticiaAlta);
 
             BENoticia oNoticiaBE = ADominio(0, peticion);
@@ -85,11 +84,7 @@ namespace worklingua.Server.Controllers
             oNoticiaBE = oBLLNot.Guardar(oNoticiaBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oSesionBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloNoticia,
-                "Alta",
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloNoticia, "Alta",
                 "Alta de la noticia " + oNoticiaBE.Titulo + " (id " + oNoticiaBE.NoticiaId + ").",
                 BLLBitacora.NivelInformativo));
 
@@ -104,16 +99,14 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<BENoticia> Modificar(int noticiaId, [FromBody] BEGuardarNoticia peticion)
         {
+            oBLLNot.Validar(peticion);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.NoticiaModificar);
 
             BENoticia oNoticiaBE = oBLLNot.Guardar(ADominio(noticiaId, peticion));
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oSesionBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloNoticia,
-                "Modificacion",
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloNoticia, "Modificacion",
                 "Modificación de la noticia " + oNoticiaBE.Titulo + " (id " + noticiaId + ").",
                 BLLBitacora.NivelInformativo));
 
@@ -136,13 +129,8 @@ namespace worklingua.Server.Controllers
             oBLLNot.Baja(oNoticiaBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oSesionBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloNoticia,
-                "Baja",
-                "Baja lógica de la noticia con id " + noticiaId + ".",
-                BLLBitacora.NivelInformativo));
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloNoticia, "Baja",
+                "Baja lógica de la noticia con id " + noticiaId + ".", BLLBitacora.NivelInformativo));
 
             return NoContent();
         }
@@ -175,6 +163,113 @@ namespace worklingua.Server.Controllers
             item.FechaPublicacion = oNoticiaBE.FechaPublicacion;
 
             return item;
+        }
+    }
+
+    [Route("api/newsletter")]
+    public class NewsletterController : ControladorBase
+    {
+        BLLSuscriptorNewsletter oBLLSus = new BLLSuscriptorNewsletter();
+        BLLEnvioNewsletter oBLLEnv = new BLLEnvioNewsletter();
+
+        [HttpPost("suscripciones")]
+        [ProducesResponseType(typeof(BEMensajeRespuesta), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult Suscribir([FromBody] BESuscribirNewsletter oSuscripcionBE)
+        {
+            oBLLSus.Validar(oSuscripcionBE);
+
+            oBLLSus.Guardar(oSuscripcionBE);
+
+            return Ok(new BEMensajeRespuesta(
+                "Si el correo es válido, te enviamos un mensaje para confirmar la suscripción."));
+        }
+
+        [HttpPost("suscripciones/confirmar")]
+        [ProducesResponseType(typeof(BEMensajeRespuesta), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult Confirmar([FromBody] BESuscriptorNewsletter oSuscriptorBE)
+        {
+            oBLLSus.Confirmar(oSuscriptorBE);
+
+            return Ok(new BEMensajeRespuesta("Tu suscripción al newsletter quedó confirmada."));
+        }
+
+        [HttpPost("suscripciones/baja")]
+        [ProducesResponseType(typeof(BEMensajeRespuesta), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult Baja([FromBody] BESuscriptorNewsletter oSuscriptorBE)
+        {
+            oBLLSus.Baja(oSuscriptorBE);
+
+            return Ok(new BEMensajeRespuesta("Ya no vas a recibir el newsletter de WorkLingua."));
+        }
+
+        [HttpGet("suscriptores")]
+        [ProducesResponseType(typeof(List<BESuscriptorNewsletterRespuesta>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public ActionResult<List<BESuscriptorNewsletterRespuesta>> ListarSuscriptores()
+        {
+            ExigirPermiso(Permisos.NewsletterListar);
+
+            List<BESuscriptorNewsletterRespuesta> respuesta = new List<BESuscriptorNewsletterRespuesta>();
+
+            foreach (BESuscriptorNewsletter oSuscriptorBE in oBLLSus.ListarTodo())
+            {
+                respuesta.Add(new BESuscriptorNewsletterRespuesta(
+                    oSuscriptorBE.SuscriptorId,
+                    oSuscriptorBE.Email,
+                    oSuscriptorBE.IdiomaId,
+                    oSuscriptorBE.Confirmado,
+                    oSuscriptorBE.FechaAlta,
+                    oSuscriptorBE.FechaConfirmacion,
+                    oSuscriptorBE.FechaBaja,
+                    oSuscriptorBE.Activo));
+            }
+
+            return Ok(respuesta);
+        }
+
+        [HttpGet("envios")]
+        [ProducesResponseType(typeof(List<BEEnvioNewsletter>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public ActionResult<List<BEEnvioNewsletter>> ListarEnvios()
+        {
+            ExigirPermiso(Permisos.NewsletterListar);
+
+            return Ok(oBLLEnv.ListarTodo());
+        }
+
+        [HttpPost("envios/previsualizar")]
+        [ProducesResponseType(typeof(BEVistaPreviaNewsletterRespuesta), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<BEVistaPreviaNewsletterRespuesta> Previsualizar([FromBody] BEEnviarNewsletter oEnvioBE)
+        {
+            oBLLEnv.Validar(oEnvioBE);
+
+            ExigirPermiso(Permisos.NewsletterEnviar);
+
+            return Ok(oBLLEnv.Previsualizar(oEnvioBE));
+        }
+
+        [HttpPost("envios")]
+        [ProducesResponseType(typeof(BEEnvioNewsletter), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult<BEEnvioNewsletter> Enviar([FromBody] BEEnviarNewsletter oEnvioBE)
+        {
+            oBLLEnv.Validar(oEnvioBE);
+
+            BESesion oSesionBE = ExigirPermiso(Permisos.NewsletterEnviar);
+
+            return StatusCode(StatusCodes.Status201Created, oBLLEnv.Guardar(oEnvioBE, oSesionBE));
         }
     }
 }

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../../api/clienteHttp';
-import { cuentaCorrienteApi } from '../../api/cuentaCorrienteApi';
+import { cuentaCorrienteApi } from '../../api/contratacionesApi';
 import { Alerta } from '../../componentes/Alerta';
-import { EtiquetaEstado, type TonoEstado } from '../../componentes/EtiquetaEstado';
-import { TablaAbm, type ColumnaAbm } from '../../componentes/TablaAbm';
+import { EtiquetaEstado, type TonoEstado } from '../../componentes/Basicos';
+import { type ColumnaAbm, TablaAbm } from '../../componentes/TablaAbm';
 import { useLocalizacion } from '../../contexto/useLocalizacion';
 import type {
     EstadoCuentaCorrienteResponse,
@@ -12,7 +12,7 @@ import type {
     MovimientoResponse,
     NotaConFacturaResponse,
     PagoConFacturaResponse,
-} from '../../tipos/cuentaCorriente';
+} from '../../tipos/contrataciones';
 
 type Pestana = 'movimientos' | 'facturas' | 'pagos' | 'notas';
 

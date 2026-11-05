@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { ErrorApi } from '../../api/clienteHttp';
 import { usuariosApi } from '../../api/usuariosApi';
 import { Alerta } from '../../componentes/Alerta';
 import { Boton } from '../../componentes/Boton';
-import { CampoTexto } from '../../componentes/CampoTexto';
+import { CampoTexto } from '../../componentes/Campos';
 import { useSesion } from '../../contexto/useSesion';
-import type { PerfilResponse } from '../../tipos/perfil';
+import { useMensajeDeError } from '../../hooks/useMensajeDeError';
+import type { PerfilResponse } from '../../tipos/usuarios';
 
 const CLASE_SECCION = 'mt-6 rounded-2xl border border-borde bg-superficie p-6';
 
@@ -59,11 +59,7 @@ export function MiPerfil() {
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     const aplicarPerfil = useCallback((datos: PerfilResponse) => {
         setPerfil(datos);

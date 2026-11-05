@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
 import { noticiasApi } from '../../../api/noticiasApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { BotonAccion, BotonesFormulario, ConfirmarBaja } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { PERMISOS } from '../../../rutas/itemsMenu';
 import type { GuardarNoticiaRequest, NoticiaAdminResponse } from '../../../tipos/noticias';
 
@@ -32,18 +31,10 @@ function estadoDe(noticia: NoticiaAdminResponse): EstadoNoticia {
     return new Date(noticia.fechaPublicacion) > new Date() ? 'programada' : 'publicada';
 }
 
-/** `datetime-local` trabaja con "yyyy-MM-ddTHH:mm", sin segundos ni zona. */
 function aCampoFecha(valor: string): string {
     return valor.slice(0, 16);
 }
 
-/**
- * ABM de las noticias que muestra la página pública de Novedades.
- *
- * Cada noticia se escribe en UN idioma de la plataforma. El contenido es texto
- * plano: el sitio y el newsletter lo muestran respetando saltos de línea y
- * nunca lo interpretan como HTML.
- */
 export function AdminNoticias() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -64,11 +55,7 @@ export function AdminNoticias() {
     const puedeModificar = tienePermiso(PERMISOS.noticiaModificar);
     const puedeDarDeBaja = tienePermiso(PERMISOS.noticiaBaja);
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         noticiasApi
@@ -182,10 +169,7 @@ export function AdminNoticias() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.noticias.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -274,23 +258,12 @@ export function AdminNoticias() {
 
                         <p className="ayuda">{t('admin.noticias.formulario.ayuda')}</p>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null
-                                    ? t('admin.noticias.formulario.crear')
-                                    : t('comun.boton.guardarCambios')}
-                            </Boton>
-
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.noticias.formulario.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}
@@ -332,43 +305,19 @@ export function AdminNoticias() {
                             acciones={(noticia) => (
                                 <div className="flex justify-end gap-2">
                                     {puedeModificar && (
-                                        <button
-                                            type="button"
-                                            onClick={() => editar(noticia)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => editar(noticia)}>
                                             {t('comun.boton.editar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeDarDeBaja &&
                                         noticia.activo &&
-                                        (confirmandoBaja === noticia.noticiaId ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void darDeBaja(noticia)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                                >
-                                                    {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
-                                                    {t('comun.boton.no')}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => setConfirmandoBaja(noticia.noticiaId)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                            >
-                                                {t('comun.boton.darDeBaja')}
-                                            </button>
-                                        ))}
+                                        (<ConfirmarBaja
+                                            confirmando={confirmandoBaja === noticia.noticiaId}
+                                            onPedir={() => setConfirmandoBaja(noticia.noticiaId)}
+                                            onConfirmar={() => void darDeBaja(noticia)}
+                                            onCancelar={() => setConfirmandoBaja(null)}
+                                        />)}
                                 </div>
                             )}
                         />

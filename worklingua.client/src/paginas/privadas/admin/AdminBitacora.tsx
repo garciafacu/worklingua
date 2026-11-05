@@ -5,13 +5,13 @@ import { ErrorApi } from '../../../api/clienteHttp';
 import { Alerta } from '../../../componentes/Alerta';
 import { BuscadorBitacora } from '../../../componentes/BuscadorBitacora';
 import { Paginador } from '../../../componentes/Paginador';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import {
-    TAMANIOS_PAGINA,
     type BitacoraEventoResponse,
     type FiltrosBitacora,
     type PaginaBitacoraResponse,
+    TAMANIOS_PAGINA,
 } from '../../../tipos/bitacora';
 
 const SIN_FILTROS: FiltrosBitacora = {};

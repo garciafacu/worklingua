@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using worklingua.Server.BE;
 using worklingua.Server.DAL;
@@ -9,13 +8,8 @@ namespace worklingua.Server.MPP
 {
     public class MPPBitacora
     {
-        Acceso oDatos;
+        Acceso oDatos = new Acceso();
         Hashtable Hdatos;
-
-        public MPPBitacora()
-        {
-            oDatos = new Acceso();
-        }
 
         public bool Guardar(BEBitacoraEvento Objeto)
         {
@@ -64,20 +58,19 @@ namespace worklingua.Server.MPP
 
         private BEBitacoraEventoConUsuario Mapear(DataRow Item)
         {
-            BEBitacoraEvento oEventoBE = new BEBitacoraEvento();
+            BEBitacoraEventoConUsuario oRegistroBE = new BEBitacoraEventoConUsuario();
 
-            oEventoBE.BitacoraId = ServicioLectorFila.LeerEntero(Item, "BitacoraId");
-            oEventoBE.UsuarioId = ServicioLectorFila.LeerEnteroNulo(Item, "UsuarioId");
-            oEventoBE.FechaEvento = ServicioLectorFila.LeerFechaHora(Item, "FechaEvento");
-            oEventoBE.Modulo = ServicioLectorFila.LeerTextoNulo(Item, "Modulo");
-            oEventoBE.Accion = ServicioLectorFila.LeerTextoNulo(Item, "Accion");
-            oEventoBE.Descripcion = ServicioLectorFila.LeerTextoNulo(Item, "Descripcion");
-            oEventoBE.Nivel = ServicioLectorFila.LeerTextoNulo(Item, "Nivel");
+            oRegistroBE.BitacoraId = ServicioLectorFila.LeerEntero(Item, "BitacoraId");
+            oRegistroBE.UsuarioId = ServicioLectorFila.LeerEnteroNulo(Item, "UsuarioId");
+            oRegistroBE.FechaEvento = ServicioLectorFila.LeerFechaHora(Item, "FechaEvento");
+            oRegistroBE.Modulo = ServicioLectorFila.LeerTextoNulo(Item, "Modulo");
+            oRegistroBE.Accion = ServicioLectorFila.LeerTextoNulo(Item, "Accion");
+            oRegistroBE.Descripcion = ServicioLectorFila.LeerTextoNulo(Item, "Descripcion");
+            oRegistroBE.Nivel = ServicioLectorFila.LeerTextoNulo(Item, "Nivel");
+            oRegistroBE.Usuario = ServicioLectorFila.LeerTexto(Item, "Usuario");
+            oRegistroBE.Email = ServicioLectorFila.LeerTextoNulo(Item, "Email");
 
-            return new BEBitacoraEventoConUsuario(
-                oEventoBE,
-                ServicioLectorFila.LeerTexto(Item, "Usuario"),
-                ServicioLectorFila.LeerTextoNulo(Item, "Email"));
+            return oRegistroBE;
         }
     }
 }

@@ -1,17 +1,15 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
-import { permisosApi } from '../../../api/permisosApi';
-import { rolesApi } from '../../../api/rolesApi';
-import { Alerta } from '../../../componentes/Alerta';
+import { permisosApi, rolesApi } from '../../../api/permisosApi';
+import { AlertasResultado } from '../../../componentes/Alerta';
 import { ArbolPermisos } from '../../../componentes/ArbolPermisos';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { Boton, BotonAccion, BotonesFormulario } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { aplanarPermisos, type PermisoResponse } from '../../../tipos/permisos';
-import type { GuardarRolRequest } from '../../../tipos/roles';
+import type { GuardarRolRequest } from '../../../tipos/permisos';
 import type { RolResponse } from '../../../tipos/usuarios';
 
 const FORMULARIO_VACIO = {
@@ -51,11 +49,7 @@ export function AdminRoles() {
     const puedeEliminar = tienePermiso('Rol.Baja');
     const puedeVerCatalogo = tienePermiso('Permiso.Listar');
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         rolesApi
@@ -235,10 +229,7 @@ export function AdminRoles() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.roles.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -272,23 +263,12 @@ export function AdminRoles() {
                             />
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null
-                                    ? t('admin.roles.formulario.crear')
-                                    : t('comun.boton.guardarCambios')}
-                            </Boton>
-
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.roles.formulario.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}
@@ -307,13 +287,9 @@ export function AdminRoles() {
                             mensajeVacio={t('admin.roles.vacio')}
                             acciones={(fila) => (
                                 <div className="flex justify-end gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => verPermisos(fila)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-primario hover:bg-info-fondo"
-                                    >
+                                    <BotonAccion variante="primario" onClick={() => verPermisos(fila)}>
                                         {t('admin.roles.permisos')}
-                                    </button>
+                                    </BotonAccion>
 
                                     {puedeModificar && (
                                         <button type="button" onClick={() => editar(fila)} className={CLASE_BOTON}>
@@ -324,13 +300,12 @@ export function AdminRoles() {
                                     {puedeEliminar &&
                                         (confirmandoEliminar === fila.rolId ? (
                                             <>
-                                                <button
-                                                    type="button"
+                                                <BotonAccion
+                                                    variante="confirmar"
                                                     onClick={() => void eliminar(fila)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
                                                 >
                                                     {t('comun.boton.confirmarEliminar')}
-                                                </button>
+                                                </BotonAccion>
                                                 <button
                                                     type="button"
                                                     onClick={() => setConfirmandoEliminar(null)}

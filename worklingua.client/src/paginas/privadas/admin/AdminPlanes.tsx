@@ -1,67 +1,39 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
 import { planesApi } from '../../../api/planesApi';
-import { Alerta } from '../../../componentes/Alerta';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { BotonAccion, ConfirmarBaja } from '../../../componentes/Boton';
 import { CatalogoCaracteristicas } from '../../../componentes/CatalogoCaracteristicas';
 import { FormularioPlan } from '../../../componentes/FormularioPlan';
 import { Modal } from '../../../componentes/Modal';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import type { PlanAdminResponse } from '../../../tipos/planes';
 
-/**
- * Sección Planes: el ABM de los planes de suscripción y, dentro, todo lo de sus
- * características.
- *
- * Las tres superficies que antes estaban separadas —el ABM de planes, el ABM del
- * catálogo de características y el panel que las asociaba— viven acá: el
- * formulario del plan está arriba del listado con sus características en una
- * pestaña, y el catálogo se administra en un modal que se abre encima sin perder
- * lo que se estaba editando.
- *
- * Los botones se muestran según los permisos de la sesión, pero eso es
- * presentación: cada endpoint vuelve a exigir el permiso y responde 403 si
- * falta. Los planes del catálogo público están protegidos: el backend rechaza su
- * baja y la fila no dibuja el botón.
- */
 export function AdminPlanes() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
-    // El precio se muestra con la cultura activa, no con un Intl fijo en es-AR.
     const { formatearMoneda } = useLocalizacion();
 
     const [planes, setPlanes] = useState<PlanAdminResponse[]>([]);
     const [confirmandoBaja, setConfirmandoBaja] = useState<number | null>(null);
-    /** Plan que se está editando; `null` es un alta. */
     const [planEnEdicion, setPlanEnEdicion] = useState<PlanAdminResponse | null>(null);
     const [catalogoAbierto, setCatalogoAbierto] = useState(false);
-    /** Sube cada vez que el catálogo cambia, para que el panel lo relea. */
     const [versionCatalogo, setVersionCatalogo] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
-    /** Fuerza releer el listado despues de guardar o dar de baja. */
     const [recarga, setRecarga] = useState(0);
 
-    // En useCallback para poder ir en las dependencias de los efectos que lo
-    // usan: sin eso el linter avisa, y el mensaje de error quedaría en el idioma
-    // anterior después de cambiar de idioma.
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     const puedeCrear = tienePermiso('Plan.Alta');
     const puedeModificar = tienePermiso('Plan.Modificar');
     const puedeDarDeBaja = tienePermiso('Plan.Baja');
     const puedeVerCatalogo = tienePermiso('Caracteristica.Listar');
 
-    // El listado se relee cambiando este contador. El pedido vive dentro del
-    // efecto y no en una función que el efecto llame, para no disparar setState
-    // de forma sincrónica en el cuerpo del efecto (react-hooks/set-state-in-effect).
     useEffect(() => {
         planesApi
             .listarAdministracion()
@@ -130,11 +102,6 @@ export function AdminPlanes() {
         },
     ];
 
-    /**
-     * El alta solo aparece con permiso de crear; la edición, en cambio, se abre
-     * siempre: sin `Plan.Modificar` el formulario queda de solo lectura y sirve
-     * para consultar qué características tiene el plan.
-     */
     const mostrarFormulario = planEnEdicion !== null || puedeCrear;
 
     return (
@@ -150,20 +117,13 @@ export function AdminPlanes() {
                 </div>
 
                 {puedeVerCatalogo && (
-                    <button
-                        type="button"
-                        onClick={() => setCatalogoAbierto(true)}
-                        className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                    >
+                    <BotonAccion grande onClick={() => setCatalogoAbierto(true)}>
                         {t('admin.planes.catalogo')}
-                    </button>
+                    </BotonAccion>
                 )}
             </div>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {mostrarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -172,9 +132,6 @@ export function AdminPlanes() {
                             ? t('admin.planes.formulario.nuevo')
                             : t('admin.planes.formulario.editar')}
 
-                        {/* El nombre es dato, no texto de interfaz: no lleva
-                            clave de traducción. Con el formulario arriba del
-                            listado, dice de un vistazo qué fila se está tocando. */}
                         {planEnEdicion !== null && (
                             <span className="ml-2 font-normal text-texto-suave">
                                 {planEnEdicion.nombre}
@@ -183,8 +140,6 @@ export function AdminPlanes() {
                     </h2>
 
                     <div className="mt-4">
-                        {/* La `key` remonta el formulario al cambiar de plan: su
-                            estado arranca de cero y vuelve a pedir las características. */}
                         <FormularioPlan
                             key={planEnEdicion?.planId ?? 'nuevo'}
                             plan={planEnEdicion}
@@ -221,15 +176,11 @@ export function AdminPlanes() {
                             mensajeVacio={t('admin.planes.vacio')}
                             acciones={(plan) => (
                                 <div className="flex justify-end gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => editar(plan)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion onClick={() => editar(plan)}>
                                         {puedeModificar
                                             ? t('comun.boton.editar')
                                             : t('comun.boton.ver')}
-                                    </button>
+                                    </BotonAccion>
 
                                     {plan.protegido ? (
                                         <span className="px-3 py-1.5 text-sm text-texto-suave">
@@ -237,32 +188,12 @@ export function AdminPlanes() {
                                         </span>
                                     ) : (
                                         puedeDarDeBaja &&
-                                        (confirmandoBaja === plan.planId ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void darDeBaja(plan)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                                >
-                                                    {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
-                                                    {t('comun.boton.no')}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => setConfirmandoBaja(plan.planId)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                            >
-                                                {t('comun.boton.darDeBaja')}
-                                            </button>
-                                        ))
+                                        (<ConfirmarBaja
+                                            confirmando={confirmandoBaja === plan.planId}
+                                            onPedir={() => setConfirmandoBaja(plan.planId)}
+                                            onConfirmar={() => void darDeBaja(plan)}
+                                            onCancelar={() => setConfirmandoBaja(null)}
+                                        />)
                                     )}
                                 </div>
                             )}

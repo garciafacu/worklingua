@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ErrorApi } from '../../../api/clienteHttp';
 import { reportesApi } from '../../../api/reportesApi';
 import { Alerta } from '../../../componentes/Alerta';
-import { GraficoBarras, type DatoGrafico } from '../../../componentes/GraficoBarras';
+import { type DatoGrafico, GraficoBarras } from '../../../componentes/GraficoBarras';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import type { TableroResponse } from '../../../tipos/reportes';
 
@@ -24,13 +24,6 @@ function Tarjeta({ titulo, valor, detalle }: TarjetaProps) {
     );
 }
 
-/**
- * Tablero del negocio (Formulario, punto 15.c): lo cobrado en el mes, la deuda
- * de las empresas clientes y las contrataciones vigentes.
- *
- * Los ingresos son el cobrado neto, el mismo criterio que los reportes: pagos
- * con tarjeta aprobados menos notas de crédito.
- */
 export function AdminTablero() {
     const { t } = useTranslation();
     const { formatearMoneda, formatearNumero } = useLocalizacion();
@@ -52,11 +45,6 @@ export function AdminTablero() {
             .finally(() => setCargando(false));
     }, [mensajeDeError]);
 
-    /**
-     * Comparación con el mes anterior. Sin base contra la cual comparar (mes
-     * anterior en cero o negativo) se muestra el importe en vez del porcentaje,
-     * que sería engañoso.
-     */
     function comparacion(datos: TableroResponse): ReactNode {
         if (datos.ingresosMesAnterior <= 0) {
             return t('admin.tablero.mesAnterior', { importe: formatearMoneda(datos.ingresosMesAnterior) });
@@ -115,8 +103,6 @@ export function AdminTablero() {
                                 tablero.contratacionesActivas,
                             )}`}
                         />
-                        {/* Señal de upselling: cuántas licencias de las vendidas
-                            están realmente en uso, y quiénes ya no tienen cupo. */}
                         <Tarjeta
                             titulo={t('admin.tablero.licencias')}
                             valor={`${formatearNumero(

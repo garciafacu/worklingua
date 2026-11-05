@@ -1,5 +1,5 @@
 import type { BackendModule, ReadCallback } from 'i18next';
-import { traduccionesApi } from '../api/traduccionesApi';
+import { traduccionesApi } from '../api/idiomasApi';
 
 export const backendTraducciones: BackendModule = {
     type: 'backend',

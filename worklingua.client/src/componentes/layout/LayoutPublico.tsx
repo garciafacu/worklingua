@@ -15,3 +15,12 @@ export function LayoutPublico() {
         </div>
     );
 }
+
+export function LayoutAuth() {
+    return (
+        <div className="flex min-h-screen flex-col bg-fondo">
+            <EncabezadoPublico />
+            <Outlet />
+        </div>
+    );
+}

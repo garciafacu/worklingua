@@ -1,29 +1,19 @@
-import { useMemo, useState, type FormEvent } from 'react';
+import { type FormEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Acordeon } from '../../componentes/Acordeon';
-import { CampoTexto } from '../../componentes/CampoTexto';
+import { Acordeon } from '../../componentes/Basicos';
+import { CampoTexto } from '../../componentes/Campos';
 
 interface PreguntaFrecuente {
-    /** Base de las claves `<clave>.pregunta` y `<clave>.respuesta`. */
     clave: string;
-    /** Enlace interno que se muestra debajo de la respuesta. */
     enlace?: { ruta: string; etiqueta: string };
 }
 
 interface CategoriaFaq {
-    /** Base de la clave `<clave>.titulo`. */
     clave: string;
     preguntas: PreguntaFrecuente[];
 }
 
-/**
- * Las preguntas y sus categorías, como claves de traducción.
- *
- * El bundle de traducciones es plano (`keySeparator: false`), así que la lista
- * no puede venir de `t()`: vive acá, y el texto de cada pregunta se edita desde
- * el ABM de Traducciones como el resto del sitio.
- */
 const CATEGORIAS: CategoriaFaq[] = [
     {
         clave: 'ayuda.faq.general',
@@ -85,7 +75,6 @@ const CATEGORIAS: CategoriaFaq[] = [
     },
 ];
 
-/** Minúsculas y sin tildes: "contraseña" y "CONTRASENA" tienen que coincidir. */
 function normalizar(texto: string): string {
     return texto
         .normalize('NFD')
@@ -93,16 +82,10 @@ function normalizar(texto: string): string {
         .toLowerCase();
 }
 
-/** Una clave de traducción como `id` de HTML: los puntos confunden a los selectores CSS. */
 function idHtml(clave: string): string {
     return clave.replace(/\./g, '-');
 }
 
-/**
- * Servicio de Ayuda: preguntas frecuentes agrupadas por categoría, con búsqueda
- * por texto. El filtro corre sobre los textos ya traducidos, así que busca en
- * el idioma que se está viendo. Es contenido fijo: no hay llamadas a la API.
- */
 export function PreguntasFrecuentes() {
     const { t } = useTranslation();
 

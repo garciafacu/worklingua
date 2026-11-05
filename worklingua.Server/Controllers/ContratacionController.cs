@@ -7,12 +7,7 @@ namespace worklingua.Server.Controllers
     [Route("api/contrataciones")]
     public class ContratacionController : ControladorBase
     {
-        BLLContratacion oBLLCon;
-
-        public ContratacionController()
-        {
-            oBLLCon = new BLLContratacion();
-        }
+        BLLContratacion oBLLCon = new BLLContratacion();
 
         [HttpGet("cotizacion")]
         [ProducesResponseType(typeof(BECotizacionContratacion), StatusCodes.Status200OK)]
@@ -42,6 +37,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public ActionResult<BEContratacionRespuesta> Contratar([FromBody] BEContratarPlan peticion)
         {
+            oBLLCon.Validar(peticion);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.SuscripcionContratar);
 
             return Ok(Mapear(oBLLCon.Contratar(peticion, oSesionBE)));
@@ -57,6 +54,8 @@ namespace worklingua.Server.Controllers
         public ActionResult<BEContratacionRespuesta> Cancelar(
             int suscripcionId, [FromBody] BECancelarContratacion peticion)
         {
+            oBLLCon.Validar(peticion);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.SuscripcionContratar);
 
             peticion.SuscripcionId = suscripcionId;
@@ -87,6 +86,23 @@ namespace worklingua.Server.Controllers
             }
 
             return respuesta;
+        }
+    }
+
+    [Route("api/cuenta-corriente")]
+    public class CuentaCorrienteController : ControladorBase
+    {
+        BLLCuentaCorriente oBLLCta = new BLLCuentaCorriente();
+
+        [HttpGet]
+        [ProducesResponseType(typeof(BEEstadoCuentaCorriente), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public ActionResult<BEEstadoCuentaCorriente> Obtener()
+        {
+            BESesion oSesionBE = ExigirPermiso(Permisos.CuentaCorrienteConsultar);
+
+            return Ok(oBLLCta.ListarObjeto(oSesionBE));
         }
     }
 }

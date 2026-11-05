@@ -1,12 +1,19 @@
-import { clienteHttp } from './clienteHttp';
-import type { MensajeResponse } from '../tipos/autenticacion';
-import type { ModificarPerfilRequest, PerfilResponse } from '../tipos/perfil';
 import type {
+    CambiarClaveRequest,
     CompletarInvitacionRequest,
+    GuardarOperadorRequest,
     InvitarUsuarioRequest,
+    LoginRequest,
+    LoginResponse,
+    MensajeResponse,
+    ModificarPerfilRequest,
+    PerfilResponse,
+    RegistroUsuarioRequest,
+    RestablecerClaveRequest,
     RolResponse,
     UsuarioAdminResponse,
 } from '../tipos/usuarios';
+import { clienteHttp } from './clienteHttp';
 
 export const usuariosApi = {
     listarAdministracion: () => clienteHttp.get<UsuarioAdminResponse[]>('/usuarios/administracion'),
@@ -34,4 +41,55 @@ export const usuariosApi = {
 
     modificarPerfil: (cuerpo: ModificarPerfilRequest) =>
         clienteHttp.put<MensajeResponse>('/usuarios/perfil', cuerpo),
+};
+
+export const operadoresApi = {
+    listar: () => clienteHttp.get<UsuarioAdminResponse[]>('/operadores'),
+
+    crear: (cuerpo: GuardarOperadorRequest) =>
+        clienteHttp.post<UsuarioAdminResponse>('/operadores', cuerpo),
+
+    modificar: (usuarioId: number, cuerpo: GuardarOperadorRequest) =>
+        clienteHttp.put<UsuarioAdminResponse>(`/operadores/${usuarioId}`, cuerpo),
+
+    baja: (usuarioId: number) => clienteHttp.borrar<void>(`/operadores/${usuarioId}`),
+
+    reinvitar: (usuarioId: number) =>
+        clienteHttp.post<MensajeResponse>(`/operadores/${usuarioId}/reinvitar`),
+
+    desbloquear: (usuarioId: number) =>
+        clienteHttp.post<MensajeResponse>(`/operadores/${usuarioId}/desbloquear`),
+
+    listarRoles: (usuarioId: number) =>
+        clienteHttp.get<RolResponse[]>(`/operadores/${usuarioId}/roles`),
+
+    asignarRol: (usuarioId: number, rolId: number) =>
+        clienteHttp.post<void>(`/operadores/${usuarioId}/roles/${rolId}`),
+
+    quitarRol: (usuarioId: number, rolId: number) =>
+        clienteHttp.borrar<void>(`/operadores/${usuarioId}/roles/${rolId}`),
+};
+
+export const autenticacionApi = {
+    registrar: (datos: RegistroUsuarioRequest) =>
+        clienteHttp.post<MensajeResponse>('/usuarios/registro', datos),
+
+    confirmarCuenta: (token: string) =>
+        clienteHttp.post<MensajeResponse>('/usuarios/confirmar', { token }),
+
+    login: (datos: LoginRequest) =>
+        clienteHttp.post<LoginResponse>('/autenticacion/login', datos),
+
+    sesion: () => clienteHttp.get<LoginResponse>('/autenticacion/sesion'),
+
+    logout: () => clienteHttp.post<void>('/autenticacion/logout'),
+
+    recuperarClave: (email: string) =>
+        clienteHttp.post<MensajeResponse>('/autenticacion/recuperar-clave', { email }),
+
+    restablecerClave: (datos: RestablecerClaveRequest) =>
+        clienteHttp.post<MensajeResponse>('/autenticacion/restablecer-clave', datos),
+
+    cambiarClave: (datos: CambiarClaveRequest) =>
+        clienteHttp.post<MensajeResponse>('/autenticacion/cambiar-clave', datos),
 };

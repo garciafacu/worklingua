@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
 import { permisosApi } from '../../../api/permisosApi';
-import { Alerta } from '../../../componentes/Alerta';
+import { AlertasResultado } from '../../../componentes/Alerta';
 import { ArbolPermisos } from '../../../componentes/ArbolPermisos';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
+import { Boton, BotonAccion, BotonesFormulario } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import {
     aplanarPermisos,
     type GuardarPermisoRequest,
@@ -46,11 +45,7 @@ export function AdminPermisos() {
     const puedeModificar = tienePermiso('Permiso.Modificar');
     const puedeEliminar = tienePermiso('Permiso.Baja');
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         permisosApi
@@ -201,13 +196,9 @@ export function AdminPermisos() {
                     puedeEliminar &&
                     (confirmandoEliminar === nodo.permisoId ? (
                         <>
-                            <button
-                                type="button"
-                                onClick={() => void eliminar(nodo)}
-                                className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                            >
+                            <BotonAccion variante="confirmar" onClick={() => void eliminar(nodo)}>
                                 {t('comun.boton.confirmarEliminar')}
-                            </button>
+                            </BotonAccion>
                             <button
                                 type="button"
                                 onClick={() => setConfirmandoEliminar(null)}
@@ -270,10 +261,7 @@ export function AdminPermisos() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.permisos.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -310,23 +298,12 @@ export function AdminPermisos() {
 
                         <p className="ayuda">{t('admin.permisos.formulario.ayuda')}</p>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null
-                                    ? t('admin.permisos.formulario.crear')
-                                    : t('comun.boton.guardarCambios')}
-                            </Boton>
-
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.permisos.formulario.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}

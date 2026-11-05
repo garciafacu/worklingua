@@ -8,7 +8,6 @@ namespace worklingua.Server.DAL
     public class Acceso
     {
         private SqlConnection oCnn;
-        private SqlCommand Cmd;
 
         public Acceso()
         {
@@ -17,90 +16,33 @@ namespace worklingua.Server.DAL
 
         public DataTable Leer(string Consulta, Hashtable Hdatos)
         {
-            DataTable Dt = new DataTable();
-
-            try
+            return Ejecutar(Consulta, Hdatos, Cmd =>
             {
-                if (oCnn.State == ConnectionState.Closed)
-                {
-                    oCnn.Open();
-                }
-
-                Cmd = new SqlCommand(Consulta, oCnn);
-                Cmd.CommandType = CommandType.StoredProcedure;
-
-                if (Hdatos != null)
-                {
-                    foreach (string dato in Hdatos.Keys)
-                    {
-                        Cmd.Parameters.AddWithValue(dato, Hdatos[dato] ?? DBNull.Value);
-                    }
-                }
-
-                SqlDataAdapter Da = new SqlDataAdapter(Cmd);
-                Da.Fill(Dt);
-
+                DataTable Dt = new DataTable();
+                new SqlDataAdapter(Cmd).Fill(Dt);
                 return Dt;
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                if (oCnn.State != ConnectionState.Closed)
-                {
-                    oCnn.Close();
-                }
-            }
+            });
         }
 
         public bool Escribir(string Consulta, Hashtable Hdatos)
         {
-            try
+            return Ejecutar(Consulta, Hdatos, Cmd =>
             {
-                if (oCnn.State == ConnectionState.Closed)
-                {
-                    oCnn.Open();
-                }
-
-                Cmd = new SqlCommand(Consulta, oCnn);
-                Cmd.CommandType = CommandType.StoredProcedure;
-
-                if (Hdatos != null)
-                {
-                    foreach (string dato in Hdatos.Keys)
-                    {
-                        Cmd.Parameters.AddWithValue(dato, Hdatos[dato] ?? DBNull.Value);
-                    }
-                }
-
                 Cmd.ExecuteNonQuery();
-
                 return true;
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                if (oCnn.State != ConnectionState.Closed)
-                {
-                    oCnn.Close();
-                }
-            }
+            });
         }
 
         public object LeerEscalar(string Consulta, Hashtable Hdatos)
+        {
+            return Ejecutar(Consulta, Hdatos, Cmd =>
+            {
+                object resultado = Cmd.ExecuteScalar();
+                return resultado == DBNull.Value ? null : resultado;
+            });
+        }
+
+        private T Ejecutar<T>(string Consulta, Hashtable Hdatos, Func<SqlCommand, T> accion)
         {
             try
             {
@@ -109,7 +51,7 @@ namespace worklingua.Server.DAL
                     oCnn.Open();
                 }
 
-                Cmd = new SqlCommand(Consulta, oCnn);
+                SqlCommand Cmd = new SqlCommand(Consulta, oCnn);
                 Cmd.CommandType = CommandType.StoredProcedure;
 
                 if (Hdatos != null)
@@ -120,17 +62,7 @@ namespace worklingua.Server.DAL
                     }
                 }
 
-                object resultado = Cmd.ExecuteScalar();
-
-                return resultado == DBNull.Value ? null : resultado;
-            }
-            catch (SqlException)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                throw;
+                return accion(Cmd);
             }
             finally
             {

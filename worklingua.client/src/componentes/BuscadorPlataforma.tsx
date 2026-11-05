@@ -1,15 +1,15 @@
-import { useState, type FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CampoSelect } from './CampoSelect';
-import { CampoTexto } from './CampoTexto';
 import {
-    AREAS_BUSQUEDA,
-    ORDENES_BUSQUEDA,
     type AreaBusqueda,
+    AREAS_BUSQUEDA,
     type CriteriosBusqueda,
     type OrdenBusqueda,
+    ORDENES_BUSQUEDA,
     type SeccionBusquedaResponse,
 } from '../tipos/busqueda';
+import { BotonAccion } from './Boton';
+import { CampoSelect, CampoTexto } from './Campos';
 
 interface BuscadorPlataformaProps {
     criteriosIniciales: CriteriosBusqueda;
@@ -173,13 +173,9 @@ export function BuscadorPlataforma({ criteriosIniciales, secciones, buscando, al
             </details>
 
             <div className="mt-4 flex justify-end">
-                <button
-                    type="button"
-                    onClick={limpiar}
-                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                >
+                <BotonAccion grande onClick={limpiar}>
                     {t('comun.boton.limpiar')}
-                </button>
+                </BotonAccion>
             </div>
         </form>
     );

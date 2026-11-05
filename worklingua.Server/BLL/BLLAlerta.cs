@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
 using worklingua.Server.Services;
@@ -12,20 +11,10 @@ namespace worklingua.Server.BLL
         private const int DiasMinimos = 1;
         private const int DiasMaximos = 365;
 
-        MPPAlerta oMPPAle;
-        MPPUsuario oMPPUsu;
-        BLLSeguridad oBLLSeg;
-        BLLEmpresa oBLLEmp;
-        BLLDepartamento oBLLDep;
-
-        public BLLAlerta()
-        {
-            oMPPAle = new MPPAlerta();
-            oMPPUsu = new MPPUsuario();
-            oBLLSeg = new BLLSeguridad();
-            oBLLEmp = new BLLEmpresa();
-            oBLLDep = new BLLDepartamento();
-        }
+        MPPAlerta oMPPAle = new MPPAlerta();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
+        BLLEmpresa oBLLEmp = new BLLEmpresa();
+        BLLDepartamento oBLLDep = new BLLDepartamento();
 
         public List<BEAlerta> Listar(BESesion oSesionBE)
         {
@@ -40,7 +29,7 @@ namespace worklingua.Server.BLL
             return oMPPAle.Listar(oFiltroBE);
         }
 
-        public BEAlerta ListarObjeto(BEAlerta Objeto, BESesion oSesionBE)
+        private BEAlerta ListarObjeto(BEAlerta Objeto, BESesion oSesionBE)
         {
             BEAlerta oAlertaBE = oMPPAle.ListarObjeto(Objeto);
 
@@ -184,19 +173,10 @@ namespace worklingua.Server.BLL
                     TipoErrorNegocio.Validacion, "Debe completar el título y el contenido del mensaje.");
             }
 
-            if (Objeto.Titulo.Length > LongitudMaximaTitulo)
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "El título no puede superar los " + LongitudMaximaTitulo + " caracteres.");
-            }
-
-            if (Objeto.Mensaje.Length > LongitudMaximaMensaje)
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "El mensaje no puede superar los " + LongitudMaximaMensaje + " caracteres.");
-            }
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Titulo, LongitudMaximaTitulo,
+                "El título no puede superar los " + LongitudMaximaTitulo + " caracteres.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Mensaje, LongitudMaximaMensaje,
+                "El mensaje no puede superar los " + LongitudMaximaMensaje + " caracteres.");
 
             ValidarCondicion(Objeto);
         }
@@ -216,10 +196,7 @@ namespace worklingua.Server.BLL
             BEEmpresa oFiltroBE = new BEEmpresa();
             oFiltroBE.EmpresaId = empresaId;
 
-            if (oBLLEmp.ListarObjeto(oFiltroBE) == null)
-            {
-                throw new ExcepcionNegocio(TipoErrorNegocio.Validacion, "La empresa no existe.");
-            }
+            oBLLEmp.ListarObjeto(oFiltroBE);
         }
 
         private string Normalizar(string valor)
@@ -249,22 +226,43 @@ namespace worklingua.Server.BLL
 
         private int? EmpresaQueLimita(BESesion oSesionBE)
         {
-            if (oBLLSeg.Tiene(oSesionBE.UsuarioId, Permisos.AlertaVerTodasLasEmpresas))
-            {
-                return null;
-            }
+            return oBLLSeg.EmpresaQueLimita(oSesionBE, Permisos.AlertaVerTodasLasEmpresas);
+        }
 
-            BEUsuario oFiltroBE = new BEUsuario();
-            oFiltroBE.UsuarioId = oSesionBE.UsuarioId;
+        public void Validar(BEGuardarAlerta Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.Titulo, "Debe completar el título y el contenido del mensaje.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Titulo, 150, "El título no puede superar los 150 caracteres.");
 
-            BEUsuario oUsuarioBE = oMPPUsu.ListarObjeto(oFiltroBE);
+            ReglasNegocio.ExigirTexto(Objeto.Mensaje, "Debe completar el título y el contenido del mensaje.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Mensaje, 2000, "El mensaje no puede superar los 2000 caracteres.");
 
-            if (oUsuarioBE == null)
-            {
-                throw new ExcepcionNegocio(TipoErrorNegocio.SesionInvalida, "El usuario de la sesión no existe.");
-            }
+            ReglasNegocio.ExigirRango(Objeto.DiasInactividad, 1, 365,
+                "La condición de inactividad va de 1 a 365 días.");
+        }
+    }
 
-            return oUsuarioBE.EmpresaId;
+    public class BLLNotificacion
+    {
+        private const int TopeBandeja = 20;
+
+        MPPNotificacion oMPPNot = new MPPNotificacion();
+
+        public BEBandejaNotificaciones ObtenerBandeja(BESesion oSesionBE)
+        {
+            BEBandejaNotificaciones respuesta = new BEBandejaNotificaciones();
+
+            respuesta.Notificaciones = oMPPNot.ListarPorUsuario(oSesionBE.UsuarioId, TopeBandeja);
+            respuesta.NoLeidas = oMPPNot.ContarNoLeidas(oSesionBE.UsuarioId);
+
+            return respuesta;
+        }
+
+        public BEBandejaNotificaciones MarcarLeidas(int? notificacionId, BESesion oSesionBE)
+        {
+            oMPPNot.MarcarLeidas(oSesionBE.UsuarioId, notificacionId);
+
+            return ObtenerBandeja(oSesionBE);
         }
     }
 }

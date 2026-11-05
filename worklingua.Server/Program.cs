@@ -21,9 +21,6 @@ SembrarSuperAdmin();
 
 app.UseExceptionHandler();
 
-// Los activos pedagógicos los sube el Backoffice en tiempo de ejecución, así
-// que viven fuera de wwwroot y los sirve este middleware. MapStaticAssets solo
-// conoce lo que estaba al compilar.
 ServicioArchivos.AsegurarCarpeta();
 
 app.UseStaticFiles(new StaticFileOptions

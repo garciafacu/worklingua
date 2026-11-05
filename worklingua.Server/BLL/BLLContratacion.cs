@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.Services;
 
@@ -6,38 +5,20 @@ namespace worklingua.Server.BLL
 {
     public class BLLContratacion
     {
-        BLLSuscripcion oBLLSus;
-        BLLLicencia oBLLLic;
-        BLLFactura oBLLFac;
-        BLLPago oBLLPag;
-        BLLNotaCreditoDebito oBLLNot;
-        BLLMovimientoCuentaCorriente oBLLMov;
-        BLLPlan oBLLPlan;
-        BLLEmpresa oBLLEmp;
-        BLLUsuario oBLLUsu;
-        BLLCultura oBLLCul;
-        BLLTraduccion oBLLTra;
-        BLLBitacora oBLLBit;
-        ServicioValidacionTarjeta oServicioTarjeta;
-        ServicioEmailContratacion oServicioEmail;
-
-        public BLLContratacion()
-        {
-            oBLLSus = new BLLSuscripcion();
-            oBLLLic = new BLLLicencia();
-            oBLLFac = new BLLFactura();
-            oBLLPag = new BLLPago();
-            oBLLNot = new BLLNotaCreditoDebito();
-            oBLLMov = new BLLMovimientoCuentaCorriente();
-            oBLLPlan = new BLLPlan();
-            oBLLEmp = new BLLEmpresa();
-            oBLLUsu = new BLLUsuario();
-            oBLLCul = new BLLCultura();
-            oBLLTra = new BLLTraduccion();
-            oBLLBit = new BLLBitacora();
-            oServicioTarjeta = new ServicioValidacionTarjeta();
-            oServicioEmail = new ServicioEmailContratacion();
-        }
+        BLLSuscripcion oBLLSus = new BLLSuscripcion();
+        BLLLicencia oBLLLic = new BLLLicencia();
+        BLLFactura oBLLFac = new BLLFactura();
+        BLLPago oBLLPag = new BLLPago();
+        BLLNotaCreditoDebito oBLLNot = new BLLNotaCreditoDebito();
+        BLLMovimientoCuentaCorriente oBLLMov = new BLLMovimientoCuentaCorriente();
+        BLLPlan oBLLPlan = new BLLPlan();
+        BLLEmpresa oBLLEmp = new BLLEmpresa();
+        BLLUsuario oBLLUsu = new BLLUsuario();
+        BLLCultura oBLLCul = new BLLCultura();
+        BLLTraduccion oBLLTra = new BLLTraduccion();
+        BLLBitacora oBLLBit = new BLLBitacora();
+        ServicioValidacionTarjeta oServicioTarjeta = new ServicioValidacionTarjeta();
+        ServicioEmailContratacion oServicioEmail = new ServicioEmailContratacion();
 
         public BECotizacionContratacion Cotizar(BEContratarPlan Objeto, BESesion oSesionBE)
         {
@@ -871,18 +852,53 @@ namespace worklingua.Server.BLL
         private void Registrar(int usuarioId, string accion, string descripcion, string nivel)
         {
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                usuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloSuscripcion,
-                accion,
-                descripcion,
-                nivel));
+                0, usuarioId, DateTime.Now, BLLBitacora.ModuloSuscripcion, accion, descripcion, nivel));
         }
 
         private DateOnly Hoy()
         {
             return DateOnly.FromDateTime(DateTime.Now);
+        }
+
+        public void Validar(BEContratarPlan Objeto)
+        {
+            ReglasNegocio.ExigirRango(Objeto.PlanId, 1, int.MaxValue, "Elegí un plan.");
+
+            ReglasNegocio.ExigirTexto(Objeto.CodigoCultura, "Falta la cultura de la operación.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.CodigoCultura, 10,
+                "El código de cultura no puede superar los 10 caracteres.");
+
+            ReglasNegocio.ExigirRango(Objeto.ImporteNotaCredito, 0m, 999999999m,
+                "El importe con nota de crédito no es válido.");
+
+            ReglasNegocio.ExigirRango(Objeto.ImporteCuentaCorriente, 0m, 999999999m,
+                "El importe en cuenta corriente no es válido.");
+
+            Validar(Objeto.Tarjeta);
+        }
+
+        public void Validar(BECancelarContratacion Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.CodigoCultura, "Falta la cultura de la operación.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.CodigoCultura, 10,
+                "El código de cultura no puede superar los 10 caracteres.");
+        }
+
+        private void Validar(BETarjeta Objeto)
+        {
+            if (Objeto == null)
+            {
+                return;
+            }
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Numero, 25,
+                "El número de tarjeta no puede superar los 25 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Titular, 100, "El titular no puede superar los 100 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Vencimiento, 7, "El vencimiento tiene que tener el formato MM/AA.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.CodigoSeguridad, 4, "El código de seguridad tiene 3 o 4 dígitos.");
         }
     }
 }

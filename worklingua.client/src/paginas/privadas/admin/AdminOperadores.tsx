@@ -1,18 +1,20 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
-import { operadoresApi } from '../../../api/operadoresApi';
-import { rolesApi } from '../../../api/rolesApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { rolesApi } from '../../../api/permisosApi';
+import { operadoresApi } from '../../../api/usuariosApi';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { Boton, BotonAccion, BotonesFormulario } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { estaBloqueada } from '../../../servicios/cuenta';
-import type { GuardarOperadorRequest } from '../../../tipos/operadores';
-import type { RolResponse, UsuarioAdminResponse } from '../../../tipos/usuarios';
+import type {
+    GuardarOperadorRequest,
+    RolResponse,
+    UsuarioAdminResponse,
+} from '../../../tipos/usuarios';
 
 const FORMULARIO_VACIO = {
     nombre: '',
@@ -58,11 +60,7 @@ export function AdminOperadores() {
     const puedeDarDeBaja = tienePermiso('Operador.Baja');
     const puedeVerRoles = tienePermiso('Rol.Listar');
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         operadoresApi
@@ -290,10 +288,7 @@ export function AdminOperadores() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.operadores.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -346,23 +341,12 @@ export function AdminOperadores() {
 
                         {editandoId === null && <p className="ayuda">{t('admin.operadores.formulario.ayudaAlta')}</p>}
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null
-                                    ? t('admin.operadores.formulario.crear')
-                                    : t('comun.boton.guardarCambios')}
-                            </Boton>
-
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.operadores.formulario.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}
@@ -382,16 +366,15 @@ export function AdminOperadores() {
                             mensajeVacio={t('admin.operadores.vacio')}
                             acciones={(fila) => (
                                 <div className="flex justify-end gap-2">
-                                    <button
-                                        type="button"
+                                    <BotonAccion
+                                        variante="primario"
                                         onClick={() => {
                                             limpiarMensajes();
                                             verRoles(fila);
                                         }}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-primario hover:bg-info-fondo"
                                     >
                                         {t('admin.operadores.roles')}
-                                    </button>
+                                    </BotonAccion>
 
                                     {puedeModificar && (
                                         <button type="button" onClick={() => editar(fila)} className={CLASE_BOTON}>
@@ -415,13 +398,12 @@ export function AdminOperadores() {
                                         fila.activo &&
                                         (confirmandoBaja === fila.usuarioId ? (
                                             <>
-                                                <button
-                                                    type="button"
+                                                <BotonAccion
+                                                    variante="confirmar"
                                                     onClick={() => void darDeBaja(fila)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
                                                 >
                                                     {t('comun.boton.confirmarBaja')}
-                                                </button>
+                                                </BotonAccion>
                                                 <button
                                                     type="button"
                                                     onClick={() => setConfirmandoBaja(null)}

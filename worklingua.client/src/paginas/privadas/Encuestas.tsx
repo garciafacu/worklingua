@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../../api/clienteHttp';
 import { encuestasApi } from '../../api/encuestasApi';
-import { Alerta } from '../../componentes/Alerta';
+import { AlertasResultado } from '../../componentes/Alerta';
 import { Boton } from '../../componentes/Boton';
 import { GraficoBarras, type DatoGrafico } from '../../componentes/GraficoBarras';
 import { useLocalizacion } from '../../contexto/useLocalizacion';
@@ -80,10 +80,7 @@ export function Encuestas() {
             <h1 className="text-2xl font-semibold tracking-tight text-texto sm:text-3xl">{t('encuestas.titulo')}</h1>
             <p className="mt-2 text-sm text-texto-suave">{t('encuestas.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {cargando && <p className="mt-6 text-sm text-texto-suave">{t('encuestas.cargando')}</p>}
 

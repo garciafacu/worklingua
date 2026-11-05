@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../../../api/clienteHttp';
 import { encuestasApi } from '../../../api/encuestasApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { GraficoBarras, type DatoGrafico } from '../../../componentes/GraficoBarras';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { BotonAccion, BotonesFormulario, ConfirmarBaja } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type DatoGrafico, GraficoBarras } from '../../../componentes/GraficoBarras';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
 import { PERMISOS } from '../../../rutas/itemsMenu';
@@ -37,12 +36,6 @@ type Formulario = typeof FORMULARIO_VACIO;
 
 const MAXIMO_OPCIONES = 10;
 
-/**
- * ABM de encuestas y sus resultados (Formulario, puntos 3, 10 y 15.a).
- *
- * Las opciones solo se pueden cambiar mientras la encuesta no tenga respuestas:
- * después, el formulario las muestra deshabilitadas y el backend las ignora.
- */
 export function AdminEncuestas() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -223,10 +216,7 @@ export function AdminEncuestas() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.encuestas.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -334,13 +324,9 @@ export function AdminEncuestas() {
 
                             {!tieneRespuestas && formulario.opciones.length < MAXIMO_OPCIONES && (
                                 <div>
-                                    <button
-                                        type="button"
-                                        onClick={agregarOpcion}
-                                        className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion grande onClick={agregarOpcion}>
                                         {t('admin.encuestas.agregarOpcion')}
-                                    </button>
+                                    </BotonAccion>
                                 </div>
                             )}
                         </fieldset>
@@ -355,20 +341,12 @@ export function AdminEncuestas() {
                             {t('admin.encuestas.activa')}
                         </label>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null ? t('admin.encuestas.crear') : t('comun.boton.guardarCambios')}
-                            </Boton>
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.encuestas.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}
@@ -388,8 +366,7 @@ export function AdminEncuestas() {
                             mensajeVacio={t('admin.encuestas.vacio')}
                             acciones={(item) => (
                                 <div className="flex justify-end gap-2">
-                                    <button
-                                        type="button"
+                                    <BotonAccion
                                         onClick={() =>
                                             setVerResultadosDe(
                                                 verResultadosDe === item.encuesta.encuestaId
@@ -397,49 +374,24 @@ export function AdminEncuestas() {
                                                     : item.encuesta.encuestaId,
                                             )
                                         }
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
                                     >
                                         {t('admin.encuestas.verResultados')}
-                                    </button>
+                                    </BotonAccion>
 
                                     {puedeModificar && (
-                                        <button
-                                            type="button"
-                                            onClick={() => editar(item)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => editar(item)}>
                                             {t('comun.boton.editar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeDarDeBaja &&
                                         item.encuesta.activo &&
-                                        (confirmandoBaja === item.encuesta.encuestaId ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void darDeBaja(item)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                                >
-                                                    {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
-                                                    {t('comun.boton.no')}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() => setConfirmandoBaja(item.encuesta.encuestaId)}
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                            >
-                                                {t('comun.boton.darDeBaja')}
-                                            </button>
-                                        ))}
+                                        (<ConfirmarBaja
+                                            confirmando={confirmandoBaja === item.encuesta.encuestaId}
+                                            onPedir={() => setConfirmandoBaja(item.encuesta.encuestaId)}
+                                            onConfirmar={() => void darDeBaja(item)}
+                                            onCancelar={() => setConfirmandoBaja(null)}
+                                        />)}
                                 </div>
                             )}
                         />

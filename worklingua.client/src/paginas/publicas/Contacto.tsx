@@ -1,20 +1,13 @@
-import { useState, type FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { contactoApi } from '../../api/contactoApi';
 import { ErrorApi } from '../../api/clienteHttp';
+import { contactoApi } from '../../api/contactoApi';
 import { Alerta } from '../../componentes/Alerta';
 import { Boton } from '../../componentes/Boton';
-import { CampoTexto } from '../../componentes/CampoTexto';
+import { CampoTexto } from '../../componentes/Campos';
 import type { EnviarConsultaContactoRequest } from '../../tipos/contacto';
 
-/**
- * Los datos de contacto: la clave de la etiqueta se traduce, el valor no.
- *
- * Un correo, un teléfono y una dirección son los mismos en cualquier idioma.
- * Solo el horario lleva clave propia, porque "Lunes a viernes, de 9 a 18 h" sí
- * es una frase.
- */
 const DATOS = [
     { etiqueta: 'publico.contacto.dato.email', valor: 'facundogarcia077@gmail.com' },
     { etiqueta: 'publico.contacto.dato.telefono', valor: '+54 11 2655-8986' },
@@ -72,8 +65,6 @@ export function Contacto() {
             </h1>
             <p className="mt-3 text-base text-texto-suave">{t('publico.contacto.descripcion')}</p>
             <p className="mt-2 text-sm text-texto-suave">
-                {/* `components` ata el marcador <1> de la traducción al enlace por
-                    nombre, sin depender de la posición de los hijos. */}
                 <Trans
                     i18nKey="publico.contacto.faq"
                     components={{

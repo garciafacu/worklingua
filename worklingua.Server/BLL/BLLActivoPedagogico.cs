@@ -1,27 +1,9 @@
-using System.Collections.Generic;
-using System.IO;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
 using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// Activos pedagógicos de un curso (CU-004-001): imágenes, audios de
-    /// pronunciación y vocabularios.
-    ///
-    /// El caso de uso habla de modelos 3D para simulaciones inmersivas; sin
-    /// motor de Realidad Aumentada que los consuma, el tipo visual que la
-    /// plataforma sí puede mostrar es la imagen.
-    ///
-    /// El caso de uso aloja el archivo en la nube; acá se guarda en disco y la
-    /// aplicación lo sirve como archivo estático. No hay conversión de formatos
-    /// (camino alternativo 2) ni subida por bloques (camino alternativo 3): un
-    /// formato no aceptado se rechaza y el tope de tamaño evita la latencia.
-    ///
-    /// El alcance lo decide el curso: se reusa BLLCurso.ExigirGestion, así un
-    /// curso de otra empresa responde igual que en el ABM de Cursos.
-    /// </summary>
     public class BLLActivoPedagogico
     {
         public const string EstadoBorrador = "BORRADOR";
@@ -30,13 +12,8 @@ namespace worklingua.Server.BLL
         private const int LongitudMaximaNombre = 150;
         private const int LongitudMaximaDescripcion = 500;
 
-        /// <summary>Tope de tamaño del archivo, en megabytes.</summary>
         public const int MegabytesMaximos = 10;
 
-        /// <summary>
-        /// Extensiones aceptadas por tipo de recurso. Es la validación del paso
-        /// 6: lo que no entra acá no se sube.
-        /// </summary>
         private static readonly Dictionary<string, string[]> ExtensionesPorTipo =
             new Dictionary<string, string[]>
             {
@@ -45,16 +22,9 @@ namespace worklingua.Server.BLL
                 { "VOCABULARIO", new[] { ".pdf", ".csv", ".txt" } }
             };
 
-        MPPActivoPedagogico oMPPAct;
-        MPPModulo oMPPMod;
-        BLLCurso oBLLCur;
-
-        public BLLActivoPedagogico()
-        {
-            oMPPAct = new MPPActivoPedagogico();
-            oMPPMod = new MPPModulo();
-            oBLLCur = new BLLCurso();
-        }
+        MPPActivoPedagogico oMPPAct = new MPPActivoPedagogico();
+        MPPModulo oMPPMod = new MPPModulo();
+        BLLCurso oBLLCur = new BLLCurso();
 
         public List<BEActivoPedagogico> ListarPorCurso(BEActivoPedagogico Objeto, BESesion oSesionBE)
         {
@@ -63,14 +33,6 @@ namespace worklingua.Server.BLL
             return oMPPAct.ListarPorCurso(Objeto);
         }
 
-        /// <summary>
-        /// Los activos que un alumno puede consumir: publicados y vigentes.
-        ///
-        /// No valida alcance porque no lo decide: lo llama quien ya resolvió a
-        /// qué cursos llega el usuario (Mis cursos, con su licencia ya exigida).
-        /// Acá vive una sola vez qué significa "disponible", para que la
-        /// pantalla no decida sobre un borrador.
-        /// </summary>
         public List<BEActivoPedagogico> ListarPublicados(int cursoId)
         {
             BEActivoPedagogico oFiltroBE = new BEActivoPedagogico();
@@ -89,13 +51,6 @@ namespace worklingua.Server.BLL
             return ListaBE;
         }
 
-        /// <summary>
-        /// El escenario principal: valida, resuelve el nombre, guarda el
-        /// archivo y registra el activo como borrador (pasos 5 a 13).
-        ///
-        /// El archivo se escribe DESPUÉS de todas las validaciones: si algo
-        /// falla no queda un huérfano en disco.
-        /// </summary>
         public BEActivoPedagogico Guardar(
             BEActivoPedagogico Objeto, BEArchivoSubido oArchivoBE, bool confirmarNombre, BESesion oSesionBE)
         {
@@ -106,8 +61,8 @@ namespace worklingua.Server.BLL
                 throw new ExcepcionNegocio(TipoErrorNegocio.Conflicto, "El curso está dado de baja.");
             }
 
-            Objeto.Nombre = Normalizar(Objeto.Nombre);
-            Objeto.Descripcion = Normalizar(Objeto.Descripcion);
+            Objeto.Nombre = ServicioTexto.Normalizar(Objeto.Nombre);
+            Objeto.Descripcion = ServicioTexto.Normalizar(Objeto.Descripcion);
             Objeto.TipoContenido = ResolverTipo(Objeto.TipoContenido);
             Objeto.ModuloId = ResolverModulo(Objeto.ModuloId, Objeto.CursoId);
 
@@ -152,10 +107,6 @@ namespace worklingua.Server.BLL
             return ObtenerObligatorio(Objeto.ActivoPedagogicoId);
         }
 
-        /// <summary>
-        /// Baja lógica y reactivación. Reactivar vuelve a ocupar el nombre, así
-        /// que se valida de nuevo contra el índice único del curso.
-        /// </summary>
         public BEActivoPedagogico CambiarActivo(BEActivoPedagogico Objeto, BESesion oSesionBE)
         {
             BEActivoPedagogico oActivoBE = ExigirGestionable(Objeto.ActivoPedagogicoId, oSesionBE);
@@ -181,10 +132,6 @@ namespace worklingua.Server.BLL
             return ObtenerObligatorio(Objeto.ActivoPedagogicoId);
         }
 
-        /// <summary>
-        /// Camino alternativo 1: con el nombre ocupado se propone una
-        /// nomenclatura y se corta, salvo que el usuario ya la haya aceptado.
-        /// </summary>
         private string ResolverNombre(BEActivoPedagogico Objeto, bool confirmarNombre)
         {
             if (!ExisteNombre(Objeto.CursoId, Objeto.Nombre, 0))
@@ -205,27 +152,9 @@ namespace worklingua.Server.BLL
                 sugerido);
         }
 
-        /// <summary>
-        /// "Nombre" ocupado pasa a "Nombre Versión 2", y si esa también está
-        /// ocupada sigue con la 3. Busca sobre la lista del curso, que ya está
-        /// en memoria, en vez de consultar una vez por intento.
-        /// </summary>
         private string SugerirNombre(int cursoId, string nombre)
         {
-            List<string> ocupados = NombresVigentes(cursoId);
-            int version = 2;
-
-            while (true)
-            {
-                string candidato = Recortar(nombre + " Versión " + version);
-
-                if (!ocupados.Contains(candidato.ToUpperInvariant()))
-                {
-                    return candidato;
-                }
-
-                version++;
-            }
+            return NombresConVersion.Sugerir(nombre, NombresVigentes(cursoId), LongitudMaximaNombre);
         }
 
         private bool ExisteNombre(int cursoId, string nombre, int excluirId)
@@ -254,10 +183,6 @@ namespace worklingua.Server.BLL
             return nombres;
         }
 
-        /// <summary>
-        /// Los activos que ocupan nombre. Los dados de baja no cuentan: el
-        /// índice único del curso también los deja afuera.
-        /// </summary>
         private List<BEActivoPedagogico> ListarVigentes(int cursoId)
         {
             BEActivoPedagogico oFiltroBE = new BEActivoPedagogico();
@@ -276,7 +201,6 @@ namespace worklingua.Server.BLL
             return ListaBE;
         }
 
-        /// <summary>Paso 6: obligatorios, peso y formato. Devuelve la extensión.</summary>
         private string ValidarArchivo(BEArchivoSubido oArchivoBE, string tipoContenido)
         {
             if (oArchivoBE == null || oArchivoBE.Contenido == null || oArchivoBE.Contenido.Length == 0)
@@ -315,12 +239,8 @@ namespace worklingua.Server.BLL
                     LongitudMaximaNombre + " caracteres.");
             }
 
-            if (Objeto.Descripcion != null && Objeto.Descripcion.Length > LongitudMaximaDescripcion)
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "La descripción no puede superar los " + LongitudMaximaDescripcion + " caracteres.");
-            }
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, LongitudMaximaDescripcion,
+                "La descripción no puede superar los " + LongitudMaximaDescripcion + " caracteres.");
         }
 
         private string ResolverTipo(string tipoContenido)
@@ -335,13 +255,6 @@ namespace worklingua.Server.BLL
             return tipo;
         }
 
-        /// <summary>
-        /// Dónde se muestra el activo: sin módulo es material general del curso
-        /// y con módulo es el contenido de esa lección.
-        ///
-        /// El módulo tiene que ser de este curso y estar vigente; si no, el
-        /// activo quedaría colgando de una lección que el alumno no ve.
-        /// </summary>
         private int? ResolverModulo(int? moduloId, int cursoId)
         {
             if (!moduloId.HasValue || moduloId.Value == 0)
@@ -378,7 +291,6 @@ namespace worklingua.Server.BLL
             return valor;
         }
 
-        /// <summary>Un activo de un curso que la sesión no puede gestionar no existe.</summary>
         private BEActivoPedagogico ExigirGestionable(int activoPedagogicoId, BESesion oSesionBE)
         {
             BEActivoPedagogico oActivoBE = ObtenerObligatorio(activoPedagogicoId);
@@ -418,24 +330,30 @@ namespace worklingua.Server.BLL
 
             oBLLCur.ListarObjeto(oFiltroBE, oSesionBE);
         }
+    }
 
-        private string Normalizar(string valor)
+    public static class NombresConVersion
+    {
+        public static string Sugerir(string nombre, ICollection<string> ocupados, int largoMaximo)
         {
-            if (valor == null)
+            int version = 2;
+
+            while (true)
             {
-                return null;
+                string candidato = Recortar(nombre + " Versión " + version, largoMaximo);
+
+                if (!ocupados.Contains(candidato.ToUpperInvariant()))
+                {
+                    return candidato;
+                }
+
+                version++;
             }
-
-            string limpio = valor.Trim();
-
-            return limpio.Length == 0 ? null : limpio;
         }
 
-        private string Recortar(string texto)
+        private static string Recortar(string texto, int largoMaximo)
         {
-            return texto.Length <= LongitudMaximaNombre
-                ? texto
-                : texto.Substring(0, LongitudMaximaNombre);
+            return texto.Length <= largoMaximo ? texto : texto.Substring(0, largoMaximo);
         }
     }
 }

@@ -42,12 +42,6 @@ export function TerminosCondiciones() {
             <p>{t('legal.terminos.baja.p1')}</p>
 
             <h2>{t('legal.terminos.datos.titulo')}</h2>
-            {/*
-                El párrafo lleva un enlace en el medio. Con <Trans> la traducción
-                es UNA sola clave con el marcador <1>...</1>, en vez de tres
-                fragmentos que cada idioma tendría que ordenar igual que el
-                español. El índice 1 es el segundo hijo: el 0 es el texto suelto.
-            */}
             <p>
                 <Trans i18nKey="legal.terminos.datos.p1">
                     El tratamiento de los datos personales se describe en la{' '}

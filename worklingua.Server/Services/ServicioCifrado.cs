@@ -30,16 +30,6 @@ namespace worklingua.Server.Services
             }
         }
 
-        /// <summary>
-        /// Huella determinística de un dato cifrado, para poder exigir unicidad
-        /// sobre él. <see cref="Cifrar"/> usa un vector de inicialización
-        /// aleatorio, así que el mismo texto da resultados distintos y no se
-        /// puede comparar ni indexar en SQL: esta huella sí.
-        ///
-        /// Es HMAC y no un hash pelado porque el dato que protege es corto (un
-        /// documento son pocos dígitos) y sin clave se recuperaría probando
-        /// todas las combinaciones contra una copia de la base.
-        /// </summary>
         public byte[] HashDeterministico(string texto)
         {
             if (string.IsNullOrWhiteSpace(texto))

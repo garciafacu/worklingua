@@ -1,20 +1,18 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
-import { departamentosApi } from '../../../api/departamentosApi';
-import { empresasApi } from '../../../api/empresasApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { departamentosApi, empresasApi } from '../../../api/empresasApi';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { BotonAccion, BotonesFormulario, ConfirmarBaja } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { PERMISOS } from '../../../rutas/itemsMenu';
-import type { EmpresaResponse } from '../../../tipos/autenticacion';
 import type {
     DepartamentoAdminResponse,
     GuardarDepartamentoRequest,
-} from '../../../tipos/departamentos';
+} from '../../../tipos/empresas';
+import type { EmpresaResponse } from '../../../tipos/usuarios';
 
 const FORMULARIO_VACIO = {
     empresaId: '',
@@ -24,20 +22,6 @@ const FORMULARIO_VACIO = {
 
 type Formulario = typeof FORMULARIO_VACIO;
 
-/**
- * Organigrama departamental (CU-001-009).
- *
- * Es la misma pantalla para los dos alcances: con
- * Departamento.VerTodasLasEmpresas se ven los departamentos de todas las
- * empresas y hay que elegir a cuál pertenece cada uno; sin ese permiso el
- * backend acota todo a la empresa del usuario y el selector sobra.
- *
- * Como en el ABM de Idiomas, acá sí se muestran los dados de baja: dar de baja
- * un departamento no borra nada y tiene que poder reactivarse.
- *
- * Un departamento con empleados asignados no se puede dar de baja; el backend
- * responde 409 y el mensaje se muestra tal cual.
- */
 export function AdminDepartamentos() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -51,7 +35,6 @@ export function AdminDepartamentos() {
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
-    /** Fuerza releer el listado después de guardar, activar o dar de baja. */
     const [recarga, setRecarga] = useState(0);
     const [guardando, setGuardando] = useState(false);
 
@@ -60,11 +43,7 @@ export function AdminDepartamentos() {
     const puedeDarDeBaja = tienePermiso(PERMISOS.departamentoBaja);
     const alcanceTotal = tienePermiso(PERMISOS.departamentoVerTodasLasEmpresas);
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         departamentosApi
@@ -76,7 +55,6 @@ export function AdminDepartamentos() {
             .finally(() => setCargando(false));
     }, [recarga, mensajeDeError]);
 
-    // Sin alcance global la empresa no se elige: el backend impone la propia.
     useEffect(() => {
         if (!alcanceTotal) {
             return;
@@ -85,8 +63,6 @@ export function AdminDepartamentos() {
         empresasApi.listar().then(setEmpresas).catch(() => setEmpresas([]));
     }, [alcanceTotal]);
 
-    // El filtro es en cliente a propósito: un organigrama son decenas de filas
-    // y ya están todas en memoria.
     const visibles = useMemo(() => {
         const termino = busqueda.trim().toLowerCase();
 
@@ -239,10 +215,7 @@ export function AdminDepartamentos() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.departamentos.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeUsarFormulario && (
                 <section className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
@@ -253,8 +226,6 @@ export function AdminDepartamentos() {
                     </h2>
 
                     <form onSubmit={guardar} noValidate className="mt-4 flex flex-col gap-4">
-                        {/* La empresa solo se elige al crear: un departamento no se
-                            puede mover de empresa sin arrastrar a sus empleados. */}
                         {alcanceTotal && editandoId === null && (
                             <>
                                 <CampoSelect
@@ -309,23 +280,12 @@ export function AdminDepartamentos() {
                             />
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
-                            <Boton type="submit" cargando={guardando}>
-                                {editandoId === null
-                                    ? t('admin.departamentos.formulario.crear')
-                                    : t('comun.boton.guardarCambios')}
-                            </Boton>
-
-                            {editandoId !== null && (
-                                <button
-                                    type="button"
-                                    onClick={limpiar}
-                                    className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                                >
-                                    {t('comun.boton.cancelar')}
-                                </button>
-                            )}
-                        </div>
+                        <BotonesFormulario
+                            editando={editandoId !== null}
+                            guardando={guardando}
+                            textoCrear={t('admin.departamentos.formulario.crear')}
+                            onCancelar={limpiar}
+                        />
                     </form>
                 </section>
             )}
@@ -367,57 +327,31 @@ export function AdminDepartamentos() {
                             acciones={(fila) => (
                                 <div className="flex justify-end gap-2">
                                     {puedeModificar && (
-                                        <button
-                                            type="button"
-                                            onClick={() => editar(fila)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => editar(fila)}>
                                             {t('comun.boton.editar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeModificar && (
-                                        <button
-                                            type="button"
+                                        <BotonAccion
+                                            variante="primario"
                                             onClick={() => void cambiarEstado(fila)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-primario hover:bg-info-fondo"
                                         >
                                             {fila.activo
                                                 ? t('comun.boton.desactivar')
                                                 : t('comun.boton.activar')}
-                                        </button>
+                                        </BotonAccion>
                                     )}
 
                                     {puedeDarDeBaja &&
                                         fila.activo &&
-                                        (confirmandoBaja === fila.departamentoId ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => void darDeBaja(fila)}
-                                                    className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                                >
-                                                    {t('comun.boton.confirmarBaja')}
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setConfirmandoBaja(null)}
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                >
-                                                    {t('comun.boton.no')}
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setConfirmandoBaja(fila.departamentoId)
-                                                }
-                                                className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
-                                            >
-                                                {t('comun.boton.darDeBaja')}
-                                            </button>
-                                        ))}
+                                        (<ConfirmarBaja
+                                            confirmando={confirmandoBaja === fila.departamentoId}
+                                            onPedir={() =>
+                                                    setConfirmandoBaja(fila.departamentoId)}
+                                            onConfirmar={() => void darDeBaja(fila)}
+                                            onCancelar={() => setConfirmandoBaja(null)}
+                                        />)}
                                 </div>
                             )}
                         />

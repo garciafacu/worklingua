@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
+using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
@@ -10,16 +10,9 @@ namespace worklingua.Server.BLL
         private const int LongitudMaximaRazonSocial = 150;
         private const int LongitudMaximaEmail = 120;
 
-        MPPEmpresa oMPPEmp;
-        MPPUsuario oMPPUsu;
-        BLLSeguridad oBLLSeg;
-
-        public BLLEmpresa()
-        {
-            oMPPEmp = new MPPEmpresa();
-            oMPPUsu = new MPPUsuario();
-            oBLLSeg = new BLLSeguridad();
-        }
+        MPPEmpresa oMPPEmp = new MPPEmpresa();
+        MPPUsuario oMPPUsu = new MPPUsuario();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
 
         public List<BEEmpresa> ListarAdministracion(BESesion oSesionBE)
         {
@@ -71,22 +64,7 @@ namespace worklingua.Server.BLL
 
         private int? EmpresaQueLimita(BESesion oSesionBE)
         {
-            if (oBLLSeg.Tiene(oSesionBE.UsuarioId, Permisos.EmpresaVerTodasLasEmpresas))
-            {
-                return null;
-            }
-
-            BEUsuario oFiltroBE = new BEUsuario();
-            oFiltroBE.UsuarioId = oSesionBE.UsuarioId;
-
-            BEUsuario oUsuarioBE = oMPPUsu.ListarObjeto(oFiltroBE);
-
-            if (oUsuarioBE == null)
-            {
-                throw new ExcepcionNegocio(TipoErrorNegocio.SesionInvalida, "El usuario de la sesión no existe.");
-            }
-
-            return oUsuarioBE.EmpresaId;
+            return oBLLSeg.EmpresaQueLimita(oSesionBE, Permisos.EmpresaVerTodasLasEmpresas);
         }
 
         private void ExigirAlcanceTotal(BESesion oSesionBE, string mensaje)
@@ -109,6 +87,21 @@ namespace worklingua.Server.BLL
             List<BEEmpresa> ListaEmpresaBE = oMPPEmp.ListarSeleccionables();
 
             return ListaEmpresaBE == null ? new List<BEEmpresa>() : ListaEmpresaBE;
+        }
+
+        public BEEmpresa ObtenerSeleccionable(BEEmpresa Objeto)
+        {
+            foreach (BEEmpresa oEmpresaBE in ListarSeleccionables())
+            {
+                if (oEmpresaBE.EmpresaId == Objeto.EmpresaId)
+                {
+                    return oEmpresaBE;
+                }
+            }
+
+            throw new ExcepcionNegocio(
+                TipoErrorNegocio.Validacion,
+                "La empresa seleccionada no existe o no está disponible para asignar usuarios.");
         }
 
         public BEEmpresa ListarObjeto(BEEmpresa Objeto)
@@ -239,33 +232,19 @@ namespace worklingua.Server.BLL
 
         private void Validar(BEEmpresa Objeto)
         {
-            Objeto.RazonSocial = Normalizar(Objeto.RazonSocial);
-            Objeto.Email = Normalizar(Objeto.Email);
-            Objeto.CUIT = Normalizar(Objeto.CUIT);
-            Objeto.Telefono = Normalizar(Objeto.Telefono);
-            Objeto.Direccion = Normalizar(Objeto.Direccion);
-            Objeto.Ciudad = Normalizar(Objeto.Ciudad);
-            Objeto.Provincia = Normalizar(Objeto.Provincia);
-            Objeto.Pais = Normalizar(Objeto.Pais);
+            Objeto.RazonSocial = ServicioTexto.Normalizar(Objeto.RazonSocial);
+            Objeto.Email = ServicioTexto.Normalizar(Objeto.Email);
+            Objeto.CUIT = ServicioTexto.Normalizar(Objeto.CUIT);
+            Objeto.Telefono = ServicioTexto.Normalizar(Objeto.Telefono);
+            Objeto.Direccion = ServicioTexto.Normalizar(Objeto.Direccion);
+            Objeto.Ciudad = ServicioTexto.Normalizar(Objeto.Ciudad);
+            Objeto.Provincia = ServicioTexto.Normalizar(Objeto.Provincia);
+            Objeto.Pais = ServicioTexto.Normalizar(Objeto.Pais);
 
-            if (string.IsNullOrWhiteSpace(Objeto.RazonSocial))
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion, "La razón social es obligatoria.");
-            }
-
-            if (Objeto.RazonSocial.Length > LongitudMaximaRazonSocial)
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "La razón social no puede superar los " + LongitudMaximaRazonSocial + " caracteres.");
-            }
-
-            if (string.IsNullOrWhiteSpace(Objeto.Email))
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion, "El correo de la empresa es obligatorio.");
-            }
+            ReglasNegocio.ExigirTexto(Objeto.RazonSocial, "La razón social es obligatoria.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.RazonSocial, LongitudMaximaRazonSocial,
+                "La razón social no puede superar los " + LongitudMaximaRazonSocial + " caracteres.");
+            ReglasNegocio.ExigirTexto(Objeto.Email, "El correo de la empresa es obligatorio.");
 
             if (Objeto.Email.Length > LongitudMaximaEmail || !Objeto.Email.Contains('@'))
             {
@@ -283,10 +262,7 @@ namespace worklingua.Server.BLL
 
         private void ValidarCuit(string cuit)
         {
-            if (string.IsNullOrWhiteSpace(cuit))
-            {
-                throw new ExcepcionNegocio(TipoErrorNegocio.Validacion, "El CUIT es obligatorio.");
-            }
+            ReglasNegocio.ExigirTexto(cuit, "El CUIT es obligatorio.");
 
             if (cuit.Length != LongitudCuit)
             {
@@ -305,14 +281,283 @@ namespace worklingua.Server.BLL
             }
         }
 
-        private string Normalizar(string texto)
+        public void Validar(BEGuardarEmpresa Objeto)
         {
-            if (string.IsNullOrWhiteSpace(texto))
+            ReglasNegocio.ExigirTexto(Objeto.RazonSocial, "La razón social es obligatoria.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.RazonSocial, 150,
+                "La razón social no puede superar los 150 caracteres.");
+
+            ReglasNegocio.ExigirTexto(Objeto.CUIT, "El CUIT es obligatorio.");
+            ReglasNegocio.ExigirLargo(Objeto.CUIT, 11, 11, "El CUIT debe tener 11 dígitos, sin guiones.");
+
+            ReglasNegocio.ExigirTexto(Objeto.Email, "El correo de la empresa es obligatorio.");
+            ReglasNegocio.ExigirEmail(Objeto.Email, "El correo no tiene un formato válido.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Email, 120, "El correo no puede superar los 120 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Telefono, 30, "El teléfono no puede superar los 30 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Direccion, 250, "La dirección no puede superar los 250 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Ciudad, 80, "La ciudad no puede superar los 80 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Provincia, 80, "La provincia no puede superar los 80 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Pais, 80, "El país no puede superar los 80 caracteres.");
+        }
+    }
+
+    public class BLLDepartamento
+    {
+        private const int LongitudMaximaNombre = 100;
+        private const int LongitudMaximaDescripcion = 250;
+
+        MPPDepartamento oMPPDep = new MPPDepartamento();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
+        BLLEmpresa oBLLEmp = new BLLEmpresa();
+
+        public List<BEDepartamento> ListarAdministracion(BESesion oSesionBE)
+        {
+            BEDepartamento oFiltroBE = new BEDepartamento();
+            int? empresaQueLimita = EmpresaQueLimita(oSesionBE);
+
+            if (empresaQueLimita.HasValue)
+            {
+                oFiltroBE.EmpresaId = empresaQueLimita.Value;
+            }
+
+            List<BEDepartamento> ListaDepartamentoBE = oMPPDep.ListarTodoConBajas(oFiltroBE);
+
+            return ListaDepartamentoBE == null ? new List<BEDepartamento>() : ListaDepartamentoBE;
+        }
+
+        public List<BEDepartamento> ListarAsignables(BEDepartamento Objeto, BESesion oSesionBE)
+        {
+            int? empresaQueLimita = EmpresaQueLimita(oSesionBE);
+
+            if (empresaQueLimita.HasValue)
+            {
+                Objeto.EmpresaId = empresaQueLimita.Value;
+            }
+
+            if (Objeto.EmpresaId == 0)
+            {
+                return new List<BEDepartamento>();
+            }
+
+            return ListarActivos(Objeto);
+        }
+
+        private List<BEDepartamento> ListarActivos(BEDepartamento Objeto)
+        {
+            List<BEDepartamento> ListaDepartamentoBE = oMPPDep.ListarTodo(Objeto);
+
+            return ListaDepartamentoBE == null ? new List<BEDepartamento>() : ListaDepartamentoBE;
+        }
+
+        public BEDepartamento ListarObjeto(BEDepartamento Objeto, BESesion oSesionBE)
+        {
+            BEDepartamento oDepartamentoBE = ListarObjeto(Objeto);
+            int? empresaQueLimita = EmpresaQueLimita(oSesionBE);
+
+            if (empresaQueLimita.HasValue && oDepartamentoBE.EmpresaId != empresaQueLimita.Value)
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "El departamento no existe.");
+            }
+
+            return oDepartamentoBE;
+        }
+
+        public BEDepartamento Guardar(BEDepartamento Objeto, BESesion oSesionBE)
+        {
+            Validar(Objeto);
+
+            bool esAlta = Objeto.DepartamentoId == 0;
+            int? empresaQueLimita = EmpresaQueLimita(oSesionBE);
+
+            if (esAlta)
+            {
+                if (empresaQueLimita.HasValue)
+                {
+                    Objeto.EmpresaId = empresaQueLimita.Value;
+                }
+
+                if (Objeto.EmpresaId == 0)
+                {
+                    throw new ExcepcionNegocio(
+                        TipoErrorNegocio.Validacion, "Elegí la empresa del departamento.");
+                }
+
+                ExigirEmpresaExistente(Objeto.EmpresaId);
+            }
+            else
+            {
+                Objeto.EmpresaId = ListarObjeto(Objeto, oSesionBE).EmpresaId;
+            }
+
+            if (ExisteOtroConNombre(Objeto))
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto, "Ya existe un departamento con ese nombre.");
+            }
+
+            Objeto.Activo = true;
+            Objeto.DepartamentoId = oMPPDep.Guardar(Objeto);
+
+            return ListarObjeto(Objeto);
+        }
+
+        public bool Baja(BEDepartamento Objeto, BESesion oSesionBE)
+        {
+            BEDepartamento oDepartamentoBE = ListarObjeto(Objeto, oSesionBE);
+
+            if (oDepartamentoBE.Activo != true)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto, "El departamento ya está dado de baja.");
+            }
+
+            ExigirSinEmpleados(oDepartamentoBE);
+
+            return oMPPDep.Baja(Objeto);
+        }
+
+        public bool CambiarEstado(BEDepartamento Objeto, BESesion oSesionBE)
+        {
+            BEDepartamento oDepartamentoBE = ListarObjeto(Objeto, oSesionBE);
+
+            bool activar = Objeto.Activo.HasValue && Objeto.Activo.Value;
+
+            if (oDepartamentoBE.Activo == activar)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto,
+                    activar ? "El departamento ya está activo." : "El departamento ya está desactivado.");
+            }
+
+            if (!activar)
+            {
+                ExigirSinEmpleados(oDepartamentoBE);
+            }
+
+            if (activar && ExisteOtroConNombre(oDepartamentoBE))
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto, "Ya existe un departamento con ese nombre.");
+            }
+
+            return oMPPDep.CambiarEstado(Objeto);
+        }
+
+        public int? ResolverParaUsuario(int? departamentoId, int empresaId)
+        {
+            if (!departamentoId.HasValue || departamentoId.Value == 0)
             {
                 return null;
             }
 
-            return texto.Trim();
+            BEDepartamento oFiltroBE = new BEDepartamento();
+            oFiltroBE.DepartamentoId = departamentoId.Value;
+
+            BEDepartamento oDepartamentoBE = oMPPDep.ListarObjeto(oFiltroBE);
+
+            if (oDepartamentoBE == null || oDepartamentoBE.Activo != true ||
+                oDepartamentoBE.EmpresaId != empresaId)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Validacion,
+                    "El departamento elegido no existe en el organigrama de la empresa.");
+            }
+
+            return oDepartamentoBE.DepartamentoId;
+        }
+
+        public BEDepartamento ListarObjeto(BEDepartamento Objeto)
+        {
+            BEDepartamento oDepartamentoBE = oMPPDep.ListarObjeto(Objeto);
+
+            if (oDepartamentoBE == null)
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "El departamento no existe.");
+            }
+
+            return oDepartamentoBE;
+        }
+
+        private void ExigirEmpresaExistente(int empresaId)
+        {
+            foreach (BEEmpresa oEmpresaBE in oBLLEmp.ListarTodo())
+            {
+                if (oEmpresaBE.EmpresaId == empresaId)
+                {
+                    return;
+                }
+            }
+
+            throw new ExcepcionNegocio(
+                TipoErrorNegocio.Validacion, "La empresa seleccionada no existe.");
+        }
+
+        private void ExigirSinEmpleados(BEDepartamento oDepartamentoBE)
+        {
+            if (oDepartamentoBE.Empleados > 0)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto,
+                    "No se puede dar de baja un departamento con empleados asignados: " +
+                    "primero reasignalos desde Usuarios.");
+            }
+        }
+
+        private int? EmpresaQueLimita(BESesion oSesionBE)
+        {
+            return oBLLSeg.EmpresaQueLimita(oSesionBE, Permisos.DepartamentoVerTodasLasEmpresas);
+        }
+
+        private bool ExisteOtroConNombre(BEDepartamento Objeto)
+        {
+            BEDepartamento oFiltroBE = new BEDepartamento();
+            oFiltroBE.EmpresaId = Objeto.EmpresaId;
+
+            foreach (BEDepartamento oDepartamentoBE in ListarActivos(oFiltroBE))
+            {
+                if (oDepartamentoBE.DepartamentoId == Objeto.DepartamentoId)
+                {
+                    continue;
+                }
+
+                if (string.Equals(oDepartamentoBE.Nombre, Objeto.Nombre, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void Validar(BEDepartamento Objeto)
+        {
+            Objeto.Nombre = ServicioTexto.Normalizar(Objeto.Nombre);
+            Objeto.Descripcion = ServicioTexto.Normalizar(Objeto.Descripcion);
+
+            if (string.IsNullOrEmpty(Objeto.Nombre))
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Validacion, "El nombre del departamento es obligatorio.");
+            }
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Nombre, LongitudMaximaNombre,
+                "El nombre no puede superar los " + LongitudMaximaNombre + " caracteres.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, LongitudMaximaDescripcion,
+                "La descripción no puede superar los " + LongitudMaximaDescripcion + " caracteres.");
+        }
+
+        public void Validar(BEGuardarDepartamento Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.Nombre, "El nombre del departamento es obligatorio.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Nombre, 100, "El nombre no puede superar los 100 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, 250,
+                "La descripción no puede superar los 250 caracteres.");
         }
     }
 }

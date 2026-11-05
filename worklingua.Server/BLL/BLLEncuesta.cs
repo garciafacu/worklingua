@@ -1,14 +1,9 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
+using worklingua.Server.Services;
 
 namespace worklingua.Server.BLL
 {
-    /// <summary>
-    /// Encuestas de una pregunta con fecha de vencimiento (Formulario, puntos 3 y
-    /// 10). Responden los usuarios con sesión, una sola vez cada uno, y el
-    /// resultado se devuelve en el momento para graficarlo.
-    /// </summary>
     public class BLLEncuesta
     {
         private const int LongitudMaximaPregunta = 300;
@@ -17,22 +12,10 @@ namespace worklingua.Server.BLL
         private const int MinimoOpciones = 2;
         private const int MaximoOpciones = 10;
 
-        MPPEncuesta oMPPEnc;
-        BLLIdioma oBLLIdi;
-        BLLBitacora oBLLBit;
+        MPPEncuesta oMPPEnc = new MPPEncuesta();
+        BLLIdioma oBLLIdi = new BLLIdioma();
+        BLLBitacora oBLLBit = new BLLBitacora();
 
-        public BLLEncuesta()
-        {
-            oMPPEnc = new MPPEncuesta();
-            oBLLIdi = new BLLIdioma();
-            oBLLBit = new BLLBitacora();
-        }
-
-        /// <summary>
-        /// Encuestas vigentes en el idioma de la interfaz, con el español como
-        /// respaldo. Mientras el usuario no responde una encuesta vigente no
-        /// recibe el detalle de los votos, para no condicionar su respuesta.
-        /// </summary>
         public List<BEEncuestaConDetalle> ListarVigentes(BEFiltroEncuesta Objeto, BESesion oSesionBE)
         {
             BEIdioma oIdiomaBE = ResolverIdioma(Objeto.Idioma);
@@ -53,7 +36,8 @@ namespace worklingua.Server.BLL
 
                 if (oBaseBE != null && oBaseBE.IdiomaId != oIdiomaBE.IdiomaId)
                 {
-                    ListaEncuestaBE = oMPPEnc.Listar(new BEFiltroEncuesta(null, oBaseBE.IdiomaId, hoy));
+                    ListaEncuestaBE =
+                        oMPPEnc.Listar(new BEFiltroEncuesta(null, oBaseBE.IdiomaId, hoy));
                 }
             }
 
@@ -81,7 +65,7 @@ namespace worklingua.Server.BLL
             return ListaEncuestaBE;
         }
 
-        public BEEncuestaConDetalle ListarObjeto(BEEncuesta Objeto)
+        private BEEncuestaConDetalle ListarObjeto(BEEncuesta Objeto)
         {
             List<BEEncuestaConDetalle> ListaEncuestaBE =
                 oMPPEnc.Listar(new BEFiltroEncuesta(Objeto.EncuestaId, null, null));
@@ -96,11 +80,6 @@ namespace worklingua.Server.BLL
             return ListaEncuestaBE[0];
         }
 
-        /// <summary>
-        /// Alta y modificación. Las opciones solo se reemplazan mientras la
-        /// encuesta no tenga respuestas: cambiarlas después dejaría los votos
-        /// apuntando a textos distintos de los que se votaron.
-        /// </summary>
         public BEEncuestaConDetalle Guardar(BEEncuesta Objeto, List<string> Opciones, BESesion oSesionBE)
         {
             bool esAlta = Objeto.EncuestaId == 0;
@@ -124,13 +103,8 @@ namespace worklingua.Server.BLL
             }
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oSesionBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloEncuesta,
-                esAlta ? "Alta" : "Modificacion",
-                "Encuesta " + Objeto.EncuestaId + " (" + Objeto.Pregunta + ").",
-                BLLBitacora.NivelInformativo));
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloEncuesta, esAlta ? "Alta" : "Modificacion",
+                "Encuesta " + Objeto.EncuestaId + " (" + Objeto.Pregunta + ").", BLLBitacora.NivelInformativo));
 
             return ListarObjeto(Objeto);
         }
@@ -147,21 +121,13 @@ namespace worklingua.Server.BLL
             bool resultado = oMPPEnc.Baja(Objeto);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oSesionBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloEncuesta,
-                "Baja",
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloEncuesta, "Baja",
                 "Baja de la encuesta " + Objeto.EncuestaId + " (" + oDetalleBE.Encuesta.Pregunta + ").",
                 BLLBitacora.NivelInformativo));
 
             return resultado;
         }
 
-        /// <summary>
-        /// Registra el voto y devuelve la encuesta con los resultados ya
-        /// actualizados, que es lo que grafica la pantalla.
-        /// </summary>
         public BEEncuestaConDetalle Responder(BEResponderEncuesta Objeto, BESesion oSesionBE)
         {
             BEEncuesta oFiltroBE = new BEEncuesta();
@@ -189,13 +155,8 @@ namespace worklingua.Server.BLL
             oMPPEnc.GuardarRespuesta(Objeto, oSesionBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oSesionBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloEncuesta,
-                "Respuesta",
-                "Respuesta a la encuesta " + Objeto.EncuestaId + ".",
-                BLLBitacora.NivelInformativo));
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloEncuesta, "Respuesta",
+                "Respuesta a la encuesta " + Objeto.EncuestaId + ".", BLLBitacora.NivelInformativo));
 
             List<BEEncuestaConDetalle> ListaEncuestaBE =
                 oMPPEnc.Listar(new BEFiltroEncuesta(Objeto.EncuestaId, null, null));
@@ -205,10 +166,6 @@ namespace worklingua.Server.BLL
             return ListaEncuestaBE[0];
         }
 
-        /// <summary>
-        /// Carga en cada encuesta sus opciones, la vigencia y, si hay sesión, la
-        /// opción que eligió ese usuario.
-        /// </summary>
         private void Completar(List<BEEncuestaConDetalle> ListaEncuestaBE, BESesion oSesionBE)
         {
             List<BEOpcionEncuesta> ListaOpcionBE = oMPPEnc.ListarOpciones(new BEFiltroEncuesta());
@@ -323,22 +280,13 @@ namespace worklingua.Server.BLL
 
         private void Validar(BEEncuesta Objeto, List<string> Opciones, bool exigirOpciones)
         {
-            Objeto.Pregunta = Recortar(Objeto.Pregunta);
-            Objeto.Descripcion = Recortar(Objeto.Descripcion);
+            Objeto.Pregunta = ServicioTexto.Normalizar(Objeto.Pregunta);
+            Objeto.Descripcion = ServicioTexto.Normalizar(Objeto.Descripcion);
 
-            if (Objeto.Pregunta == null || Objeto.Pregunta.Length > LongitudMaximaPregunta)
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "La pregunta es obligatoria y no puede superar los " + LongitudMaximaPregunta + " caracteres.");
-            }
-
-            if (Objeto.Descripcion != null && Objeto.Descripcion.Length > LongitudMaximaDescripcion)
-            {
-                throw new ExcepcionNegocio(
-                    TipoErrorNegocio.Validacion,
-                    "El texto de ayuda no puede superar los " + LongitudMaximaDescripcion + " caracteres.");
-            }
+            ReglasNegocio.ExigirConLargoMaximo(Objeto.Pregunta, LongitudMaximaPregunta,
+                "La pregunta es obligatoria y no puede superar los " + LongitudMaximaPregunta + " caracteres.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, LongitudMaximaDescripcion,
+                "El texto de ayuda no puede superar los " + LongitudMaximaDescripcion + " caracteres.");
 
             if (Objeto.FechaVencimiento < Objeto.FechaDesde)
             {
@@ -363,12 +311,8 @@ namespace worklingua.Server.BLL
 
             foreach (string texto in Opciones)
             {
-                if (texto.Length > LongitudMaximaOpcion)
-                {
-                    throw new ExcepcionNegocio(
-                        TipoErrorNegocio.Validacion,
-                        "Cada opción puede tener hasta " + LongitudMaximaOpcion + " caracteres.");
-                }
+                ReglasNegocio.ExigirLargoMaximo(texto, LongitudMaximaOpcion,
+                    "Cada opción puede tener hasta " + LongitudMaximaOpcion + " caracteres.");
             }
         }
 
@@ -397,9 +341,24 @@ namespace worklingua.Server.BLL
             return oBLLIdi.ResolverPorCodigo(oFiltroBE);
         }
 
-        private string Recortar(string texto)
+        public void Validar(BEResponderEncuesta Objeto)
         {
-            return string.IsNullOrWhiteSpace(texto) ? null : texto.Trim();
+            ReglasNegocio.ExigirRango(Objeto.OpcionEncuestaId, 1, int.MaxValue, "Elegí una opción para responder.");
+        }
+
+        public void Validar(BEGuardarEncuesta Objeto)
+        {
+            ReglasNegocio.ExigirRango(Objeto.IdiomaId, 1, int.MaxValue, "Elegí el idioma de la encuesta.");
+
+            ReglasNegocio.ExigirTexto(Objeto.Pregunta, "La pregunta es obligatoria.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Pregunta, 300, "La pregunta no puede superar los 300 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Descripcion, 600,
+                "El texto de ayuda no puede superar los 600 caracteres.");
+
+            ReglasNegocio.ExigirValor(Objeto.FechaDesde, "La fecha de inicio es obligatoria.");
+
+            ReglasNegocio.ExigirValor(Objeto.FechaVencimiento, "La fecha de vencimiento es obligatoria.");
         }
     }
 }

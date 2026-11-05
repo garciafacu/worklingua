@@ -1,21 +1,19 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { alertasApi } from '../../../api/alertasApi';
-import { ErrorApi } from '../../../api/clienteHttp';
-import { departamentosApi } from '../../../api/departamentosApi';
-import { empresasApi } from '../../../api/empresasApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { Boton } from '../../../componentes/Boton';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { EtiquetaEstado } from '../../../componentes/EtiquetaEstado';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { departamentosApi, empresasApi } from '../../../api/empresasApi';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { EtiquetaEstado } from '../../../componentes/Basicos';
+import { Boton, BotonAccion } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { PERMISOS } from '../../../rutas/itemsMenu';
-import type { EmpresaResponse } from '../../../tipos/autenticacion';
-import type { DepartamentoResponse } from '../../../tipos/departamentos';
 import type { AlertaResponse } from '../../../tipos/alertas';
+import type { DepartamentoResponse } from '../../../tipos/empresas';
+import type { EmpresaResponse } from '../../../tipos/usuarios';
 
 const DIAS_POR_DEFECTO = 15;
 
@@ -31,20 +29,6 @@ function formularioInicial() {
 
 type Formulario = ReturnType<typeof formularioInicial>;
 
-/**
- * Alertas preventivas de deserción (CU-001-010).
- *
- * Una alerta es una regla: título, mensaje y una condición de inactividad sobre
- * un grupo de empleados. Guardarla la emite en el acto, y queda en el panel
- * para volver a emitirla o desactivarla.
- *
- * Es la misma pantalla para los dos alcances: con Alerta.VerTodasLasEmpresas se
- * elige la empresa, y sin ese permiso el backend acota todo a la propia.
- *
- * El formulario muestra a cuántos empleados alcanzaría la condición antes de
- * emitir. Es una consulta de solo lectura: quien decide si hay destinatarios
- * sigue siendo el backend, que vuelve a verificarlo al guardar.
- */
 export function AdminAlertas() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -61,7 +45,6 @@ export function AdminAlertas() {
     const [exito, setExito] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
     const [guardando, setGuardando] = useState(false);
-    /** Fuerza releer el panel después de emitir o cambiar de estado. */
     const [recarga, setRecarga] = useState(0);
 
     const puedeCrear = tienePermiso(PERMISOS.alertaAlta);
@@ -69,11 +52,7 @@ export function AdminAlertas() {
     const puedeDarDeBaja = tienePermiso(PERMISOS.alertaBaja);
     const alcanceTotal = tienePermiso(PERMISOS.alertaVerTodasLasEmpresas);
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         if (!alcanceTotal) {
@@ -94,8 +73,6 @@ export function AdminAlertas() {
             .finally(() => setCargando(false));
     }, [recarga, mensajeDeError]);
 
-    // Los departamentos del selector siguen a la empresa elegida. Sin alcance
-    // total el backend ya devuelve los de la empresa propia e ignora el id.
     const empresaElegida = formulario.empresaId === '' ? 0 : Number(formulario.empresaId);
 
     useEffect(() => {
@@ -109,8 +86,6 @@ export function AdminAlertas() {
             .catch(() => setDepartamentos([]));
     }, [mostrandoFormulario, alcanceTotal, empresaElegida]);
 
-    // El alcance se recalcula cuando cambian los criterios, no al tipear el
-    // mensaje: es lo único que lo afecta.
     const diasElegidos = Number(formulario.diasInactividad);
     const departamentoElegido = formulario.departamentoId === '' ? 0 : Number(formulario.departamentoId);
 
@@ -247,10 +222,7 @@ export function AdminAlertas() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.alertas.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
             {puedeCrear && !mostrandoFormulario && (
                 <div className="mt-6">
@@ -262,8 +234,6 @@ export function AdminAlertas() {
 
             {mostrandoFormulario && (
                 <form onSubmit={guardar} className="mt-6 rounded-2xl border border-borde bg-superficie p-6">
-                    {/* Sin alcance global la empresa no se elige: el backend
-                        impone la propia, así que el campo solo confundiría. */}
                     {alcanceTotal && (
                         <div className="fila">
                             <CampoSelect
@@ -362,13 +332,9 @@ export function AdminAlertas() {
                         <Boton type="submit" cargando={guardando}>
                             {t('admin.alertas.guardar')}
                         </Boton>
-                        <button
-                            type="button"
-                            onClick={cerrarFormulario}
-                            className="rounded-lg border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-texto hover:bg-fondo"
-                        >
+                        <BotonAccion grande onClick={cerrarFormulario}>
                             {t('admin.alertas.cancelar')}
-                        </button>
+                        </BotonAccion>
                     </div>
                 </form>
             )}
@@ -386,13 +352,9 @@ export function AdminAlertas() {
                         acciones={(fila) => (
                             <div className="flex flex-wrap justify-end gap-2">
                                 {puedeEmitir && fila.activo && (
-                                    <button
-                                        type="button"
-                                        onClick={() => void emitir(fila)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion onClick={() => void emitir(fila)}>
                                         {t('admin.alertas.emitir')}
-                                    </button>
+                                    </BotonAccion>
                                 )}
 
                                 {puedeDarDeBaja && fila.activo && confirmandoBaja !== fila.alertaId && (
@@ -417,24 +379,16 @@ export function AdminAlertas() {
                                         >
                                             {t('admin.alertas.desactivar')}
                                         </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setConfirmandoBaja(null)}
-                                            className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                        >
+                                        <BotonAccion onClick={() => setConfirmandoBaja(null)}>
                                             {t('admin.alertas.cancelar')}
-                                        </button>
+                                        </BotonAccion>
                                     </>
                                 )}
 
                                 {puedeDarDeBaja && !fila.activo && (
-                                    <button
-                                        type="button"
-                                        onClick={() => void cambiarEstado(fila, true)}
-                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                    >
+                                    <BotonAccion onClick={() => void cambiarEstado(fila, true)}>
                                         {t('admin.alertas.activar')}
-                                    </button>
+                                    </BotonAccion>
                                 )}
                             </div>
                         )}

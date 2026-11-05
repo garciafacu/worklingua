@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { autenticacionApi } from '../api/autenticacionApi';
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { ErrorApi, establecerTokenSesion } from '../api/clienteHttp';
-import type { UsuarioSesion } from '../tipos/autenticacion';
-import { SesionContexto, type EstadoSesion } from './sesionContexto';
+import { autenticacionApi } from '../api/usuariosApi';
+import type { UsuarioSesion } from '../tipos/usuarios';
+import { type EstadoSesion, SesionContexto } from './sesionContexto';
 
 const CLAVE_ALMACENAMIENTO = 'worklingua.sesion';
 

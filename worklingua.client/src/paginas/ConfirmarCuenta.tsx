@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
-import { autenticacionApi } from '../api/autenticacionApi';
 import { ErrorApi } from '../api/clienteHttp';
+import { autenticacionApi } from '../api/usuariosApi';
 import { Alerta } from '../componentes/Alerta';
 import { TarjetaAuth } from '../componentes/TarjetaAuth';
 import { conPlanPendiente, planRecordado } from '../rutas/contratacionPendiente';

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using worklingua.Server.BE;
 using worklingua.Server.MPP;
 using worklingua.Server.Services;
@@ -10,34 +9,18 @@ namespace worklingua.Server.BLL
         public const int LongitudMaximaNombre = 80;
         private static readonly DateOnly FechaNacimientoMinima = new DateOnly(1900, 1, 1);
 
-        MPPUsuario oMPPUsu;
-        BLLRol oBLLRol;
-        BLLSesion oBLLSes;
-        BLLTokenSeguridad oBLLTok;
-        BLLBitacora oBLLBit;
-        BLLSeguridad oBLLSeg;
-        BLLEmpresa oBLLEmp;
-        BLLSuscripcion oBLLSus;
-        BLLDepartamento oBLLDep;
-        BLLLicencia oBLLLic;
-        ServicioEmailCuenta oServicioEmail;
-        ServicioCaptcha oServicioCaptcha;
-
-        public BLLUsuario()
-        {
-            oMPPUsu = new MPPUsuario();
-            oBLLRol = new BLLRol();
-            oBLLSes = new BLLSesion();
-            oBLLTok = new BLLTokenSeguridad();
-            oBLLBit = new BLLBitacora();
-            oBLLSeg = new BLLSeguridad();
-            oBLLEmp = new BLLEmpresa();
-            oBLLSus = new BLLSuscripcion();
-            oBLLDep = new BLLDepartamento();
-            oBLLLic = new BLLLicencia();
-            oServicioEmail = new ServicioEmailCuenta();
-            oServicioCaptcha = new ServicioCaptcha();
-        }
+        MPPUsuario oMPPUsu = new MPPUsuario();
+        BLLRol oBLLRol = new BLLRol();
+        BLLSesion oBLLSes = new BLLSesion();
+        BLLTokenSeguridad oBLLTok = new BLLTokenSeguridad();
+        BLLBitacora oBLLBit = new BLLBitacora();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
+        BLLEmpresa oBLLEmp = new BLLEmpresa();
+        BLLSuscripcion oBLLSus = new BLLSuscripcion();
+        BLLDepartamento oBLLDep = new BLLDepartamento();
+        BLLLicencia oBLLLic = new BLLLicencia();
+        ServicioEmailCuenta oServicioEmail = new ServicioEmailCuenta();
+        ServicioCaptcha oServicioCaptcha = new ServicioCaptcha();
 
         public async Task<BEUsuario> Registrar(BERegistroUsuario Objeto)
         {
@@ -91,20 +74,12 @@ namespace worklingua.Server.BLL
             BETokenSeguridad oTokenBE = GenerarToken(oUsuarioBE.UsuarioId, BLLTokenSeguridad.TipoConfirmacion);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloEmpresa,
-                "Registro",
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloEmpresa, "Registro",
                 "Alta de " + oEmpresaBE.RazonSocial + " (CUIT " + oEmpresaBE.CUIT + ") desde el registro público.",
                 BLLBitacora.NivelInformativo));
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloUsuario,
-                "Registro",
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloUsuario, "Registro",
                 "Alta de " + oUsuarioBE.Email + " con rol " + oRolBE.Nombre + " en " + oEmpresaBE.RazonSocial + ".",
                 BLLBitacora.NivelInformativo));
 
@@ -232,12 +207,7 @@ namespace worklingua.Server.BLL
             BETokenSeguridad oTokenBE = GenerarToken(oUsuarioBE.UsuarioId, BLLTokenSeguridad.TipoInvitacion);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                modulo,
-                "Invitacion",
-                descripcion,
+                0, oUsuarioBE.UsuarioId, DateTime.Now, modulo, "Invitacion", descripcion,
                 BLLBitacora.NivelInformativo));
 
             EnviarInvitacion(oUsuarioBE, oTokenBE.Token);
@@ -258,13 +228,8 @@ namespace worklingua.Server.BLL
             BETokenSeguridad oTokenBE = GenerarToken(oUsuarioBE.UsuarioId, BLLTokenSeguridad.TipoInvitacion);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                modulo,
-                "InvitacionReenviada",
-                "Se reenvió la invitación a " + oUsuarioBE.Email + ".",
-                BLLBitacora.NivelInformativo));
+                0, oUsuarioBE.UsuarioId, DateTime.Now, modulo, "InvitacionReenviada",
+                "Se reenvió la invitación a " + oUsuarioBE.Email + ".", BLLBitacora.NivelInformativo));
 
             EnviarInvitacion(oUsuarioBE, oTokenBE.Token);
         }
@@ -280,13 +245,8 @@ namespace worklingua.Server.BLL
             oMPPUsu.ActivarCuenta(oUsuarioBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloUsuario,
-                "InvitacionCompletada",
-                "La cuenta de " + oUsuarioBE.Email + " quedó activa.",
-                BLLBitacora.NivelInformativo));
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloUsuario, "InvitacionCompletada",
+                "La cuenta de " + oUsuarioBE.Email + " quedó activa.", BLLBitacora.NivelInformativo));
 
             EnviarBienvenida(oUsuarioBE);
         }
@@ -334,11 +294,7 @@ namespace worklingua.Server.BLL
             oMPPUsu.ReemplazarRol(oUsuarioRolBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloUsuario,
-                "Modificacion",
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloUsuario, "Modificacion",
                 "Se actualizaron los datos de " + oUsuarioBE.Email + " (rol " + oRolBE.Nombre + ").",
                 BLLBitacora.NivelInformativo));
 
@@ -416,13 +372,8 @@ namespace worklingua.Server.BLL
             oMPPUsu.Guardar(Objeto);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                Objeto.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloOperador,
-                "Modificacion",
-                "Se actualizaron los datos del operador " + Objeto.Email + ".",
-                BLLBitacora.NivelInformativo));
+                0, Objeto.UsuarioId, DateTime.Now, BLLBitacora.ModuloOperador, "Modificacion",
+                "Se actualizaron los datos del operador " + Objeto.Email + ".", BLLBitacora.NivelInformativo));
 
             return ObtenerObligatorio(Objeto.UsuarioId);
         }
@@ -475,11 +426,7 @@ namespace worklingua.Server.BLL
             bool resultado = oMPPUsu.AsignarRol(Objeto);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloOperador,
-                "AsignarRol",
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloOperador, "AsignarRol",
                 "Se asignó el rol " + oRolBE.Nombre + " al operador " + oUsuarioBE.Email + ".",
                 BLLBitacora.NivelInformativo));
 
@@ -511,11 +458,7 @@ namespace worklingua.Server.BLL
             bool resultado = oMPPUsu.QuitarRol(Objeto);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloOperador,
-                "QuitarRol",
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloOperador, "QuitarRol",
                 "Se quitó el rol " + oRolBE.Nombre + " al operador " + oUsuarioBE.Email + ".",
                 BLLBitacora.NivelInformativo));
 
@@ -547,13 +490,8 @@ namespace worklingua.Server.BLL
             int licenciasRevocadas = oBLLLic.RevocarPorUsuario(oUsuarioBE.UsuarioId);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                modulo,
-                "Baja",
-                "Se desactivó la cuenta de " + oUsuarioBE.Email + " y se cerraron sus sesiones." +
-                (licenciasRevocadas > 0 ? " Se liberó su licencia." : ""),
+                0, oUsuarioBE.UsuarioId, DateTime.Now, modulo, "Baja",
+                "Se desactivó la cuenta de " + oUsuarioBE.Email + " y se cerraron sus sesiones." + (licenciasRevocadas > 0 ? " Se liberó su licencia." : ""),
                 BLLBitacora.NivelInformativo));
 
             return resultado;
@@ -702,19 +640,10 @@ namespace worklingua.Server.BLL
 
         private BEEmpresa ObtenerEmpresaSeleccionable(int empresaId)
         {
-            List<BEEmpresa> ListaEmpresaBE = oBLLEmp.ListarSeleccionables();
+            BEEmpresa oFiltroBE = new BEEmpresa();
+            oFiltroBE.EmpresaId = empresaId;
 
-            foreach (BEEmpresa oEmpresaBE in ListaEmpresaBE)
-            {
-                if (oEmpresaBE.EmpresaId == empresaId)
-                {
-                    return oEmpresaBE;
-                }
-            }
-
-            throw new ExcepcionNegocio(
-                TipoErrorNegocio.Validacion,
-                "La empresa seleccionada no existe o no está disponible para asignar usuarios.");
+            return oBLLEmp.ObtenerSeleccionable(oFiltroBE);
         }
 
         private BERol ObtenerRolObligatorio(int rolId)
@@ -778,13 +707,8 @@ namespace worklingua.Server.BLL
             oMPPUsu.ActivarCuenta(oUsuarioBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloUsuario,
-                "ConfirmacionCuenta",
-                "Cuenta de " + oUsuarioBE.Email + " confirmada.",
-                BLLBitacora.NivelInformativo));
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloUsuario, "ConfirmacionCuenta",
+                "Cuenta de " + oUsuarioBE.Email + " confirmada.", BLLBitacora.NivelInformativo));
 
             EnviarBienvenida(oUsuarioBE);
         }
@@ -798,12 +722,8 @@ namespace worklingua.Server.BLL
             if (oUsuarioBE == null || oSesionBE.UsuarioId != oUsuarioBE.UsuarioId)
             {
                 oBLLBit.Guardar(new BEBitacoraEvento(
-                    0,
-                    oUsuarioBE == null ? null : (int?)oUsuarioBE.UsuarioId,
-                    DateTime.Now,
-                    BLLBitacora.ModuloAutenticacion,
-                    "LoginFallido",
-                    "Intento fallido para " + Objeto.Email + ".",
+                    0, oUsuarioBE == null ? null : (int?)oUsuarioBE.UsuarioId, DateTime.Now,
+                    BLLBitacora.ModuloAutenticacion, "LoginFallido", "Intento fallido para " + Objeto.Email + ".",
                     BLLBitacora.NivelAdvertencia));
 
                 if (oUsuarioBE != null)
@@ -818,13 +738,8 @@ namespace worklingua.Server.BLL
             if (oUsuarioBE.Activo != true)
             {
                 oBLLBit.Guardar(new BEBitacoraEvento(
-                    0,
-                    oUsuarioBE.UsuarioId,
-                    DateTime.Now,
-                    BLLBitacora.ModuloAutenticacion,
-                    "LoginSinConfirmar",
-                    "Login rechazado: " + Objeto.Email + " no confirmó su cuenta.",
-                    "WARN"));
+                    0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloAutenticacion, "LoginSinConfirmar",
+                    "Login rechazado: " + Objeto.Email + " no confirmó su cuenta.", BLLBitacora.NivelAdvertencia));
 
                 throw new ExcepcionNegocio(
                     TipoErrorNegocio.CuentaNoConfirmada,
@@ -836,13 +751,8 @@ namespace worklingua.Server.BLL
             oMPPUsu.ActualizarUltimoAcceso(oUsuarioBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloAutenticacion,
-                "Login",
-                "Inicio de sesión de " + oUsuarioBE.Email + ".",
-                BLLBitacora.NivelInformativo));
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloAutenticacion, "Login",
+                "Inicio de sesión de " + oUsuarioBE.Email + ".", BLLBitacora.NivelInformativo));
 
             return ArmarResultado(oUsuarioBE, oSesionCreadaBE.Token);
         }
@@ -927,11 +837,7 @@ namespace worklingua.Server.BLL
             oMPPUsu.Desbloquear(oUsuarioBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                modulo,
-                "Desbloqueo",
+                0, oUsuarioBE.UsuarioId, DateTime.Now, modulo, "Desbloqueo",
                 "Se restauró el acceso de " + oUsuarioBE.Email + " y se reinició el contador de intentos.",
                 BLLBitacora.NivelInformativo));
 
@@ -993,13 +899,8 @@ namespace worklingua.Server.BLL
             oMPPUsu.Guardar(oActualBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oActualBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloUsuario,
-                "ModificacionPerfil",
-                "El usuario " + oActualBE.Email + " actualizó sus datos de perfil.",
-                BLLBitacora.NivelInformativo));
+                0, oActualBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloUsuario, "ModificacionPerfil",
+                "El usuario " + oActualBE.Email + " actualizó sus datos de perfil.", BLLBitacora.NivelInformativo));
         }
 
         private void ValidarDatosPerfil(BEUsuario Objeto)
@@ -1072,12 +973,7 @@ namespace worklingua.Server.BLL
             oBLLSes.Baja(token);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oSesionBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloAutenticacion,
-                "Logout",
-                "Cierre de sesión.",
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloAutenticacion, "Logout", "Cierre de sesión.",
                 BLLBitacora.NivelInformativo));
         }
 
@@ -1088,13 +984,9 @@ namespace worklingua.Server.BLL
             if (oUsuarioBE == null || oUsuarioBE.Activo != true)
             {
                 oBLLBit.Guardar(new BEBitacoraEvento(
-                    0,
-                    oUsuarioBE == null ? null : (int?)oUsuarioBE.UsuarioId,
-                    DateTime.Now,
-                    BLLBitacora.ModuloAutenticacion,
-                    "RecuperoClaveIgnorado",
-                    "Pedido para " + Objeto.Email + ": la cuenta no existe o no está activa.",
-                    "WARN"));
+                    0, oUsuarioBE == null ? null : (int?)oUsuarioBE.UsuarioId, DateTime.Now,
+                    BLLBitacora.ModuloAutenticacion, "RecuperoClaveIgnorado",
+                    "Pedido para " + Objeto.Email + ": la cuenta no existe o no está activa.", BLLBitacora.NivelAdvertencia));
 
                 return;
             }
@@ -1104,13 +996,8 @@ namespace worklingua.Server.BLL
             BETokenSeguridad oTokenBE = GenerarToken(oUsuarioBE.UsuarioId, BLLTokenSeguridad.TipoRecupero);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oUsuarioBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloAutenticacion,
-                "RecuperoClaveSolicitado",
-                "Enlace de recupero generado para " + oUsuarioBE.Email + ".",
-                BLLBitacora.NivelInformativo));
+                0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloAutenticacion, "RecuperoClaveSolicitado",
+                "Enlace de recupero generado para " + oUsuarioBE.Email + ".", BLLBitacora.NivelInformativo));
 
             EnviarRecuperoClave(oUsuarioBE, oTokenBE.Token);
         }
@@ -1130,13 +1017,8 @@ namespace worklingua.Server.BLL
             if (Objeto.ClaveActual == null)
             {
                 oBLLBit.Guardar(new BEBitacoraEvento(
-                    0,
-                    oUsuarioBE.UsuarioId,
-                    DateTime.Now,
-                    BLLBitacora.ModuloAutenticacion,
-                    "CambioClaveRechazado",
-                    "La clave actual no coincide.",
-                    "WARN"));
+                    0, oUsuarioBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloAutenticacion, "CambioClaveRechazado",
+                    "La clave actual no coincide.", BLLBitacora.NivelAdvertencia));
 
                 throw new ExcepcionNegocio(
                     TipoErrorNegocio.Validacion, "La clave actual no es correcta.");
@@ -1169,13 +1051,8 @@ namespace worklingua.Server.BLL
             int sesionesCerradas = oBLLSes.CerrarPorUsuario(oCerrarBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                Objeto.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloAutenticacion,
-                accion,
-                "Clave modificada. Sesiones cerradas: " + sesionesCerradas + ".",
-                BLLBitacora.NivelInformativo));
+                0, Objeto.UsuarioId, DateTime.Now, BLLBitacora.ModuloAutenticacion, accion,
+                "Clave modificada. Sesiones cerradas: " + sesionesCerradas + ".", BLLBitacora.NivelInformativo));
 
             EnviarClaveModificada(Objeto, accion);
         }
@@ -1329,13 +1206,101 @@ namespace worklingua.Server.BLL
                 "Falló el envío del email de '" + accion + "' para el usuario " + usuarioId + ".", ex);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                usuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloAutenticacion,
-                accion + ":EmailNoEnviado",
-                ex.Message,
-                "ERROR"));
+                0, usuarioId, DateTime.Now, BLLBitacora.ModuloAutenticacion, accion + ":EmailNoEnviado", ex.Message,
+                BLLBitacora.NivelError));
+        }
+
+        public void Validar(BELogin Objeto)
+        {
+            ValidarEmail(Objeto.Email);
+
+            ReglasNegocio.ExigirTexto(Objeto.Clave, "La clave es obligatoria.");
+        }
+
+        public void Validar(BERecuperarClave Objeto)
+        {
+            ValidarEmail(Objeto.Email);
+        }
+
+        public void Validar(BERestablecerClave Objeto)
+        {
+            ValidarClaveNueva(Objeto.ClaveNueva, "La clave nueva es obligatoria.");
+        }
+
+        public void Validar(BERegistroUsuario Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.RazonSocial, "La razón social es obligatoria.");
+            ReglasNegocio.ExigirLargoMaximo(Objeto.RazonSocial, 150,
+                "La razón social no puede superar los 150 caracteres.");
+
+            ReglasNegocio.ExigirTexto(Objeto.CUIT, "El CUIT es obligatorio.");
+            ReglasNegocio.ExigirLargo(Objeto.CUIT, 11, 11, "El CUIT debe tener 11 dígitos, sin guiones.");
+
+            ValidarPersona(Objeto.Nombre, Objeto.Apellido, Objeto.Documento, Objeto.Email);
+
+            ValidarClaveNueva(Objeto.Clave, "La clave es obligatoria.");
+
+            ReglasNegocio.ExigirTexto(Objeto.TokenCaptcha, "Confirmá que no sos un robot.");
+        }
+
+        public void Validar(BECompletarInvitacion Objeto)
+        {
+            ValidarClaveNueva(Objeto.Clave, "La clave es obligatoria.");
+        }
+
+        public void Validar(BEInvitarUsuario Objeto)
+        {
+            ReglasNegocio.ExigirRango(Objeto.RolId, 1, int.MaxValue, "Seleccioná un rol.");
+
+            ValidarPersona(Objeto.Nombre, Objeto.Apellido, Objeto.Documento, Objeto.Email);
+        }
+
+        public void Validar(BEGuardarOperador Objeto)
+        {
+            ValidarPersona(Objeto.Nombre, Objeto.Apellido, Objeto.Documento, Objeto.Email);
+        }
+
+        public void Validar(BECambiarClave Objeto)
+        {
+            ReglasNegocio.ExigirTexto(Objeto.ClaveActual, "La clave actual es obligatoria.");
+
+            ValidarClaveNueva(Objeto.ClaveNueva, "La clave nueva es obligatoria.");
+        }
+
+        public void Validar(BEModificarPerfil Objeto)
+        {
+            ValidarNombreApellido(Objeto.Nombre, Objeto.Apellido);
+        }
+
+        private void ValidarPersona(string nombre, string apellido, string documento, string email)
+        {
+            ValidarNombreApellido(nombre, apellido);
+
+            ReglasNegocio.ExigirLargoMaximo(documento, 20, "El documento no puede superar los 20 caracteres.");
+
+            ValidarEmail(email);
+            ReglasNegocio.ExigirLargoMaximo(email, 150, "El correo no puede superar los 150 caracteres.");
+        }
+
+        private void ValidarNombreApellido(string nombre, string apellido)
+        {
+            ReglasNegocio.ExigirTexto(nombre, "El nombre es obligatorio.");
+            ReglasNegocio.ExigirLargoMaximo(nombre, 80, "El nombre no puede superar los 80 caracteres.");
+
+            ReglasNegocio.ExigirTexto(apellido, "El apellido es obligatorio.");
+            ReglasNegocio.ExigirLargoMaximo(apellido, 80, "El apellido no puede superar los 80 caracteres.");
+        }
+
+        private void ValidarEmail(string email)
+        {
+            ReglasNegocio.ExigirTexto(email, "El correo es obligatorio.");
+            ReglasNegocio.ExigirEmail(email, "El correo no tiene un formato válido.");
+        }
+
+        private void ValidarClaveNueva(string clave, string mensajeObligatoria)
+        {
+            ReglasNegocio.ExigirTexto(clave, mensajeObligatoria);
+            ReglasNegocio.ExigirLargo(clave, 8, 200, "La clave debe tener al menos 8 caracteres.");
         }
     }
 }

@@ -9,12 +9,7 @@ namespace worklingua.Server.Controllers
     {
         public const string HeaderTokenSesion = "X-Sesion-Token";
 
-        private BLLSeguridad oBLLSeg;
-
-        protected ControladorBase()
-        {
-            oBLLSeg = new BLLSeguridad();
-        }
+        private BLLSeguridad oBLLSeg = new BLLSeguridad();
 
         protected BESesion ExigirPermiso(string permiso)
         {

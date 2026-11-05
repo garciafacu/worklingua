@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ErrorApi } from '../../../api/clienteHttp';
 import { empresasApi } from '../../../api/empresasApi';
-import { licenciasApi } from '../../../api/licenciasApi';
-import { Alerta } from '../../../componentes/Alerta';
-import { CampoSelect } from '../../../componentes/CampoSelect';
-import { CampoTexto } from '../../../componentes/CampoTexto';
-import { TablaAbm, type ColumnaAbm } from '../../../componentes/TablaAbm';
+import { licenciasApi } from '../../../api/planesApi';
+import { AlertasResultado } from '../../../componentes/Alerta';
+import { BotonAccion } from '../../../componentes/Boton';
+import { CampoSelect, CampoTexto } from '../../../componentes/Campos';
+import { type ColumnaAbm, TablaAbm } from '../../../componentes/TablaAbm';
 import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
+import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { PERMISOS } from '../../../rutas/itemsMenu';
-import type { EmpresaResponse } from '../../../tipos/autenticacion';
-import type { InventarioLicenciaResponse, InventarioResponse } from '../../../tipos/licencias';
+import type { InventarioLicenciaResponse, InventarioResponse } from '../../../tipos/planes';
+import type { EmpresaResponse } from '../../../tipos/usuarios';
 
 interface CifraProps {
     titulo: string;
@@ -36,18 +36,6 @@ function Cifra({ titulo, valor, destacada }: CifraProps) {
     );
 }
 
-/**
- * Licencias SaaS (CU-001-005).
- *
- * El cupo lo da el plan contratado. Se asigna una licencia por empleado y
- * revocarla libera el cupo; no se borra nada, queda el histórico.
- *
- * Es la misma pantalla para los dos alcances: con Licencia.VerTodasLasEmpresas
- * se elige la empresa, y sin ese permiso el backend acota todo a la propia.
- *
- * Una empresa sin contratación activa no tiene licencias que administrar: el
- * backend responde 409 y acá se muestra ese mensaje en lugar de la tabla.
- */
 export function AdminLicencias() {
     const { t } = useTranslation();
     const { tienePermiso } = useSesion();
@@ -61,18 +49,13 @@ export function AdminLicencias() {
     const [error, setError] = useState<string | null>(null);
     const [exito, setExito] = useState<string | null>(null);
     const [cargando, setCargando] = useState(true);
-    /** Fuerza releer el inventario después de asignar o revocar. */
     const [recarga, setRecarga] = useState(0);
 
     const puedeAsignar = tienePermiso(PERMISOS.licenciaAsignar);
     const puedeRevocar = tienePermiso(PERMISOS.licenciaRevocar);
     const alcanceTotal = tienePermiso(PERMISOS.licenciaVerTodasLasEmpresas);
 
-    const mensajeDeError = useCallback(
-        (excepcion: unknown, clave: string) =>
-            excepcion instanceof ErrorApi ? excepcion.message : t(clave),
-        [t],
-    );
+    const mensajeDeError = useMensajeDeError();
 
     useEffect(() => {
         if (!alcanceTotal) {
@@ -90,8 +73,6 @@ export function AdminLicencias() {
                 setError(null);
             })
             .catch((excepcion) => {
-                // Sin contratación activa no hay inventario: el mensaje del
-                // backend ya lo explica.
                 setInventario(null);
                 setError(mensajeDeError(excepcion, 'admin.licencias.errorCargar'));
             })
@@ -199,13 +180,8 @@ export function AdminLicencias() {
             </h1>
             <p className="mt-2 text-sm text-texto-suave">{t('admin.licencias.descripcion')}</p>
 
-            <div className="mt-6 flex flex-col gap-3">
-                <Alerta tipo="error" mensaje={error} />
-                <Alerta tipo="exito" mensaje={exito} />
-            </div>
+            <AlertasResultado error={error} exito={exito} />
 
-            {/* Sin alcance global la empresa no se elige: el backend impone la
-                propia, así que el campo solo confundiría. */}
             {alcanceTotal && (
                 <div className="mt-6 w-full sm:w-96">
                     <CampoSelect
@@ -299,31 +275,25 @@ export function AdminLicencias() {
                                             fila.licenciaId !== null &&
                                             (confirmandoRevocar === fila.usuarioId ? (
                                                 <>
-                                                    <button
-                                                        type="button"
+                                                    <BotonAccion
+                                                        variante="confirmar"
                                                         onClick={() => void revocar(fila)}
-                                                        className="rounded-lg border border-error bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
                                                     >
                                                         {t('admin.licencias.revocarConfirmar')}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setConfirmandoRevocar(null)}
-                                                        className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-texto hover:bg-fondo"
-                                                    >
+                                                    </BotonAccion>
+                                                    <BotonAccion onClick={() => setConfirmandoRevocar(null)}>
                                                         {t('comun.boton.no')}
-                                                    </button>
+                                                    </BotonAccion>
                                                 </>
                                             ) : (
-                                                <button
-                                                    type="button"
+                                                <BotonAccion
+                                                    variante="peligro"
                                                     onClick={() =>
                                                         setConfirmandoRevocar(fila.usuarioId)
                                                     }
-                                                    className="rounded-lg border border-borde bg-superficie px-3 py-1.5 text-sm font-semibold text-error hover:bg-error-fondo"
                                                 >
                                                     {t('admin.licencias.revocar')}
-                                                </button>
+                                                </BotonAccion>
                                             ))}
                                     </div>
                                 )}

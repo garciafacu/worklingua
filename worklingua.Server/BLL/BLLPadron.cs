@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using worklingua.Server.BE;
@@ -16,28 +15,15 @@ namespace worklingua.Server.BLL
         private const int LongitudMaximaEmail = 150;
         private const int LongitudMaximaDocumento = 20;
 
-        BLLUsuario oBLLUsu;
-        BLLRol oBLLRol;
-        BLLEmpresa oBLLEmp;
-        BLLLicencia oBLLLic;
-        BLLSeguridad oBLLSeg;
-        BLLBitacora oBLLBit;
-        MPPUsuario oMPPUsu;
-        MPPDepartamento oMPPDep;
-        ServicioHash oServicioHash;
-
-        public BLLPadron()
-        {
-            oBLLUsu = new BLLUsuario();
-            oBLLRol = new BLLRol();
-            oBLLEmp = new BLLEmpresa();
-            oBLLLic = new BLLLicencia();
-            oBLLSeg = new BLLSeguridad();
-            oBLLBit = new BLLBitacora();
-            oMPPUsu = new MPPUsuario();
-            oMPPDep = new MPPDepartamento();
-            oServicioHash = new ServicioHash();
-        }
+        BLLUsuario oBLLUsu = new BLLUsuario();
+        BLLRol oBLLRol = new BLLRol();
+        BLLEmpresa oBLLEmp = new BLLEmpresa();
+        BLLLicencia oBLLLic = new BLLLicencia();
+        BLLSeguridad oBLLSeg = new BLLSeguridad();
+        BLLBitacora oBLLBit = new BLLBitacora();
+        MPPUsuario oMPPUsu = new MPPUsuario();
+        MPPDepartamento oMPPDep = new MPPDepartamento();
+        ServicioHash oServicioHash = new ServicioHash();
 
         public BEResultadoPadron Procesar(BEPadron Objeto, BESesion oSesionBE)
         {
@@ -95,14 +81,14 @@ namespace worklingua.Server.BLL
                 BEResultadoFilaPadron oResultadoBE = new BEResultadoFilaPadron();
 
                 oResultadoBE.Fila = indice + 2;
-                oResultadoBE.Nombre = Normalizar(oFilaBE.Nombre);
-                oResultadoBE.Apellido = Normalizar(oFilaBE.Apellido);
+                oResultadoBE.Nombre = ServicioTexto.Normalizar(oFilaBE.Nombre);
+                oResultadoBE.Apellido = ServicioTexto.Normalizar(oFilaBE.Apellido);
                 oResultadoBE.Email = NormalizarEmail(oFilaBE.Email);
-                oResultadoBE.Departamento = Normalizar(oFilaBE.Departamento);
+                oResultadoBE.Departamento = ServicioTexto.Normalizar(oFilaBE.Departamento);
 
                 oResultadoBE.Motivo = Revisar(
                     oResultadoBE,
-                    Normalizar(oFilaBE.Documento),
+                    ServicioTexto.Normalizar(oFilaBE.Documento),
                     departamentos,
                     emailsDelArchivo,
                     documentosDelArchivo);
@@ -114,9 +100,9 @@ namespace worklingua.Server.BLL
                     respuesta.Validas++;
                     emailsDelArchivo.Add(oResultadoBE.Email);
 
-                    if (!string.IsNullOrEmpty(Normalizar(oFilaBE.Documento)))
+                    if (!string.IsNullOrEmpty(ServicioTexto.Normalizar(oFilaBE.Documento)))
                     {
-                        documentosDelArchivo.Add(Normalizar(oFilaBE.Documento));
+                        documentosDelArchivo.Add(ServicioTexto.Normalizar(oFilaBE.Documento));
                     }
                 }
                 else
@@ -225,7 +211,7 @@ namespace worklingua.Server.BLL
                 oUsuarioBE.Nombre = oResultadoBE.Nombre;
                 oUsuarioBE.Apellido = oResultadoBE.Apellido;
                 oUsuarioBE.Email = oResultadoBE.Email;
-                oUsuarioBE.Documento = Normalizar(Objeto.Filas[indice].Documento);
+                oUsuarioBE.Documento = ServicioTexto.Normalizar(Objeto.Filas[indice].Documento);
                 oUsuarioBE.DepartamentoId = ResolverDepartamento(oResultadoBE.Departamento, departamentos);
 
                 oUsuarioBE.PasswordHash = oServicioHash.Hashear(Guid.NewGuid().ToString());
@@ -341,17 +327,10 @@ namespace worklingua.Server.BLL
 
         private BEEmpresa ObtenerEmpresaSeleccionable(int empresaId)
         {
-            foreach (BEEmpresa oEmpresaBE in oBLLEmp.ListarSeleccionables())
-            {
-                if (oEmpresaBE.EmpresaId == empresaId)
-                {
-                    return oEmpresaBE;
-                }
-            }
+            BEEmpresa oFiltroBE = new BEEmpresa();
+            oFiltroBE.EmpresaId = empresaId;
 
-            throw new ExcepcionNegocio(
-                TipoErrorNegocio.Validacion,
-                "La empresa seleccionada no existe o no está disponible para asignar usuarios.");
+            return oBLLEmp.ObtenerSeleccionable(oFiltroBE);
         }
 
         private BERol ObtenerRolEmpleado()
@@ -406,11 +385,6 @@ namespace worklingua.Server.BLL
             }
 
             return limpio.ToString().Normalize(NormalizationForm.FormC);
-        }
-
-        private string Normalizar(string valor)
-        {
-            return string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
         }
 
         private string NormalizarEmail(string valor)

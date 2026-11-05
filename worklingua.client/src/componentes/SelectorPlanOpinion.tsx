@@ -1,30 +1,14 @@
 import { useTranslation } from 'react-i18next';
+import type { CaracteristicaResponse, PlanResponse } from '../tipos/planes';
 import { TarjetaPlan } from './TarjetaPlan';
-import type { CaracteristicaResponse } from '../tipos/caracteristicas';
-import type { PlanResponse } from '../tipos/planes';
 
 interface SelectorPlanOpinionProps {
     planes: PlanResponse[];
-    /** Eje de comparación común, tal como lo recibe la sección Planes pública. */
     caracteristicas: CaracteristicaResponse[];
     planId: number | null;
     alSeleccionar: (planId: number) => void;
 }
 
-/**
- * Elige el plan sobre el que se va a opinar, con las mismas tarjetas que muestra
- * la sección pública en lugar de un desplegable.
- *
- * Es un GRUPO DE RADIOS NATIVO —un `<input type="radio">` oculto dentro de cada
- * `<label>`— y no tarjetas con `onClick`. Así se navega con las flechas, el foco
- * se comporta como en cualquier formulario, y un lector de pantalla lo anuncia
- * como "opción 2 de 3" sin que haya que declarar roles a mano. Poner un `onClick`
- * en la tarjeta habría necesitado además `tabIndex`, `role="radio"`,
- * `aria-checked` y el manejo de teclado, todo reimplementado a mano.
- *
- * Toda la mecánica del radio vive acá: `TarjetaPlan` solo recibe `seleccionada`
- * para pintarse distinto y no sabe que está dentro de un selector.
- */
 export function SelectorPlanOpinion({
     planes,
     caracteristicas,
@@ -33,8 +17,6 @@ export function SelectorPlanOpinion({
 }: SelectorPlanOpinionProps) {
     const { t } = useTranslation();
 
-    // Todas las características visibles: acá no hay filtros como en la sección
-    // pública, porque lo que se está haciendo es elegir, no comparar.
     const idsVisibles = caracteristicas.map((fila) => fila.caracteristicaId);
 
     return (
@@ -61,8 +43,6 @@ export function SelectorPlanOpinion({
                             onChange={() => alSeleccionar(plan.planId)}
                         />
 
-                        {/* El anillo de foco se dibuja acá porque el input real es
-                            invisible: sin esto, navegar con el teclado no se vería. */}
                         <div className="h-full rounded-2xl group-focus-within:ring-2 group-focus-within:ring-borde-foco group-focus-within:ring-offset-2 group-focus-within:ring-offset-fondo">
                             <TarjetaPlan
                                 plan={plan}

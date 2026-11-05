@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using worklingua.Server.BE;
 using worklingua.Server.BLL;
@@ -8,14 +7,8 @@ namespace worklingua.Server.Controllers
     [Route("api/alertas")]
     public class AlertaController : ControladorBase
     {
-        BLLAlerta oBLLAle;
-        BLLBitacora oBLLBit;
-
-        public AlertaController()
-        {
-            oBLLAle = new BLLAlerta();
-            oBLLBit = new BLLBitacora();
-        }
+        BLLAlerta oBLLAle = new BLLAlerta();
+        BLLBitacora oBLLBit = new BLLBitacora();
 
         [HttpGet]
         [ProducesResponseType(typeof(List<BEAlertaRespuesta>), StatusCodes.Status200OK)]
@@ -63,6 +56,8 @@ namespace worklingua.Server.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public ActionResult<BEEmisionRespuesta> Crear([FromBody] BEGuardarAlerta peticion)
         {
+            oBLLAle.Validar(peticion);
+
             BESesion oSesionBE = ExigirPermiso(Permisos.AlertaAlta);
 
             BEEmisionRespuesta respuesta = oBLLAle.GuardarYEmitir(ADominio(peticion), oSesionBE);
@@ -96,13 +91,8 @@ namespace worklingua.Server.Controllers
             BEEmisionRespuesta respuesta = oBLLAle.Reemitir(oFiltroBE, oSesionBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oSesionBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloAlerta,
-                "Emision",
-                "Emisión de la alerta " + respuesta.Alerta.Titulo + " (id " + alertaId + ") a " +
-                respuesta.Destinatarios + " empleados.",
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloAlerta, "Emision",
+                "Emisión de la alerta " + respuesta.Alerta.Titulo + " (id " + alertaId + ") a " + respuesta.Destinatarios + " empleados.",
                 BLLBitacora.NivelInformativo));
 
             return Ok(respuesta);
@@ -126,13 +116,9 @@ namespace worklingua.Server.Controllers
             bool activada = oPeticionBE.Activo == true;
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0,
-                oSesionBE.UsuarioId,
-                DateTime.Now,
-                BLLBitacora.ModuloAlerta,
+                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloAlerta,
                 activada ? "Activacion" : "Desactivacion",
-                (activada ? "Activación" : "Desactivación") + " de la alerta " +
-                oAlertaBE.Titulo + " (id " + alertaId + ").",
+                (activada ? "Activación" : "Desactivación") + " de la alerta " + oAlertaBE.Titulo + " (id " + alertaId + ").",
                 BLLBitacora.NivelInformativo));
 
             return Ok(Mapear(oAlertaBE));
@@ -172,6 +158,43 @@ namespace worklingua.Server.Controllers
             respuesta.Destinatarios = oAlertaBE.Destinatarios;
 
             return respuesta;
+        }
+    }
+
+    [Route("api/notificaciones")]
+    public class NotificacionController : ControladorBase
+    {
+        BLLNotificacion oBLLNot = new BLLNotificacion();
+        BLLSesion oBLLSes = new BLLSesion();
+
+        [HttpGet]
+        [ProducesResponseType(typeof(BEBandejaNotificaciones), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public ActionResult<BEBandejaNotificaciones> Obtener()
+        {
+            BESesion oSesionBE = oBLLSes.ObtenerActiva(ObtenerTokenSesion());
+
+            return Ok(oBLLNot.ObtenerBandeja(oSesionBE));
+        }
+
+        [HttpPost("leidas")]
+        [ProducesResponseType(typeof(BEBandejaNotificaciones), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public ActionResult<BEBandejaNotificaciones> MarcarTodas()
+        {
+            BESesion oSesionBE = oBLLSes.ObtenerActiva(ObtenerTokenSesion());
+
+            return Ok(oBLLNot.MarcarLeidas(null, oSesionBE));
+        }
+
+        [HttpPost("{notificacionId:int}/leida")]
+        [ProducesResponseType(typeof(BEBandejaNotificaciones), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public ActionResult<BEBandejaNotificaciones> MarcarLeida(int notificacionId)
+        {
+            BESesion oSesionBE = oBLLSes.ObtenerActiva(ObtenerTokenSesion());
+
+            return Ok(oBLLNot.MarcarLeidas(notificacionId, oSesionBE));
         }
     }
 }
