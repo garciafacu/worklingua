@@ -663,5 +663,10 @@ namespace worklingua.Server.BLL
         public const string EncuestaBaja = "Encuesta.Baja";
 
         public const string ReporteVer = "Reporte.Ver";
+
+        public const string FaqListar = "Faq.Listar";
+        public const string FaqAlta = "Faq.Alta";
+        public const string FaqModificar = "Faq.Modificar";
+        public const string FaqBaja = "Faq.Baja";
     }
 }

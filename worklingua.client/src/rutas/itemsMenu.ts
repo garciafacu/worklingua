@@ -65,6 +65,10 @@ export const PERMISOS = {
     encuestaAlta: 'Encuesta.Alta',
     encuestaModificar: 'Encuesta.Modificar',
     encuestaBaja: 'Encuesta.Baja',
+    faqListar: 'Faq.Listar',
+    faqAlta: 'Faq.Alta',
+    faqModificar: 'Faq.Modificar',
+    faqBaja: 'Faq.Baja',
     reporteVer: 'Reporte.Ver',
 } as const;
 
@@ -156,6 +160,11 @@ export const GRUPOS_MENU: GrupoMenu[] = [
                 etiqueta: 'layout.menu.adminEncuestas',
                 ruta: '/inicio/admin/encuestas',
                 permiso: PERMISOS.encuestaListar,
+            },
+            {
+                etiqueta: 'layout.menu.faqs',
+                ruta: '/inicio/admin/faqs',
+                permiso: PERMISOS.faqListar,
             },
         ],
     },

@@ -72,6 +72,7 @@ namespace worklingua.Server.BLL
             Privada("/inicio/admin/newsletter", "layout.menu.newsletter", "newsletter", SeccionComunicacion, Permisos.NewsletterListar, 520),
             Privada("/inicio/admin/ofertas", "layout.menu.adminOfertas", "adminOfertas", SeccionComunicacion, Permisos.OfertaListar, 530),
             Privada("/inicio/admin/encuestas", "layout.menu.adminEncuestas", "adminEncuestas", SeccionComunicacion, Permisos.EncuestaListar, 540),
+            Privada("/inicio/admin/faqs", "layout.menu.faqs", "adminFaqs", SeccionComunicacion, Permisos.FaqListar, 550),
 
             Privada("/inicio/admin/soporte", "layout.menu.adminSoporte", "adminSoporte", SeccionAtencion, Permisos.TicketAtender, 560),
 

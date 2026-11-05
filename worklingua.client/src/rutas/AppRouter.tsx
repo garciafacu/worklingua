@@ -15,6 +15,7 @@ import { AdminCursos } from '../paginas/privadas/admin/AdminCursos';
 import { AdminDepartamentos } from '../paginas/privadas/admin/AdminDepartamentos';
 import { AdminEmpresas } from '../paginas/privadas/admin/AdminEmpresas';
 import { AdminEncuestas } from '../paginas/privadas/admin/AdminEncuestas';
+import { AdminFaqs } from '../paginas/privadas/admin/AdminFaqs';
 import { AdminIdiomas } from '../paginas/privadas/admin/AdminIdiomas';
 import { AdminLicencias } from '../paginas/privadas/admin/AdminLicencias';
 import { AdminNewsletter } from '../paginas/privadas/admin/AdminNewsletter';
@@ -40,6 +41,7 @@ import { MisOfertas } from '../paginas/privadas/MisOfertas';
 import { Opiniones } from '../paginas/privadas/Opiniones';
 import { Panel } from '../paginas/privadas/Panel';
 import { Soporte } from '../paginas/privadas/Soporte';
+import { Consulta } from '../paginas/publicas/Consulta';
 import { Contacto } from '../paginas/publicas/Contacto';
 import { InicioPublico } from '../paginas/publicas/InicioPublico';
 import { Institucional } from '../paginas/publicas/Institucional';
@@ -67,6 +69,7 @@ export function AppRouter() {
                 <Route path="/novedades/:noticiaId" element={<NovedadDetalle />} />
                 <Route path="/institucional" element={<Institucional />} />
                 <Route path="/contacto" element={<Contacto />} />
+                <Route path="/consulta" element={<Consulta />} />
                 <Route path="/preguntas-frecuentes" element={<PreguntasFrecuentes />} />
                 <Route path="/terminos" element={<TerminosCondiciones />} />
                 <Route path="/privacidad" element={<PoliticaPrivacidad />} />
@@ -300,6 +303,14 @@ export function AppRouter() {
                     element={
                         <RutaConPermiso permiso={PERMISOS.encuestaListar}>
                             <AdminEncuestas />
+                        </RutaConPermiso>
+                    }
+                />
+                <Route
+                    path="admin/faqs"
+                    element={
+                        <RutaConPermiso permiso={PERMISOS.faqListar}>
+                            <AdminFaqs />
                         </RutaConPermiso>
                     }
                 />

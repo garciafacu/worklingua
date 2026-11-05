@@ -29,6 +29,7 @@ namespace worklingua.Server.BLL
         public const string ModuloOferta = "Oferta";
         public const string ModuloCuentaCorriente = "CuentaCorriente";
         public const string ModuloEncuesta = "Encuesta";
+        public const string ModuloFaq = "Faq";
         public const string ModuloDepartamento = "Departamento";
         public const string ModuloLicencia = "Licencia";
         public const string ModuloAlerta = "Alerta";

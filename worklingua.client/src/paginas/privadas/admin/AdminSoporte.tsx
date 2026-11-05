@@ -71,7 +71,7 @@ export function AdminSoporte() {
                     <span className="font-medium text-texto">{fila.ticket.asunto}</span>
                     <br />
                     <span className="text-xs text-texto-suave">
-                        {fila.plan}
+                        {fila.plan ?? t('soporte.hilo.contextoPublica')}
                         {fila.curso && ` · ${fila.curso}`}
                     </span>
                 </>
@@ -81,9 +81,21 @@ export function AdminSoporte() {
             encabezado: t('admin.soporte.col.empresa'),
             celda: (fila) => (
                 <>
-                    <span className="text-texto">{fila.empresa}</span>
+                    {fila.empresa === null ? (
+                        <span
+                            className="rounded-full bg-fondo px-2.5 py-0.5 text-xs font-semibold text-texto-suave"
+                            title={t('admin.soporte.publica.ayuda')}
+                        >
+                            {t('admin.soporte.publica')}
+                        </span>
+                    ) : (
+                        <span className="text-texto">{fila.empresa}</span>
+                    )}
                     <br />
-                    <span className="text-xs text-texto-suave">{fila.autor}</span>
+                    <span className="text-xs text-texto-suave">
+                        {fila.autor}
+                        {fila.empresa === null && ` · ${fila.autorEmail}`}
+                    </span>
                 </>
             ),
         },

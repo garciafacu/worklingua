@@ -1,135 +1,95 @@
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { ErrorApi } from '../../api/clienteHttp';
+import { faqsApi } from '../../api/faqsApi';
+import { Alerta } from '../../componentes/Alerta';
 import { Acordeon } from '../../componentes/Basicos';
 import { CampoTexto } from '../../componentes/Campos';
-
-interface PreguntaFrecuente {
-    clave: string;
-    enlace?: { ruta: string; etiqueta: string };
-}
-
-interface CategoriaFaq {
-    clave: string;
-    preguntas: PreguntaFrecuente[];
-}
-
-const CATEGORIAS: CategoriaFaq[] = [
-    {
-        clave: 'ayuda.faq.general',
-        preguntas: [
-            { clave: 'ayuda.faq.general.queEs' },
-            { clave: 'ayuda.faq.general.sectores' },
-            { clave: 'ayuda.faq.general.arIa' },
-        ],
-    },
-    {
-        clave: 'ayuda.faq.cuenta',
-        preguntas: [
-            {
-                clave: 'ayuda.faq.cuenta.registro',
-                enlace: { ruta: '/registro', etiqueta: 'ayuda.faq.enlace.registro' },
-            },
-            { clave: 'ayuda.faq.cuenta.equipo' },
-            {
-                clave: 'ayuda.faq.cuenta.clave',
-                enlace: { ruta: '/recuperar-clave', etiqueta: 'ayuda.faq.enlace.recuperarClave' },
-            },
-        ],
-    },
-    {
-        clave: 'ayuda.faq.planes',
-        preguntas: [
-            { clave: 'ayuda.faq.planes.sinCargo' },
-            {
-                clave: 'ayuda.faq.planes.precios',
-                enlace: { ruta: '/catalogo', etiqueta: 'ayuda.faq.enlace.planes' },
-            },
-            { clave: 'ayuda.faq.planes.cambiar' },
-            {
-                clave: 'ayuda.faq.planes.licencias',
-                enlace: { ruta: '/terminos', etiqueta: 'ayuda.faq.enlace.terminos' },
-            },
-        ],
-    },
-    {
-        clave: 'ayuda.faq.cursos',
-        preguntas: [
-            {
-                clave: 'ayuda.faq.cursos.idiomasNiveles',
-                enlace: { ruta: '/catalogo', etiqueta: 'ayuda.faq.enlace.catalogo' },
-            },
-            { clave: 'ayuda.faq.cursos.progreso' },
-        ],
-    },
-    {
-        clave: 'ayuda.faq.privacidad',
-        preguntas: [
-            {
-                clave: 'ayuda.faq.privacidad.datos',
-                enlace: { ruta: '/privacidad', etiqueta: 'ayuda.faq.enlace.privacidad' },
-            },
-            { clave: 'ayuda.faq.privacidad.derechos' },
-            { clave: 'ayuda.faq.privacidad.newsletter' },
-        ],
-    },
-];
+import { useLocalizacion } from '../../contexto/useLocalizacion';
+import type { CategoriaFaqConPreguntasResponse } from '../../tipos/faqs';
 
 function normalizar(texto: string): string {
     return texto
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[̀-ͯ]/g, '')
         .toLowerCase();
-}
-
-function idHtml(clave: string): string {
-    return clave.replace(/\./g, '-');
 }
 
 export function PreguntasFrecuentes() {
     const { t } = useTranslation();
+    const { idiomaActual } = useLocalizacion();
 
+    const [categorias, setCategorias] = useState<CategoriaFaqConPreguntasResponse[]>([]);
     const [termino, setTermino] = useState('');
-    const [abiertas, setAbiertas] = useState<Set<string>>(() => new Set());
+    const [abiertas, setAbiertas] = useState<Set<number>>(() => new Set());
+    const [error, setError] = useState<string | null>(null);
+    const [cargando, setCargando] = useState(true);
+
+    const mensajeDeError = useCallback(
+        (excepcion: unknown) => (excepcion instanceof ErrorApi ? excepcion.message : t('ayuda.faq.error')),
+        [t],
+    );
+
+    useEffect(() => {
+        let vigente = true;
+
+        faqsApi
+            .listarPublicadas(idiomaActual)
+            .then((lista) => {
+                if (vigente) {
+                    setCategorias(lista);
+                    setError(null);
+                }
+            })
+            .catch((excepcion) => {
+                if (vigente) {
+                    setError(mensajeDeError(excepcion));
+                }
+            })
+            .finally(() => {
+                if (vigente) {
+                    setCargando(false);
+                }
+            });
+
+        return () => {
+            vigente = false;
+        };
+    }, [idiomaActual, mensajeDeError]);
 
     const busqueda = normalizar(termino.trim());
 
     const categoriasVisibles = useMemo(() => {
         if (busqueda === '') {
-            return CATEGORIAS;
+            return categorias;
         }
 
-        return CATEGORIAS.map((categoria) => {
-            const tituloCategoria = t(`${categoria.clave}.titulo`);
-
-            return {
-                ...categoria,
-                preguntas: categoria.preguntas.filter((pregunta) =>
+        return categorias
+            .map((item) => ({
+                ...item,
+                preguntas: item.preguntas.filter((pregunta) =>
                     normalizar(
-                        [
-                            tituloCategoria,
-                            t(`${pregunta.clave}.pregunta`),
-                            t(`${pregunta.clave}.respuesta`),
-                        ].join(' '),
+                        [item.categoria.titulo, pregunta.pregunta, pregunta.respuesta].join(' '),
                     ).includes(busqueda),
                 ),
-            };
-        }).filter((categoria) => categoria.preguntas.length > 0);
-    }, [busqueda, t]);
+            }))
+            .filter((item) => item.preguntas.length > 0);
+    }, [busqueda, categorias]);
 
     const cantidadResultados = categoriasVisibles.reduce(
-        (total, categoria) => total + categoria.preguntas.length,
+        (total, item) => total + item.preguntas.length,
         0,
     );
 
-    function alternar(clave: string) {
+    function alternar(preguntaFrecuenteId: number) {
         setAbiertas((anteriores) => {
             const siguientes = new Set(anteriores);
 
-            if (siguientes.has(clave)) {
-                siguientes.delete(clave);
+            if (siguientes.has(preguntaFrecuenteId)) {
+                siguientes.delete(preguntaFrecuenteId);
             } else {
-                siguientes.add(clave);
+                siguientes.add(preguntaFrecuenteId);
             }
 
             return siguientes;
@@ -176,6 +136,18 @@ export function PreguntasFrecuentes() {
                 </div>
             </form>
 
+            {error !== null && (
+                <div className="mt-6">
+                    <Alerta tipo="error" mensaje={error} />
+                </div>
+            )}
+
+            {cargando && <p className="mt-6 text-sm text-texto-suave">{t('ayuda.faq.cargando')}</p>}
+
+            {!cargando && !error && categorias.length === 0 && (
+                <p className="mt-6 text-sm text-texto-suave">{t('ayuda.faq.vacio')}</p>
+            )}
+
             {busqueda !== '' && (
                 <p className="mt-6 text-sm text-texto-suave" role="status">
                     {cantidadResultados === 0
@@ -187,32 +159,35 @@ export function PreguntasFrecuentes() {
             )}
 
             <div className="mt-10 space-y-10">
-                {categoriasVisibles.map((categoria) => (
-                    <section key={categoria.clave} aria-labelledby={idHtml(`${categoria.clave}.titulo`)}>
+                {categoriasVisibles.map((item) => (
+                    <section
+                        key={item.categoria.categoriaFaqId}
+                        aria-labelledby={`categoria-faq-${item.categoria.categoriaFaqId}`}
+                    >
                         <h2
-                            id={idHtml(`${categoria.clave}.titulo`)}
+                            id={`categoria-faq-${item.categoria.categoriaFaqId}`}
                             className="text-xl font-semibold text-texto"
                         >
-                            {t(`${categoria.clave}.titulo`)}
+                            {item.categoria.titulo}
                         </h2>
 
                         <div className="mt-4 space-y-3">
-                            {categoria.preguntas.map((pregunta) => (
+                            {item.preguntas.map((pregunta) => (
                                 <Acordeon
-                                    key={pregunta.clave}
-                                    identificador={idHtml(pregunta.clave)}
-                                    titulo={t(`${pregunta.clave}.pregunta`)}
-                                    abierto={abiertas.has(pregunta.clave)}
-                                    alAlternar={() => alternar(pregunta.clave)}
+                                    key={pregunta.preguntaFrecuenteId}
+                                    identificador={`pregunta-faq-${pregunta.preguntaFrecuenteId}`}
+                                    titulo={pregunta.pregunta}
+                                    abierto={abiertas.has(pregunta.preguntaFrecuenteId)}
+                                    alAlternar={() => alternar(pregunta.preguntaFrecuenteId)}
                                 >
-                                    <p className="m-0">{t(`${pregunta.clave}.respuesta`)}</p>
+                                    <p className="m-0 whitespace-pre-line">{pregunta.respuesta}</p>
 
-                                    {pregunta.enlace && (
+                                    {pregunta.enlace !== null && (
                                         <Link
-                                            to={pregunta.enlace.ruta}
+                                            to={pregunta.enlace}
                                             className="mt-3 inline-block text-sm font-semibold text-primario hover:underline"
                                         >
-                                            {t(pregunta.enlace.etiqueta)}
+                                            {pregunta.enlaceEtiqueta}
                                         </Link>
                                     )}
                                 </Acordeon>

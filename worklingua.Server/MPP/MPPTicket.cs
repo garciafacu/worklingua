@@ -28,6 +28,29 @@ namespace worklingua.Server.MPP
             return Convert.ToInt32(identidad);
         }
 
+        public BETicket GuardarConsultaPublica(BETicket Objeto, BEMensajeTicket oMensajeBE)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@Asunto", Objeto.Asunto);
+            Hdatos.Add("@Estado", Objeto.Estado);
+            Hdatos.Add("@IdiomaId", Objeto.IdiomaId);
+            Hdatos.Add("@Texto", oMensajeBE.Texto);
+            Hdatos.Add("@NombreVisitante", Objeto.NombreVisitante);
+            Hdatos.Add("@EmailVisitante", Objeto.EmailVisitante);
+
+            DataTable Dt = oDatos.Leer("sp_Ticket_Alta", Hdatos);
+
+            if (Dt.Rows.Count == 0)
+            {
+                return null;
+            }
+
+            Objeto.TicketId = ServicioLectorFila.LeerEntero(Dt.Rows[0], "TicketId");
+            Objeto.Token = ServicioLectorFila.LeerGuidNulo(Dt.Rows[0], "Token");
+
+            return Objeto;
+        }
+
         public List<BETicketConDetalle> Listar(BEFiltroTicket Objeto)
         {
             Hdatos = new Hashtable();
@@ -35,6 +58,7 @@ namespace worklingua.Server.MPP
             Hdatos.Add("@UsuarioId", Objeto.UsuarioId);
             Hdatos.Add("@Estado", Objeto.Estado);
             Hdatos.Add("@TicketId", Objeto.TicketId);
+            Hdatos.Add("@Token", Objeto.Token);
 
             return ServicioLectorFila.ALista<BETicketConDetalle>(oDatos.Leer("sp_Ticket_Listar", Hdatos), Mapear);
         }
@@ -47,6 +71,8 @@ namespace worklingua.Server.MPP
             {
                 oFiltroBE.TicketId = Objeto.TicketId;
             }
+
+            oFiltroBE.Token = Objeto.Token;
 
             List<BETicketConDetalle> ListaTicketBE = Listar(oFiltroBE);
 
@@ -94,7 +120,7 @@ namespace worklingua.Server.MPP
                     BEMensajeTicket oMensajeBE = new BEMensajeTicket(
                         ServicioLectorFila.LeerEntero(Item, "MensajeId"),
                         ServicioLectorFila.LeerEntero(Item, "TicketId"),
-                        ServicioLectorFila.LeerEntero(Item, "UsuarioId"),
+                        ServicioLectorFila.LeerEnteroNulo(Item, "UsuarioId"),
                         ServicioLectorFila.LeerBooleano(Item, "EsOperador"),
                         ServicioLectorFila.LeerTexto(Item, "Texto"),
                         ServicioLectorFila.LeerFechaHora(Item, "FechaEnvio"));
@@ -114,28 +140,30 @@ namespace worklingua.Server.MPP
         {
             BETicket oTicketBE = new BETicket(
                 ServicioLectorFila.LeerEntero(Item, "TicketId"),
-                ServicioLectorFila.LeerEntero(Item, "EmpresaId"),
-                ServicioLectorFila.LeerEntero(Item, "UsuarioId"),
-                ServicioLectorFila.LeerEntero(Item, "SuscripcionId"),
+                ServicioLectorFila.LeerEnteroNulo(Item, "EmpresaId"),
+                ServicioLectorFila.LeerEnteroNulo(Item, "UsuarioId"),
+                ServicioLectorFila.LeerEnteroNulo(Item, "SuscripcionId"),
                 ServicioLectorFila.LeerEnteroNulo(Item, "CursoId"),
                 ServicioLectorFila.LeerTexto(Item, "Asunto"),
                 ServicioLectorFila.LeerTexto(Item, "Estado"),
                 ServicioLectorFila.LeerFechaHora(Item, "FechaAlta"),
                 ServicioLectorFila.LeerFechaHora(Item, "FechaUltimoMovimiento"),
                 ServicioLectorFila.LeerFechaHoraNula(Item, "FechaCierre"),
-                ServicioLectorFila.LeerEnteroNulo(Item, "IdiomaId"));
+                ServicioLectorFila.LeerEnteroNulo(Item, "IdiomaId"),
+                ServicioLectorFila.LeerTextoNulo(Item, "NombreVisitante"),
+                ServicioLectorFila.LeerTextoNulo(Item, "EmailVisitante"));
 
             return new BETicketConDetalle(
                 oTicketBE,
                 ServicioLectorFila.LeerTextoNulo(Item, "CodigoIdioma") == null
                     ? null
                     : ServicioLectorFila.LeerTexto(Item, "CodigoIdioma").Trim(),
-                ServicioLectorFila.LeerTexto(Item, "Empresa"),
+                ServicioLectorFila.LeerTextoNulo(Item, "Empresa"),
                 ServicioLectorFila.LeerTexto(Item, "Autor"),
                 ServicioLectorFila.LeerTexto(Item, "AutorNombre"),
                 ServicioLectorFila.LeerTexto(Item, "AutorEmail"),
-                ServicioLectorFila.LeerTexto(Item, "Plan"),
-                ServicioLectorFila.LeerTexto(Item, "EstadoSuscripcion"),
+                ServicioLectorFila.LeerTextoNulo(Item, "Plan"),
+                ServicioLectorFila.LeerTextoNulo(Item, "EstadoSuscripcion"),
                 ServicioLectorFila.LeerTextoNulo(Item, "Curso"),
                 ServicioLectorFila.LeerEntero(Item, "CantidadMensajes"),
                 new List<BEMensajeTicketConAutor>());

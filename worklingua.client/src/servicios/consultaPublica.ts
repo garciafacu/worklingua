@@ -1,3 +1,13 @@
+export const RUTA_CONSULTA = '/consulta';
+
+export function rutaDeConsulta(token: string): string {
+    return `${RUTA_CONSULTA}?token=${encodeURIComponent(token)}`;
+}
+
+export function urlDeConsulta(token: string): string {
+    return `${window.location.origin}${rutaDeConsulta(token)}`;
+}
+
 const CLAVE_TOKEN_VISITANTE = 'worklingua.tokenVisitante';
 
 export function obtenerTokenVisitante(): string {

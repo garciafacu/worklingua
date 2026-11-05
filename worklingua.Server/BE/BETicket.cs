@@ -3,9 +3,9 @@ namespace worklingua.Server.BE
     public class BETicket
     {
         public int TicketId { get; set; }
-        public int EmpresaId { get; set; }
-        public int UsuarioId { get; set; }
-        public int SuscripcionId { get; set; }
+        public int? EmpresaId { get; set; }
+        public int? UsuarioId { get; set; }
+        public int? SuscripcionId { get; set; }
         public int? CursoId { get; set; }
         public string Asunto { get; set; }
         public string Estado { get; set; }
@@ -13,6 +13,9 @@ namespace worklingua.Server.BE
         public DateTime FechaUltimoMovimiento { get; set; }
         public DateTime? FechaCierre { get; set; }
         public int? IdiomaId { get; set; }
+        public string NombreVisitante { get; set; }
+        public string EmailVisitante { get; set; }
+        public Guid? Token { get; set; }
 
         public BETicket()
         {
@@ -20,16 +23,18 @@ namespace worklingua.Server.BE
 
         public BETicket(
             int ticketId,
-            int empresaId,
-            int usuarioId,
-            int suscripcionId,
+            int? empresaId,
+            int? usuarioId,
+            int? suscripcionId,
             int? cursoId,
             string asunto,
             string estado,
             DateTime fechaAlta,
             DateTime fechaUltimoMovimiento,
             DateTime? fechaCierre,
-            int? idiomaId)
+            int? idiomaId,
+            string nombreVisitante,
+            string emailVisitante)
         {
             this.TicketId = ticketId;
             this.EmpresaId = empresaId;
@@ -42,6 +47,8 @@ namespace worklingua.Server.BE
             this.FechaUltimoMovimiento = fechaUltimoMovimiento;
             this.FechaCierre = fechaCierre;
             this.IdiomaId = idiomaId;
+            this.NombreVisitante = nombreVisitante;
+            this.EmailVisitante = emailVisitante;
         }
     }
 
@@ -104,7 +111,7 @@ namespace worklingua.Server.BE
     {
         public int MensajeId { get; set; }
         public int TicketId { get; set; }
-        public int UsuarioId { get; set; }
+        public int? UsuarioId { get; set; }
         public bool EsOperador { get; set; }
         public string Texto { get; set; }
         public DateTime FechaEnvio { get; set; }
@@ -116,7 +123,7 @@ namespace worklingua.Server.BE
         public BEMensajeTicket(
             int mensajeId,
             int ticketId,
-            int usuarioId,
+            int? usuarioId,
             bool esOperador,
             string texto,
             DateTime fechaEnvio)
@@ -157,6 +164,7 @@ namespace worklingua.Server.BE
         public int? EmpresaId { get; set; }
         public int? UsuarioId { get; set; }
         public int? TicketId { get; set; }
+        public Guid? Token { get; set; }
         public bool Administracion { get; set; }
 
         public BEFiltroTicket()

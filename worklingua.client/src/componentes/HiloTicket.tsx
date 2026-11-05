@@ -35,6 +35,8 @@ export function HiloTicket({ ticket, vista, alEnviar, acciones }: HiloTicketProp
     const [enviando, setEnviando] = useState(false);
 
     const cerrado = ticket.ticket.estado === 'CERRADO';
+    const esPublica = ticket.ticket.usuarioId === null;
+
     async function enviar(evento: FormEvent) {
         evento.preventDefault();
 
@@ -63,14 +65,17 @@ export function HiloTicket({ ticket, vista, alEnviar, acciones }: HiloTicketProp
                 <div>
                     <p className="m-0 text-xs font-semibold tracking-wide text-texto-suave uppercase">
                         #{ticket.ticket.ticketId}
-                        {vista === 'operador' && ` · ${ticket.empresa}`}
+                        {vista === 'operador' &&
+                            ` · ${ticket.empresa ?? t('admin.soporte.publica')}`}
                     </p>
                     <h3 className="mt-1 mb-0 text-lg font-semibold text-texto">{ticket.ticket.asunto}</h3>
                     <p className="mt-1 mb-0 text-sm text-texto-suave">
-                        {t('soporte.hilo.contexto', {
-                            plan: ticket.plan,
-                            estado: t(`comun.contratacion.estado.${ticket.estadoSuscripcion}`),
-                        })}
+                        {esPublica
+                            ? t('soporte.hilo.contextoPublica')
+                            : t('soporte.hilo.contexto', {
+                                  plan: ticket.plan,
+                                  estado: t(`comun.contratacion.estado.${ticket.estadoSuscripcion}`),
+                              })}
                         {ticket.curso && ` · ${t('soporte.hilo.curso', { curso: ticket.curso })}`}
                     </p>
                     <p className="mt-1 mb-0 text-xs text-texto-suave">

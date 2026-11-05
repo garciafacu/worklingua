@@ -120,7 +120,9 @@ namespace worklingua.Server.BLL
                 ahora,
                 ahora,
                 null,
-                oIdiomaBE == null ? (int?)null : oIdiomaBE.IdiomaId);
+                oIdiomaBE == null ? (int?)null : oIdiomaBE.IdiomaId,
+                null,
+                null);
 
             BEMensajeTicket oMensajeBE = new BEMensajeTicket();
             oMensajeBE.Texto = texto;
@@ -138,6 +140,113 @@ namespace worklingua.Server.BLL
             oFiltroBE.TicketId = oTicketBE.TicketId;
 
             return ListarObjeto(oFiltroBE, oSesionBE);
+        }
+
+        public BETicket GuardarConsultaPublica(BEEnviarConsultaContacto Objeto)
+        {
+            string asunto = ValidarAsunto(Objeto.Asunto);
+            string texto = ValidarTexto(Objeto.Mensaje);
+
+            BEIdioma oFiltroIdiomaBE = new BEIdioma();
+            oFiltroIdiomaBE.CodigoISO = Objeto.CodigoIdioma;
+
+            BEIdioma oIdiomaBE = oBLLIdi.ResolverPorCodigo(oFiltroIdiomaBE);
+            DateTime ahora = DateTime.Now;
+
+            BETicket oTicketBE = new BETicket(
+                0,
+                null,
+                null,
+                null,
+                null,
+                asunto,
+                EstadoPendiente,
+                ahora,
+                ahora,
+                null,
+                oIdiomaBE == null ? (int?)null : oIdiomaBE.IdiomaId,
+                Objeto.Nombre,
+                Objeto.Email);
+
+            BEMensajeTicket oMensajeBE = new BEMensajeTicket();
+            oMensajeBE.Texto = texto;
+
+            BETicket oCreadoBE = oMPPTic.GuardarConsultaPublica(oTicketBE, oMensajeBE);
+
+            if (oCreadoBE == null || oCreadoBE.Token == null)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Validacion,
+                    "No pudimos registrar tu consulta. Intentá nuevamente en unos minutos.");
+            }
+
+            Registrar(
+                null,
+                "ConsultaPublicaCreada",
+                "Consulta pública #" + oCreadoBE.TicketId + " (" + asunto + ") de " + Objeto.Email + ".",
+                BLLBitacora.NivelInformativo);
+
+            return oCreadoBE;
+        }
+
+        public BETicketConDetalle ListarObjetoPorToken(BEFiltroTicket Objeto)
+        {
+            if (Objeto.Token == null || Objeto.Token == Guid.Empty)
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.Validacion, "Falta el token del enlace.");
+            }
+
+            BETicket oFiltroBE = new BETicket();
+            oFiltroBE.Token = Objeto.Token;
+
+            BETicketConDetalle oTicket = oMPPTic.ListarObjeto(oFiltroBE);
+
+            if (oTicket == null || !EsPublica(oTicket.Ticket))
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "La consulta no existe.");
+            }
+
+            List<BEMensajeTicketConAutor> ListaMensajeBE = oMPPTic.ListarMensajes(oTicket.Ticket);
+            oTicket.Mensajes = ListaMensajeBE == null ? new List<BEMensajeTicketConAutor>() : ListaMensajeBE;
+
+            return oTicket;
+        }
+
+        public BETicketConDetalle ResponderVisitante(BEResponderConsultaPublica Objeto)
+        {
+            string texto = ValidarTexto(Objeto.Texto);
+
+            BEFiltroTicket oFiltroBE = new BEFiltroTicket();
+            oFiltroBE.Token = Objeto.Token;
+
+            BETicketConDetalle oTicket = ListarObjetoPorToken(oFiltroBE);
+
+            if (oTicket.Ticket.Estado == EstadoCerrado)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto,
+                    "La consulta está cerrada. Si necesitás más ayuda, escribinos de nuevo.");
+            }
+
+            BEMensajeTicket oMensajeBE = new BEMensajeTicket();
+            oMensajeBE.TicketId = oTicket.Ticket.TicketId;
+            oMensajeBE.Texto = texto;
+            oMensajeBE.EsOperador = false;
+            oMensajeBE.UsuarioId = null;
+
+            BETicket oEstadoBE = new BETicket();
+            oEstadoBE.TicketId = oTicket.Ticket.TicketId;
+            oEstadoBE.Estado = EstadoPendiente;
+
+            oMPPTic.GuardarMensaje(oMensajeBE, oEstadoBE);
+
+            Registrar(
+                null,
+                "ConsultaPublicaMensaje",
+                "Mensaje del visitante en la consulta pública #" + oTicket.Ticket.TicketId + ".",
+                BLLBitacora.NivelInformativo);
+
+            return ListarObjetoPorToken(oFiltroBE);
         }
 
         public BETicketConDetalle GuardarMensaje(BEMensajeTicket Objeto, BESesion oSesionBE)
@@ -255,6 +364,11 @@ namespace worklingua.Server.BLL
             return oTicket;
         }
 
+        private bool EsPublica(BETicket oTicketBE)
+        {
+            return oTicketBE.UsuarioId == null;
+        }
+
         private void ValidarAcceso(BETicketConDetalle oTicket, bool administracion, BESesion oSesionBE)
         {
             if (administracion)
@@ -262,6 +376,11 @@ namespace worklingua.Server.BLL
                 ExigirOperador(oSesionBE);
 
                 return;
+            }
+
+            if (EsPublica(oTicket.Ticket))
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "La consulta no existe.");
             }
 
             BEUsuario oUsuarioBE = oBLLUsu.ObtenerPorId(oSesionBE.UsuarioId);
@@ -336,6 +455,11 @@ namespace worklingua.Server.BLL
 
         private void Avisar(BETicketConDetalle oTicket, string evento, string respuesta, BESesion oSesionBE)
         {
+            if (EsPublica(oTicket.Ticket))
+            {
+                return;
+            }
+
             try
             {
                 Dictionary<string, string> textos = oBLLTra.ListarPorCodigo(oTicket.CodigoIdioma ?? "es");

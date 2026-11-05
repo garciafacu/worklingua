@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ErrorApi } from '../api/clienteHttp';
 import { encuestasApi } from '../api/encuestasApi';
 import { useLocalizacion } from '../contexto/useLocalizacion';
-import { obtenerTokenVisitante } from '../servicios/visitante';
+import { obtenerTokenVisitante } from '../servicios/consultaPublica';
 import type { EncuestaResponse } from '../tipos/encuestas';
 import { Alerta } from './Alerta';
 import { CampoCaptcha } from './CampoCaptcha';

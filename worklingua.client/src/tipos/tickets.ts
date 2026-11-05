@@ -8,7 +8,7 @@ export interface MensajeTicketResponse {
     mensaje: {
         mensajeId: number;
         ticketId: number;
-        usuarioId: number;
+        usuarioId: number | null;
         esOperador: boolean;
         texto: string;
         fechaEnvio: string;
@@ -19,21 +19,23 @@ export interface MensajeTicketResponse {
 export interface TicketResponse {
     ticket: {
         ticketId: number;
-        empresaId: number;
-        usuarioId: number;
-        suscripcionId: number;
+        empresaId: number | null;
+        usuarioId: number | null;
+        suscripcionId: number | null;
         cursoId: number | null;
         asunto: string;
         estado: EstadoTicket;
         fechaAlta: string;
         fechaUltimoMovimiento: string;
         fechaCierre: string | null;
+        nombreVisitante: string | null;
+        emailVisitante: string | null;
     };
-    empresa: string;
+    empresa: string | null;
     autor: string;
     autorEmail: string;
-    plan: string;
-    estadoSuscripcion: EstadoContratacion;
+    plan: string | null;
+    estadoSuscripcion: EstadoContratacion | null;
     curso: string | null;
     cantidadMensajes: number;
     mensajes: MensajeTicketResponse[];
