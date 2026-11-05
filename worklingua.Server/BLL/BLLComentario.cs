@@ -14,6 +14,8 @@ namespace worklingua.Server.BLL
         BLLPlan oBLLPlan = new BLLPlan();
         BLLBitacora oBLLBit = new BLLBitacora();
         BLLSeguridad oBLLSeg = new BLLSeguridad();
+        BLLSuscripcion oBLLSus = new BLLSuscripcion();
+        BLLUsuario oBLLUsu = new BLLUsuario();
 
         public List<BEComentarioConAutor> ListarTodo(int planId)
         {
@@ -50,9 +52,53 @@ namespace worklingua.Server.BLL
             return ListaComentarioBE == null ? new List<BEComentarioConAutor>() : ListaComentarioBE;
         }
 
+        public List<int> ListarPlanesContratados(int usuarioId)
+        {
+            BEUsuario oUsuarioBE = oBLLUsu.ObtenerPorId(usuarioId);
+
+            BEEmpresa oFiltroBE = new BEEmpresa();
+            oFiltroBE.EmpresaId = oUsuarioBE.EmpresaId;
+
+            List<int> ListaPlanId = new List<int>();
+
+            foreach (BESuscripcionConPlan oSuscripcionBE in oBLLSus.ListarPorEmpresa(oFiltroBE))
+            {
+                if (!EsContratacionEfectiva(oSuscripcionBE.Suscripcion.Estado))
+                {
+                    continue;
+                }
+
+                if (!ListaPlanId.Contains(oSuscripcionBE.Suscripcion.PlanId))
+                {
+                    ListaPlanId.Add(oSuscripcionBE.Suscripcion.PlanId);
+                }
+            }
+
+            return ListaPlanId;
+        }
+
+        private bool EsContratacionEfectiva(string estado)
+        {
+            return estado == BLLSuscripcion.EstadoActiva
+                || estado == BLLSuscripcion.EstadoFinalizada
+                || estado == BLLSuscripcion.EstadoCancelada;
+        }
+
+        private void ExigirPlanContratado(int usuarioId, int planId)
+        {
+            if (!ListarPlanesContratados(usuarioId).Contains(planId))
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Conflicto,
+                    "Solo podés valorar los planes que tu empresa contrató.");
+            }
+        }
+
         public BEComentarioConAutor Guardar(BEComentario Objeto)
         {
             BEPlanSuscripcion oPlanBE = ObtenerPlanVigente(Objeto.PlanId);
+
+            ExigirPlanContratado(Objeto.UsuarioId, Objeto.PlanId);
 
             string limpio = Objeto.Texto == null ? string.Empty : Objeto.Texto.Trim();
 

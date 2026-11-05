@@ -11,6 +11,7 @@ namespace worklingua.Server.BE
         public DateTime FechaPublicacion { get; set; }
         public DateTime FechaAlta { get; set; }
         public bool Activo { get; set; }
+        public string Sector { get; set; }
     }
 
     public class BENoticiaRespuesta
@@ -21,6 +22,7 @@ namespace worklingua.Server.BE
         public string Resumen { get; set; }
         public string Contenido { get; set; }
         public DateTime FechaPublicacion { get; set; }
+        public string Sector { get; set; }
     }
 
     public class BEGuardarNoticia
@@ -30,6 +32,7 @@ namespace worklingua.Server.BE
         public string Resumen { get; set; }
         public string Contenido { get; set; }
         public DateTime? FechaPublicacion { get; set; }
+        public string Sector { get; set; }
     }
 
     public class BEFiltroNoticia
@@ -59,6 +62,7 @@ namespace worklingua.Server.BE
         public DateTime? FechaConfirmacion { get; set; }
         public DateTime? FechaBaja { get; set; }
         public bool Activo { get; set; }
+        public List<string> Sectores { get; set; } = new List<string>();
     }
 
     public class BESuscriptorNewsletterRespuesta
@@ -71,9 +75,11 @@ namespace worklingua.Server.BE
         public DateTime? FechaConfirmacion { get; set; }
         public DateTime? FechaBaja { get; set; }
         public bool Activo { get; set; }
+        public List<string> Sectores { get; set; }
 
         public BESuscriptorNewsletterRespuesta()
         {
+            this.Sectores = new List<string>();
         }
 
         public BESuscriptorNewsletterRespuesta(
@@ -84,7 +90,8 @@ namespace worklingua.Server.BE
             DateTime fechaAlta,
             DateTime? fechaConfirmacion,
             DateTime? fechaBaja,
-            bool activo)
+            bool activo,
+            List<string> sectores)
         {
             this.SuscriptorId = suscriptorId;
             this.Email = email;
@@ -94,6 +101,7 @@ namespace worklingua.Server.BE
             this.FechaConfirmacion = fechaConfirmacion;
             this.FechaBaja = fechaBaja;
             this.Activo = activo;
+            this.Sectores = sectores ?? new List<string>();
         }
     }
 
@@ -101,6 +109,7 @@ namespace worklingua.Server.BE
     {
         public string Email { get; set; }
         public string Idioma { get; set; }
+        public List<string> Sectores { get; set; } = new List<string>();
     }
 
     public class BEEnviarNewsletter
@@ -147,15 +156,18 @@ namespace worklingua.Server.BE
     {
         public string Html { get; set; }
         public int CantidadDestinatarios { get; set; }
+        public List<string> Sectores { get; set; }
 
         public BEVistaPreviaNewsletterRespuesta()
         {
+            this.Sectores = new List<string>();
         }
 
-        public BEVistaPreviaNewsletterRespuesta(string html, int cantidadDestinatarios)
+        public BEVistaPreviaNewsletterRespuesta(string html, int cantidadDestinatarios, List<string> sectores)
         {
             this.Html = html;
             this.CantidadDestinatarios = cantidadDestinatarios;
+            this.Sectores = sectores ?? new List<string>();
         }
     }
 }

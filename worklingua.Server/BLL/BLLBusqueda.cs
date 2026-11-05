@@ -24,6 +24,7 @@ namespace worklingua.Server.BLL
         private const string SeccionMiWorklingua = "layout.menu.grupo.miWorklingua";
         private const string SeccionAdministracion = "layout.menu.grupo.administracion";
         private const string SeccionComunicacion = "layout.menu.grupo.comunicacion";
+        private const string SeccionAtencion = "layout.menu.grupo.atencion";
         private const string SeccionSeguridad = "layout.menu.grupo.seguridad";
 
         static readonly List<BEPaginaBuscable> Catalogo = new List<BEPaginaBuscable>
@@ -42,20 +43,37 @@ namespace worklingua.Server.BLL
             Publica("/recuperar-clave", "auth.recuperar.titulo", "recuperarClave", SeccionAcceso, 130),
 
             Privada("/inicio", "layout.menu.panel", "perfil", SeccionCuenta, null, 210),
+            Privada("/inicio/perfil", "layout.menu.miPerfil", "miPerfil", SeccionCuenta, null, 215),
             Privada("/inicio/cambiar-clave", "layout.menu.miCuenta", "cambiarClave", SeccionCuenta, null, 220),
 
+            Privada("/inicio/cursos", "layout.menu.misCursos", "misCursos", SeccionMiWorklingua, Permisos.CursoVerProgreso, 305),
             Privada("/inicio/admin/cursos", "layout.menu.cursos", "cursos", SeccionMiWorklingua, Permisos.CursoListar, 310),
             Privada("/inicio/opiniones", "layout.menu.opiniones", "opiniones", SeccionMiWorklingua, Permisos.ComentarioParticipar, 320),
+            Privada("/inicio/plan", "layout.menu.miPlan", "miPlan", SeccionMiWorklingua, null, 330),
+            Privada("/inicio/cuenta-corriente", "layout.menu.cuentaCorriente", "cuentaCorriente", SeccionMiWorklingua, Permisos.CuentaCorrienteConsultar, 340),
+            Privada("/inicio/ofertas", "layout.menu.misOfertas", "misOfertas", SeccionMiWorklingua, Permisos.OfertaConsultar, 350),
+            Privada("/inicio/soporte", "layout.menu.soporte", "soporte", SeccionMiWorklingua, Permisos.TicketCrear, 360),
+            Privada("/inicio/encuestas", "layout.menu.encuestas", "encuestas", SeccionMiWorklingua, Permisos.EncuestaResponder, 370),
 
+            Privada("/inicio/admin/tablero", "layout.menu.tablero", "tablero", SeccionAdministracion, Permisos.ReporteVer, 405),
+            Privada("/inicio/admin/reportes", "layout.menu.reportes", "reportes", SeccionAdministracion, Permisos.ReporteVer, 408),
             Privada("/inicio/admin/usuarios", "layout.menu.usuarios", "usuarios", SeccionAdministracion, Permisos.UsuarioListar, 410),
             Privada("/inicio/admin/empresas", "layout.menu.empresas", "empresas", SeccionAdministracion, Permisos.EmpresaListar, 420),
+            Privada("/inicio/admin/departamentos", "layout.menu.departamentos", "departamentos", SeccionAdministracion, Permisos.DepartamentoListar, 425),
+            Privada("/inicio/admin/licencias", "layout.menu.licencias", "licencias", SeccionAdministracion, Permisos.LicenciaListar, 428),
             Privada("/inicio/admin/planes", "layout.menu.planes", "planes", SeccionAdministracion, Permisos.PlanListar, 430),
+            Privada("/inicio/admin/rendimiento", "layout.menu.rendimiento", "rendimiento", SeccionAdministracion, Permisos.CursoVerProgresoEmpresa, 432),
+            Privada("/inicio/admin/alertas", "layout.menu.alertas", "alertas", SeccionAdministracion, Permisos.AlertaListar, 435),
             Privada("/inicio/admin/idiomas", "layout.menu.idiomas", "idiomas", SeccionAdministracion, Permisos.IdiomaListar, 440),
             Privada("/inicio/admin/culturas", "layout.menu.culturas", "culturas", SeccionAdministracion, Permisos.CulturaListar, 450),
             Privada("/inicio/admin/traducciones", "layout.menu.traducciones", "traducciones", SeccionAdministracion, Permisos.TraduccionListar, 460),
 
             Privada("/inicio/admin/noticias", "layout.menu.noticias", "noticias", SeccionComunicacion, Permisos.NoticiaListar, 510),
             Privada("/inicio/admin/newsletter", "layout.menu.newsletter", "newsletter", SeccionComunicacion, Permisos.NewsletterListar, 520),
+            Privada("/inicio/admin/ofertas", "layout.menu.adminOfertas", "adminOfertas", SeccionComunicacion, Permisos.OfertaListar, 530),
+            Privada("/inicio/admin/encuestas", "layout.menu.adminEncuestas", "adminEncuestas", SeccionComunicacion, Permisos.EncuestaListar, 540),
+
+            Privada("/inicio/admin/soporte", "layout.menu.adminSoporte", "adminSoporte", SeccionAtencion, Permisos.TicketAtender, 560),
 
             Privada("/inicio/admin/operadores", "layout.menu.operadores", "operadores", SeccionSeguridad, Permisos.OperadorListar, 610),
             Privada("/inicio/admin/roles", "layout.menu.roles", "roles", SeccionSeguridad, Permisos.RolListar, 620),

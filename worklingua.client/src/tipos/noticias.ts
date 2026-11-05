@@ -1,3 +1,5 @@
+import type { SectorCurso } from './cursos';
+
 export interface NoticiaResponse {
     noticiaId: number;
     idiomaId: number;
@@ -5,6 +7,7 @@ export interface NoticiaResponse {
     resumen: string | null;
     contenido: string;
     fechaPublicacion: string;
+    sector: SectorCurso | null;
 }
 
 export interface NoticiaAdminResponse extends NoticiaResponse {
@@ -19,11 +22,13 @@ export interface GuardarNoticiaRequest {
     resumen: string | null;
     contenido: string;
     fechaPublicacion: string | null;
+    sector: SectorCurso | null;
 }
 
 export interface SuscribirNewsletterRequest {
     email: string;
     idioma: string;
+    sectores: SectorCurso[];
 }
 
 export interface SuscriptorNewsletterResponse {
@@ -35,6 +40,7 @@ export interface SuscriptorNewsletterResponse {
     fechaConfirmacion: string | null;
     fechaBaja: string | null;
     activo: boolean;
+    sectores: SectorCurso[];
 }
 
 export interface EnvioNewsletterResponse {
@@ -56,4 +62,5 @@ export interface EnviarNewsletterRequest {
 export interface VistaPreviaNewsletterResponse {
     html: string;
     cantidadDestinatarios: number;
+    sectores: SectorCurso[];
 }

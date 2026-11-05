@@ -32,6 +32,7 @@ namespace worklingua.Server.MPP
             Hdatos.Add("@FechaDesde", Objeto.FechaDesde.ToDateTime(TimeOnly.MinValue));
             Hdatos.Add("@FechaVencimiento", Objeto.FechaVencimiento.ToDateTime(TimeOnly.MinValue));
             Hdatos.Add("@Activo", Objeto.Activo);
+            Hdatos.Add("@EsPublica", Objeto.EsPublica);
 
             object resultado = oDatos.LeerEscalar(Consulta, Hdatos);
 
@@ -58,6 +59,7 @@ namespace worklingua.Server.MPP
                 Objeto.VigentesAl.HasValue
                     ? (object)Objeto.VigentesAl.Value.ToDateTime(TimeOnly.MinValue)
                     : null);
+            Hdatos.Add("@SoloPublicas", Objeto.SoloPublicas);
 
             List<BEEncuestaConDetalle> ListaEncuestaBE = new List<BEEncuestaConDetalle>();
             DataTable Dt = oDatos.Leer("sp_Encuesta_Listar", Hdatos);
@@ -74,6 +76,7 @@ namespace worklingua.Server.MPP
                         ServicioLectorFila.LeerFechaNula(Item, "FechaDesde") ?? default,
                         ServicioLectorFila.LeerFechaNula(Item, "FechaVencimiento") ?? default,
                         ServicioLectorFila.LeerBooleano(Item, "Activo"),
+                        ServicioLectorFila.LeerBooleano(Item, "EsPublica"),
                         ServicioLectorFila.LeerEntero(Item, "UsuarioId"),
                         ServicioLectorFila.LeerFechaHora(Item, "FechaAlta"));
 
@@ -145,26 +148,45 @@ namespace worklingua.Server.MPP
             }
         }
 
-        public int GuardarRespuesta(BEResponderEncuesta Objeto, BESesion oSesionBE)
+        public int GuardarRespuesta(BEResponderEncuesta Objeto, BEVotanteEncuesta oVotanteBE)
         {
             Hdatos = new Hashtable();
             Hdatos.Add("@EncuestaId", Objeto.EncuestaId);
             Hdatos.Add("@OpcionEncuestaId", Objeto.OpcionEncuestaId);
-            Hdatos.Add("@UsuarioId", oSesionBE.UsuarioId);
+            Hdatos.Add("@UsuarioId", oVotanteBE.UsuarioId);
+            Hdatos.Add("@TokenVisitante", oVotanteBE.TokenVisitante);
 
             object resultado = oDatos.LeerEscalar("sp_RespuestaEncuesta_Alta", Hdatos);
 
             return Convert.ToInt32(resultado);
         }
 
-        public Dictionary<int, int> ListarRespuestasDeUsuario(BEFiltroEncuesta Objeto, BESesion oSesionBE)
+        public Dictionary<int, int> ListarRespuestasDeVotante(BEFiltroEncuesta Objeto, BEVotanteEncuesta oVotanteBE)
         {
+            Dictionary<int, int> Respuestas = new Dictionary<int, int>();
+
+            if (oVotanteBE == null || (!oVotanteBE.UsuarioId.HasValue && !oVotanteBE.TokenVisitante.HasValue))
+            {
+                return Respuestas;
+            }
+
             Hdatos = new Hashtable();
-            Hdatos.Add("@UsuarioId", oSesionBE.UsuarioId);
             Hdatos.Add("@EncuestaId", Objeto.EncuestaId);
 
-            Dictionary<int, int> Respuestas = new Dictionary<int, int>();
-            DataTable Dt = oDatos.Leer("sp_RespuestaEncuesta_ListarPorUsuario", Hdatos);
+            string Consulta;
+
+            if (oVotanteBE.UsuarioId.HasValue)
+            {
+                Hdatos.Add("@UsuarioId", oVotanteBE.UsuarioId.Value);
+                Consulta = "sp_RespuestaEncuesta_ListarPorUsuario";
+            }
+            else
+            {
+                Hdatos.Add("@TokenVisitante", oVotanteBE.TokenVisitante.Value);
+                Consulta = "sp_RespuestaEncuesta_ListarPorVisitante";
+            }
+
+            DataTable Dt = oDatos.Leer(Consulta, Hdatos);
 
             foreach (DataRow Item in Dt.Rows)
             {

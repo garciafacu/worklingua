@@ -65,6 +65,17 @@ namespace worklingua.Server.Controllers
             return Ok(Mapear(oValoracion, oSesionBE.UsuarioId));
         }
 
+        [HttpGet("planes-contratados")]
+        [ProducesResponseType(typeof(List<int>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public ActionResult<List<int>> ListarPlanesContratados()
+        {
+            BESesion oSesionBE = ExigirPermiso(Permisos.ComentarioParticipar);
+
+            return Ok(oBLLCom.ListarPlanesContratados(oSesionBE.UsuarioId));
+        }
+
         [HttpPost]
         [ProducesResponseType(typeof(BEComentarioRespuesta), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

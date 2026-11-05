@@ -31,6 +31,7 @@ export function Opiniones() {
 
     const [parametros] = useSearchParams();
     const [planes, setPlanes] = useState<PlanResponse[]>([]);
+    const [planesContratados, setPlanesContratados] = useState<number[]>([]);
     const [caracteristicas, setCaracteristicas] = useState<CaracteristicaResponse[]>([]);
     const [planId, setPlanId] = useState<number | null>(null);
     const [opiniones, setOpiniones] = useState<OpinionResponse[]>([]);
@@ -51,12 +52,18 @@ export function Opiniones() {
     useEffect(() => {
         const pedido = Number.parseInt(parametros.get('planId') ?? '', 10);
 
-        Promise.all([planesApi.listar(), caracteristicasApi.listar()])
-            .then(([listado, listaCaracteristicas]) => {
+        Promise.all([
+            planesApi.listar(),
+            caracteristicasApi.listar(),
+            opinionesApi.listarPlanesContratados(),
+        ])
+            .then(([listado, listaCaracteristicas, contratados]) => {
                 setPlanes(listado);
                 setCaracteristicas(listaCaracteristicas);
+                setPlanesContratados(contratados);
 
-                const elegido = listado.find((plan) => plan.planId === pedido) ?? listado[0];
+                const valorables = listado.filter((plan) => contratados.includes(plan.planId));
+                const elegido = valorables.find((plan) => plan.planId === pedido) ?? valorables[0];
                 setPlanId(elegido?.planId ?? null);
             })
             .catch((excepcion) =>
@@ -199,7 +206,8 @@ export function Opiniones() {
         }
     }
 
-    const planActual = planes.find((plan) => plan.planId === planId) ?? null;
+    const planesValorables = planes.filter((plan) => planesContratados.includes(plan.planId));
+    const planActual = planesValorables.find((plan) => plan.planId === planId) ?? null;
     const enBusqueda = consulta.tipo === 'busqueda';
 
     return (
@@ -228,10 +236,16 @@ export function Opiniones() {
                 </p>
             )}
 
+            {!cargando && !error && planes.length > 0 && planesValorables.length === 0 && (
+                <p className="mt-6 text-sm text-texto-suave">
+                    {t('privado.opiniones.sinContratados')}
+                </p>
+            )}
+
             {planActual && (
                 <div className="mt-8 space-y-8">
                     <SelectorPlanOpinion
-                        planes={planes}
+                        planes={planesValorables}
                         caracteristicas={caracteristicas}
                         planId={planActual.planId}
                         alSeleccionar={cambiarPlan}

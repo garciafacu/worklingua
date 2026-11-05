@@ -39,6 +39,30 @@ namespace worklingua.Server.Controllers
             return Ok(oBLLEnc.Responder(peticion, oSesionBE));
         }
 
+        [HttpGet("publicas")]
+        [ProducesResponseType(typeof(List<BEEncuestaConDetalle>), StatusCodes.Status200OK)]
+        public ActionResult<List<BEEncuestaConDetalle>> ListarPublicas(
+            [FromQuery] BEFiltroEncuesta oFiltroBE, [FromQuery] Guid? tokenVisitante)
+        {
+            return Ok(oBLLEnc.ListarPublicasVigentes(oFiltroBE, new BEVotanteEncuesta(null, tokenVisitante)));
+        }
+
+        [HttpPost("publicas/{encuestaId:int}/respuestas")]
+        [ProducesResponseType(typeof(BEEncuestaConDetalle), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<ActionResult<BEEncuestaConDetalle>> ResponderPublica(
+            int encuestaId, [FromBody] BEResponderEncuestaPublica peticion)
+        {
+            oBLLEnc.Validar(peticion);
+
+            BEResponderEncuesta oVotoBE = new BEResponderEncuesta(encuestaId, peticion.OpcionEncuestaId);
+            BEVotanteEncuesta oVotanteBE = new BEVotanteEncuesta(null, peticion.TokenVisitante);
+
+            return Ok(await oBLLEnc.ResponderPublica(oVotoBE, oVotanteBE, peticion.TokenCaptcha));
+        }
+
         [HttpGet("administracion")]
         [ProducesResponseType(typeof(List<BEEncuestaConDetalle>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -109,6 +133,7 @@ namespace worklingua.Server.Controllers
             oEncuestaBE.FechaDesde = peticion.FechaDesde ?? DateOnly.FromDateTime(DateTime.Now);
             oEncuestaBE.FechaVencimiento = peticion.FechaVencimiento ?? DateOnly.FromDateTime(DateTime.Now);
             oEncuestaBE.Activo = peticion.Activo;
+            oEncuestaBE.EsPublica = peticion.EsPublica;
 
             return oEncuestaBE;
         }

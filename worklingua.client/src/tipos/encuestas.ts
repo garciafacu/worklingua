@@ -15,6 +15,7 @@ export interface EncuestaResponse {
         fechaDesde: string;
         fechaVencimiento: string;
         activo: boolean;
+        esPublica: boolean;
         usuarioId: number;
         fechaAlta: string;
     };
@@ -33,9 +34,16 @@ export interface GuardarEncuestaRequest {
     fechaDesde: string;
     fechaVencimiento: string;
     activo: boolean;
+    esPublica: boolean;
     opciones: string[];
 }
 
 export interface ResponderEncuestaRequest {
     opcionEncuestaId: number;
+}
+
+export interface ResponderEncuestaPublicaRequest {
+    opcionEncuestaId: number;
+    tokenVisitante: string;
+    tokenCaptcha: string;
 }

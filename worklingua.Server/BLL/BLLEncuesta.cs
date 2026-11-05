@@ -15,8 +15,21 @@ namespace worklingua.Server.BLL
         MPPEncuesta oMPPEnc = new MPPEncuesta();
         BLLIdioma oBLLIdi = new BLLIdioma();
         BLLBitacora oBLLBit = new BLLBitacora();
+        ServicioCaptcha oServicioCaptcha = new ServicioCaptcha();
 
         public List<BEEncuestaConDetalle> ListarVigentes(BEFiltroEncuesta Objeto, BESesion oSesionBE)
+        {
+            return ListarVigentes(Objeto, new BEVotanteEncuesta(oSesionBE.UsuarioId, null));
+        }
+
+        public List<BEEncuestaConDetalle> ListarPublicasVigentes(BEFiltroEncuesta Objeto, BEVotanteEncuesta oVotanteBE)
+        {
+            Objeto.SoloPublicas = true;
+
+            return ListarVigentes(Objeto, oVotanteBE);
+        }
+
+        private List<BEEncuestaConDetalle> ListarVigentes(BEFiltroEncuesta Objeto, BEVotanteEncuesta oVotanteBE)
         {
             BEIdioma oIdiomaBE = ResolverIdioma(Objeto.Idioma);
 
@@ -28,7 +41,7 @@ namespace worklingua.Server.BLL
             DateOnly hoy = DateOnly.FromDateTime(DateTime.Now);
 
             List<BEEncuestaConDetalle> ListaEncuestaBE =
-                oMPPEnc.Listar(new BEFiltroEncuesta(null, oIdiomaBE.IdiomaId, hoy));
+                oMPPEnc.Listar(new BEFiltroEncuesta(null, oIdiomaBE.IdiomaId, hoy, Objeto.SoloPublicas));
 
             if (ListaEncuestaBE == null)
             {
@@ -37,7 +50,7 @@ namespace worklingua.Server.BLL
                 if (oBaseBE != null && oBaseBE.IdiomaId != oIdiomaBE.IdiomaId)
                 {
                     ListaEncuestaBE =
-                        oMPPEnc.Listar(new BEFiltroEncuesta(null, oBaseBE.IdiomaId, hoy));
+                        oMPPEnc.Listar(new BEFiltroEncuesta(null, oBaseBE.IdiomaId, hoy, Objeto.SoloPublicas));
                 }
             }
 
@@ -46,7 +59,7 @@ namespace worklingua.Server.BLL
                 return new List<BEEncuestaConDetalle>();
             }
 
-            Completar(ListaEncuestaBE, oSesionBE);
+            Completar(ListaEncuestaBE, oVotanteBE, true);
 
             return ListaEncuestaBE;
         }
@@ -60,7 +73,7 @@ namespace worklingua.Server.BLL
                 return new List<BEEncuestaConDetalle>();
             }
 
-            Completar(ListaEncuestaBE, null);
+            Completar(ListaEncuestaBE, null, false);
 
             return ListaEncuestaBE;
         }
@@ -75,7 +88,7 @@ namespace worklingua.Server.BLL
                 throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "La encuesta no existe.");
             }
 
-            Completar(ListaEncuestaBE, null);
+            Completar(ListaEncuestaBE, null, false);
 
             return ListaEncuestaBE[0];
         }
@@ -130,10 +143,39 @@ namespace worklingua.Server.BLL
 
         public BEEncuestaConDetalle Responder(BEResponderEncuesta Objeto, BESesion oSesionBE)
         {
+            return Responder(Objeto, new BEVotanteEncuesta(oSesionBE.UsuarioId, null), false);
+        }
+
+        public async Task<BEEncuestaConDetalle> ResponderPublica(
+            BEResponderEncuesta Objeto, BEVotanteEncuesta oVotanteBE, string tokenCaptcha)
+        {
+            if (!oVotanteBE.TokenVisitante.HasValue)
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Validacion, "Falta el identificador del visitante.");
+            }
+
+            if (!await oServicioCaptcha.ValidarAsync(tokenCaptcha))
+            {
+                throw new ExcepcionNegocio(
+                    TipoErrorNegocio.Validacion, "No pudimos verificar el CAPTCHA. Volvé a intentarlo.");
+            }
+
+            return Responder(Objeto, oVotanteBE, true);
+        }
+
+        private BEEncuestaConDetalle Responder(
+            BEResponderEncuesta Objeto, BEVotanteEncuesta oVotanteBE, bool exigirPublica)
+        {
             BEEncuesta oFiltroBE = new BEEncuesta();
             oFiltroBE.EncuestaId = Objeto.EncuestaId;
 
             BEEncuestaConDetalle oDetalleBE = ListarObjeto(oFiltroBE);
+
+            if (exigirPublica && !oDetalleBE.Encuesta.EsPublica)
+            {
+                throw new ExcepcionNegocio(TipoErrorNegocio.NoEncontrado, "La encuesta no existe.");
+            }
 
             if (!oDetalleBE.Vigente)
             {
@@ -147,32 +189,33 @@ namespace worklingua.Server.BLL
                     TipoErrorNegocio.Validacion, "La opción elegida no pertenece a esta encuesta.");
             }
 
-            if (YaRespondio(Objeto.EncuestaId, oSesionBE))
+            if (YaRespondio(Objeto.EncuestaId, oVotanteBE))
             {
                 throw new ExcepcionNegocio(TipoErrorNegocio.Conflicto, "Ya respondiste esta encuesta.");
             }
 
-            oMPPEnc.GuardarRespuesta(Objeto, oSesionBE);
+            oMPPEnc.GuardarRespuesta(Objeto, oVotanteBE);
 
             oBLLBit.Guardar(new BEBitacoraEvento(
-                0, oSesionBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloEncuesta, "Respuesta",
+                0, oVotanteBE.UsuarioId, DateTime.Now, BLLBitacora.ModuloEncuesta,
+                oVotanteBE.UsuarioId.HasValue ? "Respuesta" : "RespuestaAnonima",
                 "Respuesta a la encuesta " + Objeto.EncuestaId + ".", BLLBitacora.NivelInformativo));
 
             List<BEEncuestaConDetalle> ListaEncuestaBE =
                 oMPPEnc.Listar(new BEFiltroEncuesta(Objeto.EncuestaId, null, null));
 
-            Completar(ListaEncuestaBE, oSesionBE);
+            Completar(ListaEncuestaBE, oVotanteBE, true);
 
             return ListaEncuestaBE[0];
         }
 
-        private void Completar(List<BEEncuestaConDetalle> ListaEncuestaBE, BESesion oSesionBE)
+        private void Completar(
+            List<BEEncuestaConDetalle> ListaEncuestaBE, BEVotanteEncuesta oVotanteBE, bool ocultarHastaVotar)
         {
             List<BEOpcionEncuesta> ListaOpcionBE = oMPPEnc.ListarOpciones(new BEFiltroEncuesta());
 
-            Dictionary<int, int> Respuestas = oSesionBE == null
-                ? new Dictionary<int, int>()
-                : oMPPEnc.ListarRespuestasDeUsuario(new BEFiltroEncuesta(), oSesionBE);
+            Dictionary<int, int> Respuestas =
+                oMPPEnc.ListarRespuestasDeVotante(new BEFiltroEncuesta(), oVotanteBE);
 
             DateOnly hoy = DateOnly.FromDateTime(DateTime.Now);
 
@@ -189,7 +232,7 @@ namespace worklingua.Server.BLL
                     oDetalleBE.OpcionElegidaId = Respuestas[encuestaId];
                 }
 
-                bool ocultarVotos = oSesionBE != null
+                bool ocultarVotos = ocultarHastaVotar
                     && oDetalleBE.OpcionElegidaId == null
                     && oDetalleBE.Vigente;
 
@@ -250,10 +293,10 @@ namespace worklingua.Server.BLL
             return false;
         }
 
-        private bool YaRespondio(int encuestaId, BESesion oSesionBE)
+        private bool YaRespondio(int encuestaId, BEVotanteEncuesta oVotanteBE)
         {
             Dictionary<int, int> Respuestas =
-                oMPPEnc.ListarRespuestasDeUsuario(new BEFiltroEncuesta(encuestaId, null, null), oSesionBE);
+                oMPPEnc.ListarRespuestasDeVotante(new BEFiltroEncuesta(encuestaId, null, null), oVotanteBE);
 
             return Respuestas.ContainsKey(encuestaId);
         }
@@ -344,6 +387,15 @@ namespace worklingua.Server.BLL
         public void Validar(BEResponderEncuesta Objeto)
         {
             ReglasNegocio.ExigirRango(Objeto.OpcionEncuestaId, 1, int.MaxValue, "Elegí una opción para responder.");
+        }
+
+        public void Validar(BEResponderEncuestaPublica Objeto)
+        {
+            ReglasNegocio.ExigirRango(Objeto.OpcionEncuestaId, 1, int.MaxValue, "Elegí una opción para responder.");
+
+            ReglasNegocio.ExigirValor(Objeto.TokenVisitante, "Falta el identificador del visitante.");
+
+            ReglasNegocio.ExigirTexto(Objeto.TokenCaptcha, "Completá el CAPTCHA.");
         }
 
         public void Validar(BEGuardarEncuesta Objeto)

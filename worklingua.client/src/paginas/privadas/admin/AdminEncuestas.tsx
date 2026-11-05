@@ -29,6 +29,7 @@ const FORMULARIO_VACIO = {
     fechaDesde: '',
     fechaVencimiento: '',
     activo: true,
+    esPublica: false,
     opciones: OPCIONES_VACIAS,
 };
 
@@ -94,6 +95,7 @@ export function AdminEncuestas() {
             fechaDesde: item.encuesta.fechaDesde,
             fechaVencimiento: item.encuesta.fechaVencimiento,
             activo: item.encuesta.activo,
+            esPublica: item.encuesta.esPublica,
             opciones: item.opciones.map((opcion) => opcion.texto),
         });
     }
@@ -148,6 +150,7 @@ export function AdminEncuestas() {
             fechaDesde: formulario.fechaDesde,
             fechaVencimiento: formulario.fechaVencimiento,
             activo: formulario.activo,
+            esPublica: formulario.esPublica,
             opciones: tieneRespuestas ? [] : opciones,
         };
 
@@ -196,6 +199,10 @@ export function AdminEncuestas() {
             celda: (item) => formatearFecha(item.encuesta.fechaVencimiento),
         },
         { encabezado: t('admin.encuestas.col.respuestas'), celda: (item) => String(item.totalRespuestas) },
+        {
+            encabezado: t('admin.encuestas.col.publica'),
+            celda: (item) => (item.encuesta.esPublica ? t('admin.encuestas.col.publica') : '—'),
+        },
         {
             encabezado: t('admin.encuestas.col.estado'),
             celda: (item) => (item.encuesta.activo ? t('admin.encuestas.activa') : t('admin.encuestas.inactiva')),
@@ -340,6 +347,23 @@ export function AdminEncuestas() {
                             />
                             {t('admin.encuestas.activa')}
                         </label>
+
+                        <div>
+                            <label className="flex items-center gap-2.5 text-sm text-texto">
+                                <input
+                                    type="checkbox"
+                                    className="size-4"
+                                    checked={formulario.esPublica}
+                                    onChange={(evento) =>
+                                        setFormulario({ ...formulario, esPublica: evento.target.checked })
+                                    }
+                                />
+                                {t('admin.encuestas.esPublica')}
+                            </label>
+                            <p className="mt-1 mb-0 ml-6.5 text-xs text-texto-suave">
+                                {t('admin.encuestas.esPublica.ayuda')}
+                            </p>
+                        </div>
 
                         <BotonesFormulario
                             editando={editandoId !== null}

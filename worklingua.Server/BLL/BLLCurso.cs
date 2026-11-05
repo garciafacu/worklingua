@@ -796,5 +796,27 @@ namespace worklingua.Server.BLL
                 TipoErrorNegocio.Validacion,
                 "El sector debe ser " + string.Join(", ", Validos) + ".");
         }
+
+        public static List<string> ResolverLista(List<string> Sectores)
+        {
+            List<string> ListaResuelta = new List<string>();
+
+            if (Sectores == null)
+            {
+                return ListaResuelta;
+            }
+
+            foreach (string sector in Sectores)
+            {
+                string resuelto = Resolver(sector);
+
+                if (resuelto != null && !ListaResuelta.Contains(resuelto))
+                {
+                    ListaResuelta.Add(resuelto);
+                }
+            }
+
+            return ListaResuelta;
+        }
     }
 }

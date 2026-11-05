@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import hero from '../../assets/hero.png';
 import { Seccion } from '../../componentes/Basicos';
+import { EncuestaPublica } from '../../componentes/EncuestaPublica';
 
 const PROPUESTA = ['sector', 'practica', 'apps'];
 
@@ -65,6 +66,10 @@ export function InicioPublico() {
                         </article>
                     ))}
                 </div>
+            </Seccion>
+
+            <Seccion titulo={t('publico.encuesta.titulo')}>
+                <EncuestaPublica />
             </Seccion>
 
             <Seccion

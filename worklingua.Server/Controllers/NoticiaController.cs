@@ -147,6 +147,7 @@ namespace worklingua.Server.Controllers
             oNoticiaBE.FechaPublicacion = peticion.FechaPublicacion.HasValue
                 ? peticion.FechaPublicacion.Value
                 : default(DateTime);
+            oNoticiaBE.Sector = peticion.Sector;
 
             return oNoticiaBE;
         }
@@ -161,6 +162,7 @@ namespace worklingua.Server.Controllers
             item.Resumen = oNoticiaBE.Resumen;
             item.Contenido = oNoticiaBE.Contenido;
             item.FechaPublicacion = oNoticiaBE.FechaPublicacion;
+            item.Sector = oNoticiaBE.Sector;
 
             return item;
         }
@@ -225,7 +227,8 @@ namespace worklingua.Server.Controllers
                     oSuscriptorBE.FechaAlta,
                     oSuscriptorBE.FechaConfirmacion,
                     oSuscriptorBE.FechaBaja,
-                    oSuscriptorBE.Activo));
+                    oSuscriptorBE.Activo,
+                    oSuscriptorBE.Sectores));
             }
 
             return Ok(respuesta);

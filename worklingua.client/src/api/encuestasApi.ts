@@ -2,10 +2,19 @@ import { clienteHttp } from './clienteHttp';
 import type {
     EncuestaResponse,
     GuardarEncuestaRequest,
+    ResponderEncuestaPublicaRequest,
     ResponderEncuestaRequest,
 } from '../tipos/encuestas';
 
 export const encuestasApi = {
+    listarPublicas: (idioma: string, tokenVisitante: string) =>
+        clienteHttp.get<EncuestaResponse[]>(
+            `/encuestas/publicas?idioma=${encodeURIComponent(idioma)}&tokenVisitante=${tokenVisitante}`,
+        ),
+
+    responderPublica: (encuestaId: number, cuerpo: ResponderEncuestaPublicaRequest) =>
+        clienteHttp.post<EncuestaResponse>(`/encuestas/publicas/${encuestaId}/respuestas`, cuerpo),
+
     listarVigentes: (idioma: string) =>
         clienteHttp.get<EncuestaResponse[]>(`/encuestas/vigentes?idioma=${encodeURIComponent(idioma)}`),
 

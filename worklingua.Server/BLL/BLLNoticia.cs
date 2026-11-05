@@ -119,6 +119,7 @@ namespace worklingua.Server.BLL
             Objeto.Titulo = ServicioTexto.Normalizar(Objeto.Titulo);
             Objeto.Resumen = ServicioTexto.Normalizar(Objeto.Resumen);
             Objeto.Contenido = ServicioTexto.Normalizar(Objeto.Contenido);
+            Objeto.Sector = Sectores.Resolver(Objeto.Sector);
 
             ReglasNegocio.ExigirTexto(Objeto.Titulo, "El título de la noticia es obligatorio.");
             ReglasNegocio.ExigirLargoMaximo(Objeto.Titulo, LongitudMaximaTitulo,
@@ -175,6 +176,8 @@ namespace worklingua.Server.BLL
             ReglasNegocio.ExigirTexto(Objeto.Contenido, "El contenido de la noticia es obligatorio.");
             ReglasNegocio.ExigirLargoMaximo(Objeto.Contenido, 20000,
                 "El contenido no puede superar los 20000 caracteres.");
+
+            ReglasNegocio.ExigirLargoMaximo(Objeto.Sector, 30, "El sector no puede superar los 30 caracteres.");
         }
     }
 
@@ -196,9 +199,9 @@ namespace worklingua.Server.BLL
             return ListaSuscriptorBE == null ? new List<BESuscriptorNewsletter>() : ListaSuscriptorBE;
         }
 
-        public List<BESuscriptorNewsletter> ListarConfirmados(BEIdioma Objeto)
+        public List<BESuscriptorNewsletter> ListarConfirmados(BEIdioma Objeto, List<string> Sectores)
         {
-            List<BESuscriptorNewsletter> ListaSuscriptorBE = oMPPSus.ListarConfirmados(Objeto);
+            List<BESuscriptorNewsletter> ListaSuscriptorBE = oMPPSus.ListarConfirmados(Objeto, Sectores);
 
             return ListaSuscriptorBE == null ? new List<BESuscriptorNewsletter>() : ListaSuscriptorBE;
         }
@@ -206,6 +209,7 @@ namespace worklingua.Server.BLL
         public void Guardar(BESuscribirNewsletter Objeto)
         {
             string email = ValidarEmail(Objeto.Email);
+            List<string> ListaSector = Sectores.ResolverLista(Objeto.Sectores);
 
             BEIdioma oFiltroIdiomaBE = new BEIdioma();
             oFiltroIdiomaBE.CodigoISO = Objeto.Idioma;
@@ -223,6 +227,12 @@ namespace worklingua.Server.BLL
 
             BESuscriptorNewsletter oExistenteBE = oMPPSus.ListarPorEmail(oFiltroBE);
 
+            if (oExistenteBE != null)
+            {
+                oExistenteBE.Sectores = ListaSector;
+                oMPPSus.ReemplazarSectores(oExistenteBE);
+            }
+
             if (oExistenteBE != null && !DebeEnviarConfirmacion(oExistenteBE))
             {
                 return;
@@ -234,6 +244,9 @@ namespace worklingua.Server.BLL
             oSuscriptorBE.IdiomaId = oIdiomaBE.IdiomaId;
 
             oSuscriptorBE.SuscriptorId = oMPPSus.Guardar(oSuscriptorBE);
+            oSuscriptorBE.Sectores = ListaSector;
+
+            oMPPSus.ReemplazarSectores(oSuscriptorBE);
 
             EnviarConfirmacion(oMPPSus.ListarObjeto(oSuscriptorBE), oIdiomaBE);
         }
@@ -402,12 +415,13 @@ namespace worklingua.Server.BLL
             ValidarAsunto(Objeto);
 
             List<BENoticia> ListaNoticiaBE = ObtenerNoticias(Objeto, oIdiomaBE);
+            List<string> ListaSector = SectoresDelEnvio(ListaNoticiaBE);
 
             string html = oServicioEmail.RenderizarNewsletter(
                 Guid.Empty, ListaNoticiaBE, oBLLTra.ListarPorCodigo(oIdiomaBE.CodigoISO), FormatoFecha(oIdiomaBE));
 
             return new BEVistaPreviaNewsletterRespuesta(
-                html, oBLLSus.ListarConfirmados(oIdiomaBE).Count);
+                html, oBLLSus.ListarConfirmados(oIdiomaBE, ListaSector).Count, ListaSector);
         }
 
         public BEEnvioNewsletter Guardar(BEEnviarNewsletter Objeto, BESesion oSesionBE)
@@ -421,13 +435,14 @@ namespace worklingua.Server.BLL
             BEIdioma oIdiomaBE = ObtenerIdioma(Objeto);
             string asunto = ValidarAsunto(Objeto);
             List<BENoticia> ListaNoticiaBE = ObtenerNoticias(Objeto, oIdiomaBE);
-            List<BESuscriptorNewsletter> ListaSuscriptorBE = oBLLSus.ListarConfirmados(oIdiomaBE);
+            List<BESuscriptorNewsletter> ListaSuscriptorBE =
+                oBLLSus.ListarConfirmados(oIdiomaBE, SectoresDelEnvio(ListaNoticiaBE));
 
             if (ListaSuscriptorBE.Count == 0)
             {
                 throw new ExcepcionNegocio(
                     TipoErrorNegocio.Validacion,
-                    "No hay suscriptores confirmados en el idioma del envío.");
+                    "No hay suscriptores confirmados para el idioma y los intereses de este envío.");
             }
 
             Dictionary<string, string> textos = oBLLTra.ListarPorCodigo(oIdiomaBE.CodigoISO);
@@ -465,6 +480,26 @@ namespace worklingua.Server.BLL
                 fallidos > 0 ? BLLBitacora.NivelAdvertencia : BLLBitacora.NivelInformativo));
 
             return oEnvioBE;
+        }
+
+        private List<string> SectoresDelEnvio(List<BENoticia> ListaNoticiaBE)
+        {
+            List<string> ListaSector = new List<string>();
+
+            foreach (BENoticia oNoticiaBE in ListaNoticiaBE)
+            {
+                if (string.IsNullOrWhiteSpace(oNoticiaBE.Sector))
+                {
+                    return new List<string>();
+                }
+
+                if (!ListaSector.Contains(oNoticiaBE.Sector))
+                {
+                    ListaSector.Add(oNoticiaBE.Sector);
+                }
+            }
+
+            return ListaSector;
         }
 
         private BEIdioma ObtenerIdioma(BEEnviarNewsletter Objeto)

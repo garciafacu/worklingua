@@ -51,6 +51,7 @@ namespace worklingua.Server.MPP
             Hdatos.Add("@Resumen", Objeto.Resumen);
             Hdatos.Add("@Contenido", Objeto.Contenido);
             Hdatos.Add("@FechaPublicacion", Objeto.FechaPublicacion);
+            Hdatos.Add("@Sector", Objeto.Sector);
 
             if (Objeto.NoticiaId != 0)
             {
@@ -91,6 +92,7 @@ namespace worklingua.Server.MPP
             oNoticiaBE.FechaPublicacion = ServicioLectorFila.LeerFechaHora(Item, "FechaPublicacion");
             oNoticiaBE.FechaAlta = ServicioLectorFila.LeerFechaHora(Item, "FechaAlta");
             oNoticiaBE.Activo = ServicioLectorFila.LeerBooleano(Item, "Activo");
+            oNoticiaBE.Sector = ServicioLectorFila.LeerTextoNulo(Item, "Sector");
 
             return oNoticiaBE;
         }
@@ -106,12 +108,30 @@ namespace worklingua.Server.MPP
             return ServicioLectorFila.ALista<BESuscriptorNewsletter>(oDatos.Leer("sp_SuscriptorNewsletter_Listar", null), Mapear);
         }
 
-        public List<BESuscriptorNewsletter> ListarConfirmados(BEIdioma Objeto)
+        public List<BESuscriptorNewsletter> ListarConfirmados(BEIdioma Objeto, List<string> Sectores)
         {
             Hdatos = new Hashtable();
             Hdatos.Add("@IdiomaId", Objeto.IdiomaId);
+            Hdatos.Add(
+                "@Sectores",
+                Sectores == null || Sectores.Count == 0 ? null : string.Join(",", Sectores));
 
             return ServicioLectorFila.ALista<BESuscriptorNewsletter>(oDatos.Leer("sp_SuscriptorNewsletter_ListarConfirmadosPorIdioma", Hdatos), Mapear);
+        }
+
+        public bool ReemplazarSectores(BESuscriptorNewsletter Objeto)
+        {
+            Hdatos = new Hashtable();
+            Hdatos.Add("@SuscriptorId", Objeto.SuscriptorId);
+            Hdatos.Add(
+                "@Sectores",
+                Objeto.Sectores == null || Objeto.Sectores.Count == 0
+                    ? null
+                    : string.Join(",", Objeto.Sectores));
+
+            oDatos.Escribir("sp_SuscriptorNewsletterSector_Reemplazar", Hdatos);
+
+            return true;
         }
 
         public BESuscriptorNewsletter ListarObjeto(BESuscriptorNewsletter Objeto)
@@ -193,8 +213,29 @@ namespace worklingua.Server.MPP
             oSuscriptorBE.FechaConfirmacion = ServicioLectorFila.LeerFechaHoraNula(Item, "FechaConfirmacion");
             oSuscriptorBE.FechaBaja = ServicioLectorFila.LeerFechaHoraNula(Item, "FechaBaja");
             oSuscriptorBE.Activo = ServicioLectorFila.LeerBooleano(Item, "Activo");
+            oSuscriptorBE.Sectores = ASectores(ServicioLectorFila.LeerTextoNulo(Item, "Sectores"));
 
             return oSuscriptorBE;
+        }
+
+        private List<string> ASectores(string agregados)
+        {
+            List<string> ListaSector = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(agregados))
+            {
+                return ListaSector;
+            }
+
+            foreach (string sector in agregados.Split(','))
+            {
+                if (!string.IsNullOrWhiteSpace(sector))
+                {
+                    ListaSector.Add(sector.Trim());
+                }
+            }
+
+            return ListaSector;
         }
     }
 

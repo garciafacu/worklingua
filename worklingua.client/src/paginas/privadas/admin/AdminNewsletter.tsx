@@ -193,6 +193,13 @@ export function AdminNewsletter() {
         { encabezado: t('admin.newsletter.tabla.email'), celda: (suscriptor) => suscriptor.email },
         { encabezado: t('comun.campo.idioma'), celda: (suscriptor) => nombreIdioma(suscriptor.idiomaId) },
         {
+            encabezado: t('admin.newsletter.col.sectores'),
+            celda: (suscriptor) =>
+                suscriptor.sectores.length === 0
+                    ? t('admin.newsletter.sectores.todos')
+                    : suscriptor.sectores.map((sector) => t(`admin.cursos.sector.${sector}`)).join(', '),
+        },
+        {
             encabezado: t('admin.newsletter.tabla.estado'),
             celda: (suscriptor) => t(`admin.newsletter.estado.${estadoSuscriptor(suscriptor)}`),
         },
@@ -346,6 +353,14 @@ export function AdminNewsletter() {
                                 {t('admin.newsletter.envio.destinatarios', {
                                     cantidad: vistaPrevia.cantidadDestinatarios,
                                 })}
+                            </p>
+
+                            <p className="mt-1 text-xs text-texto-suave">
+                                {vistaPrevia.sectores.length === 0
+                                    ? t('admin.newsletter.destinatarios.general')
+                                    : `${t('admin.newsletter.destinatarios.segmentado')} (${vistaPrevia.sectores
+                                          .map((sector) => t(`admin.cursos.sector.${sector}`))
+                                          .join(', ')})`}
                             </p>
                             <h3 className="mt-4 text-sm font-semibold text-texto">
                                 {t('admin.newsletter.envio.vistaPrevia')}

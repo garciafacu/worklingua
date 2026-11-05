@@ -9,6 +9,7 @@ namespace worklingua.Server.BE
         public DateOnly FechaDesde { get; set; }
         public DateOnly FechaVencimiento { get; set; }
         public bool Activo { get; set; }
+        public bool EsPublica { get; set; }
         public int UsuarioId { get; set; }
         public DateTime FechaAlta { get; set; }
 
@@ -24,6 +25,7 @@ namespace worklingua.Server.BE
             DateOnly fechaDesde,
             DateOnly fechaVencimiento,
             bool activo,
+            bool esPublica,
             int usuarioId,
             DateTime fechaAlta)
         {
@@ -34,6 +36,7 @@ namespace worklingua.Server.BE
             this.FechaDesde = fechaDesde;
             this.FechaVencimiento = fechaVencimiento;
             this.Activo = activo;
+            this.EsPublica = esPublica;
             this.UsuarioId = usuarioId;
             this.FechaAlta = fechaAlta;
         }
@@ -58,6 +61,7 @@ namespace worklingua.Server.BE
         public DateOnly? FechaDesde { get; set; }
         public DateOnly? FechaVencimiento { get; set; }
         public bool Activo { get; set; }
+        public bool EsPublica { get; set; }
         public List<string> Opciones { get; set; } = new List<string>();
     }
 
@@ -67,6 +71,7 @@ namespace worklingua.Server.BE
         public int? IdiomaId { get; set; }
         public string Idioma { get; set; }
         public DateOnly? VigentesAl { get; set; }
+        public bool SoloPublicas { get; set; }
 
         public BEFiltroEncuesta()
         {
@@ -77,6 +82,14 @@ namespace worklingua.Server.BE
             this.EncuestaId = encuestaId;
             this.IdiomaId = idiomaId;
             this.VigentesAl = vigentesAl;
+        }
+
+        public BEFiltroEncuesta(int? encuestaId, int? idiomaId, DateOnly? vigentesAl, bool soloPublicas)
+        {
+            this.EncuestaId = encuestaId;
+            this.IdiomaId = idiomaId;
+            this.VigentesAl = vigentesAl;
+            this.SoloPublicas = soloPublicas;
         }
     }
 
@@ -115,6 +128,29 @@ namespace worklingua.Server.BE
         {
             this.EncuestaId = encuestaId;
             this.OpcionEncuestaId = opcionEncuestaId;
+        }
+    }
+
+    public class BEResponderEncuestaPublica
+    {
+        public int OpcionEncuestaId { get; set; }
+        public Guid? TokenVisitante { get; set; }
+        public string TokenCaptcha { get; set; }
+    }
+
+    public class BEVotanteEncuesta
+    {
+        public int? UsuarioId { get; set; }
+        public Guid? TokenVisitante { get; set; }
+
+        public BEVotanteEncuesta()
+        {
+        }
+
+        public BEVotanteEncuesta(int? usuarioId, Guid? tokenVisitante)
+        {
+            this.UsuarioId = usuarioId;
+            this.TokenVisitante = tokenVisitante;
         }
     }
 }

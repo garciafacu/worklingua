@@ -24,6 +24,8 @@ export const opinionesApi = {
     guardar: (datos: GuardarValoracionRequest) =>
         clienteHttp.post<OpinionResponse>('/comentarios', datos),
 
+    listarPlanesContratados: () => clienteHttp.get<number[]>('/comentarios/planes-contratados'),
+
     obtenerValoracion: (planId: number) =>
         clienteHttp.get<OpinionResponse | undefined>(`/comentarios/valoracion?planId=${planId}`),
 

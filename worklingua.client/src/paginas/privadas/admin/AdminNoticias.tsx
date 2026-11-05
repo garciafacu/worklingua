@@ -9,6 +9,7 @@ import { useLocalizacion } from '../../../contexto/useLocalizacion';
 import { useSesion } from '../../../contexto/useSesion';
 import { useMensajeDeError } from '../../../hooks/useMensajeDeError';
 import { PERMISOS } from '../../../rutas/itemsMenu';
+import { type SectorCurso, SECTORES_CURSO } from '../../../tipos/cursos';
 import type { GuardarNoticiaRequest, NoticiaAdminResponse } from '../../../tipos/noticias';
 
 const FORMULARIO_VACIO = {
@@ -17,6 +18,7 @@ const FORMULARIO_VACIO = {
     resumen: '',
     contenido: '',
     fechaPublicacion: '',
+    sector: '',
 };
 
 type Formulario = typeof FORMULARIO_VACIO;
@@ -90,6 +92,7 @@ export function AdminNoticias() {
             resumen: noticia.resumen ?? '',
             contenido: noticia.contenido,
             fechaPublicacion: aCampoFecha(noticia.fechaPublicacion),
+            sector: noticia.sector ?? '',
         });
     }
 
@@ -105,6 +108,7 @@ export function AdminNoticias() {
             resumen: formulario.resumen.trim() || null,
             contenido: formulario.contenido.trim(),
             fechaPublicacion: formulario.fechaPublicacion ? `${formulario.fechaPublicacion}:00` : null,
+            sector: (formulario.sector as SectorCurso) || null,
         };
 
         try {
@@ -150,6 +154,11 @@ export function AdminNoticias() {
         {
             encabezado: t('admin.noticias.tabla.publicacion'),
             celda: (noticia) => formatearFecha(noticia.fechaPublicacion, true),
+        },
+        {
+            encabezado: t('admin.noticias.col.sector'),
+            celda: (noticia) =>
+                noticia.sector === null ? '—' : t(`admin.cursos.sector.`),
         },
         {
             encabezado: t('admin.noticias.tabla.estado'),
@@ -229,6 +238,22 @@ export function AdminNoticias() {
                                 }
                             />
                         </div>
+
+                        <CampoSelect
+                            etiqueta={t('admin.noticias.sector')}
+                            identificador="sector"
+                            value={formulario.sector}
+                            onChange={(evento) =>
+                                setFormulario({ ...formulario, sector: evento.target.value })
+                            }
+                        >
+                            <option value="">{t('admin.noticias.sector.sin')}</option>
+                            {SECTORES_CURSO.map((sector) => (
+                                <option key={sector} value={sector}>
+                                    {t(`admin.cursos.sector.${sector}`)}
+                                </option>
+                            ))}
+                        </CampoSelect>
 
                         <CampoTexto
                             etiqueta={t('admin.noticias.formulario.resumen')}
